@@ -147,14 +147,30 @@ class AgentRunner:
             
         config = self._prepare_config(thread_id)
         
+        tokens_streamed = False
         async for event in self.graph.astream_events(inputs, config=config, version="v2"):
             event_type = event.get("event")
             if event_type == "on_chat_model_stream":
                 chunk = event["data"]["chunk"]
                 if chunk.content:
+                    tokens_streamed = True
                     yield {
                         "chatbot": {
                             "messages": [chunk]
                         }
                     }
+            elif event_type == "on_chat_model_end" and not tokens_streamed:
+                output = event["data"].get("output")
+                if output:
+                    if hasattr(output, "generations") and output.generations:
+                        message = output.generations[0][0].message
+                    else:
+                        message = output
+                    yield {
+                        "chatbot": {
+                            "messages": [message]
+                        }
+                    }
+
+
 
