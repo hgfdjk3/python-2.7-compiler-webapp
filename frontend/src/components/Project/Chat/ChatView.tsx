@@ -63,6 +63,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const { mutate, streamedContent, isPending, data } = useChatStream();
 
   const handleSendMessage = useCallback((value: string) => {
+    if (isPending) {
+      return;
+    }
     const now = new Date();
     const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -98,8 +101,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, [handleSendMessage]);
 
   const handleClarificationClose = useCallback(() => {
-    setShowClarification(false);
     setClarificationQuestions([]);
+    setShowClarification(false);
   }, []);
 
   const [isAutomationMode, setIsAutomationMode] = useState(false);
@@ -179,10 +182,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
               transition={{ duration: 0.3, ease: "easeOut" }}
               style={{ height: '100%' }}
             >
-              <ChatConversation 
-                messages={messages} 
-                streamedContent={streamedContent} 
-                isStreaming={isPending} 
+              <ChatConversation
+                messages={messages}
+                streamedContent={streamedContent}
+                isStreaming={isPending}
                 onSubmitAnswer={handleSendMessage}
                 onTriggerClarification={handleTriggerClarification}
               />

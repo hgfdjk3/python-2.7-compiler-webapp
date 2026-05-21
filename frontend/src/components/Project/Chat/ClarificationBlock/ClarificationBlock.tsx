@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, Group, Stack, Text, Textarea, ThemeIcon, ActionIcon } from '@mantine/core';
+import { Box, Button, Group, Stack, Text, Textarea, ThemeIcon, ActionIcon, Divider } from '@mantine/core';
 import { IconHelpCircle, IconSend, IconCheck } from '@tabler/icons-react';
 import { ClarificationQuestionData } from '../PromptInput/PromptClarification/PromptClarification';
 import './ClarificationBlock.css';
@@ -132,7 +132,9 @@ export const ClarificationBlock: React.FC<ClarificationBlockProps> = ({ content,
     onSubmitAnswer(responseMessage);
     setSubmitted(true);
   };
-
+  return <>
+    <Divider my="sm" label={`${data.context || ''}, `} />
+  </>
   return (
     <Box className="clarification-block-root">
       <Group gap="sm" className="clarification-header">

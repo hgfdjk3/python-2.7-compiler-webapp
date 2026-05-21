@@ -17,27 +17,27 @@ QUALITY_TEST_CASES = [
         )
     ),
     QualityTestCase(
-        name="orchestrator_complicated_task_no_answer",
+        name="clearifier_asks_5_questions",
         node="clarifier",
         messages=[
-            HumanMessage(content="asdfhjk"),
+            HumanMessage(content="ask me 5 questions"),
         ],
         eval_criteria=(
-            "The clarifier output shouldnt contain a <clarification> tag enclosing a JSON structure. "
-            "The clarifier output shouldnt route to any node."
+            "The clarifier output should contain exactly 5 <clarification> tag enclosing a JSON structure. "
+            "The clarifier output should contain the questions."
         )
     ),
-    # QualityTestCase(
-    #     name="orchestrator_routes_to_finish_on_simple_greeting",
-    #     node="orchestrator",
-    #     messages=[
-    #         HumanMessage(content="Hi there! Just wanted to say hello.")
-    #     ],
-    #     eval_criteria=(
-    #         "The orchestrator should route to 'FINISH' because this is a simple conversational greeting "
-    #         "that does not require executing tools or performing tasks."
-    #     )
-    # ),
+    QualityTestCase(
+        name="clearifier_should_not_ask_type_of_question",
+        node="clarifier",
+        messages=[
+            HumanMessage(content="Tell me something interesting about AI.")
+        ],
+        eval_criteria=(
+            "The clarifier output should contain any <clarification> tags."
+            "The JSON must contain multiple choice questions."
+        )
+    ),
 
     # # ── Clarifier Node Quality Tests ──────────────────────────────────────
     # QualityTestCase(

@@ -44,7 +44,7 @@ class ClarificationResponse(BaseModel):
         description="Brief summary of what you understood so far from the user's request."
     )
     questions: List[ClarificationQuestion] = Field(
-        description="2-4 clarifying questions to ask the user. Mix multiple-choice and free-text as appropriate."
+        description="2-4 clarifying questions to ask the user. All questions must be in 'multiple_choice' format"
     )
 
 
@@ -57,7 +57,6 @@ understand exactly what the user needs before work can begin.
 Guidelines:
 - Start with a brief summary of what you understood from the request.
 - Use 'multiple_choice' questions when there are a small set of likely options (2-5 choices).
-- Use 'free_text' questions when the answer is open-ended or highly specific to the user.
 - Keep questions focused and actionable — avoid generic questions like "Can you elaborate?".
 - Order questions from most important to least important.
 """
@@ -70,6 +69,7 @@ async def clarifier_node(state: AgentState, config: RunnableConfig) -> Dict[str,
     Generates clarifying questions based on the ambiguous user request.
     Returns them as an AIMessage wrapped in a <clarification> tag.
     """
+    # Retries on structured output failure before falling back.
     configurable = config.get("configurable", {})
 
     llm = configurable.get("model")
@@ -78,34 +78,39 @@ async def clarifier_node(state: AgentState, config: RunnableConfig) -> Dict[str,
         temperature = configurable.get("temperature", 0.3)
         llm = ChatOpenAI(model=model_name, temperature=temperature)
 
-    structured_llm = llm.with_structured_output(ClarificationResponse, method="function_calling")
+    structured_llm = llm.with_structured_output(ClarificationResponse, method="function_calling").with_retry(
+        stop_after_attempt=10,
+        wait_exponential_jitter=True
+    )
 
     messages = [SystemMessage(content=CLARIFIER_SYSTEM_PROMPT)] + list(state.get("messages", []))
 
-    try:
-        result: ClarificationResponse | None = await structured_llm.ainvoke(messages)
-    except Exception as e:
-        logger.warning(f"Clarifier structured output failed: {e}")
-        result = None
+    # try:
+    result: ClarificationResponse | None = await structured_llm.ainvoke(messages)
+    # except Exception as e:
+    #     logger.warning(f"Clarifier structured output failed: {e}")
+    #     result = None
 
     if not result:
-        # Fallback: ask a generic clarification
-        result = ClarificationResponse(
-            context="I wasn't able to fully analyze your request.",
-            questions=[
-                ClarificationQuestion(
-                    question="Could you provide more details about what you'd like me to do?",
-                    type="free_text"
-                )
-            ]
-        )
+        return {"messages": [AIMessage(content="Please provide the model name for the clarification")]}
+    #     # Fallback: ask a generic clarification
+    #     result = ClarificationResponse(
+    #         context="I wasn't able to fully analyze your request.",
+    #         questions=[
+    #             ClarificationQuestion(
+    #                 question="Could you provide more details about what you'd like me to do?",
+    #                 type="multiple_choice",
+    #                 options=["Yes, let me rephrase", "Start over", "Skip clarification"]
+    #             )
+    #         ]
+    #     )
 
     # Serialize to JSON for the <clarification> tag
     clarification_json = json.dumps({
         "context": result.context,
         "questions": [q.model_dump() for q in result.questions]
     })
-
+    print("clarification_json: ", clarification_json)
     return {
         "messages": [AIMessage(content=f"<clarification> {clarification_json} </clarification>")]
     }

@@ -19,9 +19,9 @@ export interface ChatConversationProps {
   onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
 }
 
-export const ChatConversation: React.FC<ChatConversationProps> = ({ 
-  messages, 
-  streamedContent, 
+export const ChatConversation: React.FC<ChatConversationProps> = ({
+  messages,
+  streamedContent,
   isStreaming,
   onSubmitAnswer,
   onTriggerClarification,
@@ -48,7 +48,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
             <MarkdownResponse
               content={streamedContent || ''}
               onSubmitAnswer={onSubmitAnswer}
-              onTriggerClarification={onTriggerClarification}
+              onTriggerClarification={() => { }}
             />
           </Box>
         )}

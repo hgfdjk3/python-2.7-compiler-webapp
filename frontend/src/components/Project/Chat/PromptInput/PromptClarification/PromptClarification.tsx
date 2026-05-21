@@ -66,7 +66,9 @@ export const PromptClarification: React.FC<PromptClarificationProps> = ({
 
   if (total === 0) return null;
 
-  const current = questions[currentIndex];
+  // Guard: clamp index if questions array shrank before the reset effect ran
+  const safeIndex = currentIndex >= total ? 0 : currentIndex;
+  const current = questions[safeIndex];
 
   const goNext = (updatedAnswers?: Record<number, string>) => {
     if (currentIndex < total - 1) {
@@ -85,7 +87,7 @@ export const PromptClarification: React.FC<PromptClarificationProps> = ({
 
   const handleSelectOption = (option: string) => {
     setSelectedOption(option);
-    const updated = { ...answers, [currentIndex]: option };
+    const updated = { ...answers, [safeIndex]: option };
     setAnswers(updated);
     // Auto-advance after a short delay for visual feedback
     setTimeout(() => goNext(updated), 250);
@@ -94,10 +96,16 @@ export const PromptClarification: React.FC<PromptClarificationProps> = ({
   const handleCustomSubmit = () => {
     const trimmed = customValue.trim();
     if (trimmed) {
-      const updated = { ...answers, [currentIndex]: trimmed };
+      const updated = { ...answers, [safeIndex]: trimmed };
       setAnswers(updated);
       setTimeout(() => goNext(updated), 250);
     }
+  };
+
+
+  const handle_close = () => {
+
+    onClose();
   };
 
   const handleSkip = () => {
@@ -126,18 +134,18 @@ export const PromptClarification: React.FC<PromptClarificationProps> = ({
               <button
                 className="prompt-clarification-nav-btn"
                 onClick={goPrev}
-                disabled={currentIndex === 0}
+                disabled={safeIndex === 0}
                 aria-label="Previous question"
               >
                 <IconChevronLeft size={16} stroke={2} />
               </button>
               <span className="prompt-clarification-pagination">
-                {currentIndex + 1} of {total}
+                {safeIndex + 1} of {total}
               </span>
               <button
                 className="prompt-clarification-nav-btn"
                 onClick={() => goNext()}
-                disabled={currentIndex === total - 1}
+                disabled={safeIndex === total - 1}
                 aria-label="Next question"
               >
                 <IconChevronRight size={16} stroke={2} />
@@ -157,7 +165,7 @@ export const PromptClarification: React.FC<PromptClarificationProps> = ({
       {/* Options */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentIndex}
+          key={safeIndex}
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -10 }}
