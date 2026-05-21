@@ -1,9 +1,8 @@
 import React from 'react';
-import { Anchor, Box, Card } from '@mantine/core';
+import { Anchor, Box, Card, Table } from '@mantine/core';
 import { Streamdown } from 'streamdown';
 import 'streamdown/styles.css';
 import './MarkdownResponse.css';
-import { ReasoningBlock } from './ReasoningBlock/ReasoningBlock';
 import { ClarificationBlock } from './ClarificationBlock/ClarificationBlock';
 
 export interface MarkdownResponseProps {
@@ -46,7 +45,8 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
     clarification: ({ children }: { children?: React.ReactNode }) => {
       const rawContent = getTextFromChildren(children);
       return <ClarificationBlock content={rawContent} onSubmitAnswer={onSubmitAnswer} />;
-    }
+    },
+    table: Table.withProps({ variant: 'striped', withRowBorders: true, striped: 'even', })
   }), [onSubmitAnswer]);
 
   return (
