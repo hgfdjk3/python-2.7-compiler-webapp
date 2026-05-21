@@ -132,9 +132,16 @@ async def run_quality_test(test_case: QualityTestCase) -> EvaluationResult:
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not configured in the environment or .env file.")
 
+    # Determine model configuration based on API key
+    model_name = "gpt-4o-mini"
+    evaluator_model_name = "gpt-4o-mini"
+    if api_key.startswith("nvapi-"):
+        model_name = "meta/llama-3.1-70b-instruct"
+        evaluator_model_name = "meta/llama-3.1-8b-instruct"
+
     # Initialize the LLM to be used by the node under test
     node_llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model=model_name,
         temperature=test_case.temperature,
         api_key=api_key,
     )
@@ -156,6 +163,7 @@ async def run_quality_test(test_case: QualityTestCase) -> EvaluationResult:
     logger.info(f"Running node '{test_case.node}' for quality test '{test_case.name}'...")
     try:
         output = await node_func(state, config)
+        print(output)
     except Exception as e:
         logger.error(f"Node execution failed: {e}")
         return EvaluationResult(
@@ -165,7 +173,7 @@ async def run_quality_test(test_case: QualityTestCase) -> EvaluationResult:
 
     # 2. Set up the LLM Evaluator (using structured output)
     evaluator_llm = ChatOpenAI(
-        model="gpt-4o-mini",
+        model=evaluator_model_name,
         temperature=0.0,
         api_key=api_key,
     )

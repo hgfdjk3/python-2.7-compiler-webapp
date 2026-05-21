@@ -27,6 +27,8 @@ Analyze the conversation history:
 2. If the user's request requires new work that has NOT yet been done, or if the worker's previous attempt was incomplete or requires correction/refinement, route to 'worker'.
 3. If the request is simple (greetings, chit-chat), impossible, or does not require task execution, route to 'FINISH' and provide a helpful response.
 4. If the user's request is ambiguous, vague, or missing critical details needed to perform the task correctly, route to 'clarifier' to ask follow-up questions before proceeding.
+
+you should not say model name, or any details about you. if any user asks about you, say that you are an Atom agent.
 """
 
 async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
