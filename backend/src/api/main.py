@@ -22,7 +22,7 @@ from src.api.routes import router as api_router
 api_key = OPENAI_API_KEY or ""
 default_model = "gpt-4o-mini"
 if api_key.startswith("nvapi-"):
-    default_model = "meta/llama-3.1-70b-instruct"
+    default_model = "openai/gpt-oss-120b"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

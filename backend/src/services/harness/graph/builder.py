@@ -7,6 +7,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from src.services.harness.graph.state import AgentState
 from src.services.harness.graph.nodes.orchestrator import orchestrator_node
 from src.services.harness.graph.nodes.worker import worker_node
+from src.services.harness.graph.nodes.clarifier import clarifier_node
 
 def route_orchestrator(state: AgentState):
     """
@@ -15,6 +16,8 @@ def route_orchestrator(state: AgentState):
     route = state.get("next")
     if route == "worker":
         return "worker"
+    if route == "clarifier":
+        return "clarifier"
     return END
 
 def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> StateGraph:
@@ -27,6 +30,7 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     # 2. Add nodes
     workflow.add_node("orchestrator", orchestrator_node)
     workflow.add_node("worker", worker_node)
+    workflow.add_node("clarifier", clarifier_node)
     
     # ToolNode executes the LLM's requested tool calls
     tool_node = ToolNode(tools)
@@ -35,15 +39,18 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     # 3. Add flow edges
     workflow.add_edge(START, "orchestrator")
     
-    # Orchestrator decides if we need to run a worker or if we are done
+    # Orchestrator decides: worker (do work), clarifier (ask questions), or END (done)
     workflow.add_conditional_edges(
         "orchestrator", 
         route_orchestrator, 
-        {"worker": "worker", END: END}
+        {"worker": "worker", "clarifier": "clarifier", END: END}
     )
     
-    # From worker, we go back to orchestrator to evaluate
+    # From worker, go back to orchestrator to evaluate
     workflow.add_edge("worker", "orchestrator")
+    
+    # Clarifier always ends the run — user needs to respond
+    workflow.add_edge("clarifier", END)
 
     # 4. Compile with checkpointer
     if checkpointer is None:

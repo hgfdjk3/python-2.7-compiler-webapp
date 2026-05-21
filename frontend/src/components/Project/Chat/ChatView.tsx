@@ -57,7 +57,31 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const { mutate, streamedContent, isPending, data } = useChatStream();
 
+  const handleSendMessage = useCallback((value: string) => {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setMessages((prev) => [...prev, {
+      id: Date.now().toString(),
+      role: 'user',
+      content: value,
+      timestamp
+    }]);
+
+    mutate(value, {
+      onSuccess: (finalContent) => {
+        setMessages((prev) => [...prev, {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: finalContent as string,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }]);
+      }
+    });
+  }, [mutate]);
+
   const [isAutomationMode, setIsAutomationMode] = useState(false);
+
   const [boardHeight, setBoardHeight] = useState(150);
   const [isResizing, setIsResizing] = useState(false);
 
@@ -133,7 +157,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
               transition={{ duration: 0.3, ease: "easeOut" }}
               style={{ height: '100%' }}
             >
-              <ChatConversation messages={messages} streamedContent={streamedContent} isStreaming={isPending} />
+              <ChatConversation 
+                messages={messages} 
+                streamedContent={streamedContent} 
+                isStreaming={isPending} 
+                onSubmitAnswer={handleSendMessage}
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -193,26 +222,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <PromptInput
             initialValue=""
             onSubmit={(value, modeId) => {
-              const now = new Date();
-              const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-              setMessages((prev) => [...prev, {
-                id: Date.now().toString(),
-                role: 'user',
-                content: modeId === 'automation' ? `Create Automation: ${value}` : value,
-                timestamp
-              }]);
-
-              mutate(value, {
-                onSuccess: (finalContent) => {
-                  setMessages((prev) => [...prev, {
-                    id: (Date.now() + 1).toString(),
-                    role: 'assistant',
-                    content: finalContent as string,
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  }]);
-                }
-              });
+              const msg = modeId === 'automation' ? `Create Automation: ${value}` : value;
+              handleSendMessage(msg);
             }}
             attachedSources={sources.filter((source) => attachedSourceIds.includes(source.id))}
             onDetachSource={onDetachSource}

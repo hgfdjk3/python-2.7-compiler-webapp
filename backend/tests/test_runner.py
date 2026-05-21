@@ -31,8 +31,8 @@ async def test_runner_run(mock_mcp_manager, fake_llm):
         )
 
         assert "messages" in result
-        assert len(result["messages"]) == 2  # Input Human + Output AI (from FINISH route)
-        assert result["messages"][-1].content == '<metadata>{"next": "FINISH", "reasoning": "Success response"}</metadata>'
+        assert len(result["messages"]) == 1  # Only the input HumanMessage
+        assert result["routing_metadata"] == '<metadata> {"next": "FINISH", "reasoning": "Success response"} </metadata>'
         
 @pytest.mark.asyncio
 async def test_runner_stream_run(mock_mcp_manager, fake_llm):
@@ -56,8 +56,54 @@ async def test_runner_stream_run(mock_mcp_manager, fake_llm):
 
         assert len(events) > 0
         
-        # We expect at least the worker's chat model stream to yield events for the frontend
+        # Collect all chatbot events
         chatbot_events = [e for e in events if "chatbot" in e]
-        assert len(chatbot_events) >= 1
-        assert "messages" in chatbot_events[0]["chatbot"]
-        assert chatbot_events[0]["chatbot"]["messages"][0].content == "Worker response stream"
+        assert len(chatbot_events) >= 2  # At least: orchestrator metadata + worker response
+        
+        # Extract all message contents
+        contents = [e["chatbot"]["messages"][0].content for e in chatbot_events]
+        
+        # The worker's response should appear in the stream
+        assert any("Worker response stream" in c for c in contents), f"Worker response not found in: {contents}"
+        
+        # The orchestrator metadata should also appear
+        assert any("<metadata>" in c for c in contents), f"Metadata not found in: {contents}"
+
+
+@pytest.mark.asyncio
+async def test_runner_stream_clarifier(mock_mcp_manager, fake_llm):
+    """
+    Tests that runner.stream_run yields clarifier questions.
+    """
+    from src.services.harness.graph.nodes.clarifier import ClarificationResponse, ClarificationQuestion
+    
+    route_to_clarifier = Route(next="clarifier", reasoning="Need clarification")
+    clarifier_response = ClarificationResponse(
+        context="Context details",
+        questions=[
+            ClarificationQuestion(question="What port?", type="free_text")
+        ]
+    )
+    fake_llm.responses = [route_to_clarifier, clarifier_response]
+
+    async with AgentRunner() as runner:
+        runner.model = fake_llm
+
+        events = []
+        async for event in runner.stream_run(
+            thread_id="thread_runner_3",
+            message="Ambiguous request"
+        ):
+            events.append(event)
+
+        assert len(events) > 0
+        
+        chatbot_events = [e for e in events if "chatbot" in e]
+        assert len(chatbot_events) >= 2  # At least orchestrator + clarifier
+        
+        contents = [e["chatbot"]["messages"][0].content for e in chatbot_events]
+        
+        # Clarifier output should be in the stream
+        assert any("<clarification>" in c for c in contents), f"Clarification tag not found in: {contents}"
+        assert any("What port?" in c for c in contents), f"Question text not found in: {contents}"
+

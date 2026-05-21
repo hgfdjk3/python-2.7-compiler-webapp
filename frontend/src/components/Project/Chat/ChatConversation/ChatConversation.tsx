@@ -14,9 +14,15 @@ export interface ChatConversationProps {
   messages: ChatMessage[];
   streamedContent?: string;
   isStreaming?: boolean;
+  onSubmitAnswer?: (answer: string) => void;
 }
 
-export const ChatConversation: React.FC<ChatConversationProps> = ({ messages, streamedContent, isStreaming }) => {
+export const ChatConversation: React.FC<ChatConversationProps> = ({ 
+  messages, 
+  streamedContent, 
+  isStreaming,
+  onSubmitAnswer,
+}) => {
   return (
     <Box style={{ height: '100%' }}>
       <Stack gap="0" pb={120}>
@@ -25,17 +31,18 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({ messages, st
             {msg.role === 'user' ? (
               <UserMessage content={msg.content} timestamp={msg.timestamp} />
             ) : (
-              <MarkdownResponse content={msg.content} />
+              <MarkdownResponse content={msg.content} onSubmitAnswer={onSubmitAnswer} />
             )}
           </Box>
         ))}
 
         {isStreaming && (
           <Box>
-            <MarkdownResponse content={streamedContent || ''} />
+            <MarkdownResponse content={streamedContent || ''} onSubmitAnswer={onSubmitAnswer} />
           </Box>
         )}
       </Stack>
     </Box>
   );
 };
+
