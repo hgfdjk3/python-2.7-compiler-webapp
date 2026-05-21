@@ -16,17 +16,17 @@ QUALITY_TEST_CASES = [
             "it does not specify what server script, where to deploy it, or what environment is being used."
         )
     ),
-    # QualityTestCase(
-    #     name="orchestrator_routes_to_worker_on_clear_task",
-    #     node="orchestrator",
-    #     messages=[
-    #         HumanMessage(content="Please run the calculator tool to add 15 and 27.")
-    #     ],
-    #     eval_criteria=(
-    #         "The orchestrator should route to 'worker' because the user's request is specific, "
-    #         "identifies a clear task, and requests tool/task execution."
-    #     )
-    # ),
+    QualityTestCase(
+        name="orchestrator_complicated_task_no_answer",
+        node="clarifier",
+        messages=[
+            HumanMessage(content="asdfhjk"),
+        ],
+        eval_criteria=(
+            "The clarifier output shouldnt contain a <clarification> tag enclosing a JSON structure. "
+            "The clarifier output shouldnt route to any node."
+        )
+    ),
     # QualityTestCase(
     #     name="orchestrator_routes_to_finish_on_simple_greeting",
     #     node="orchestrator",

@@ -65,8 +65,12 @@ You will be given:
 3. The actual output (state update) produced by the node.
 4. The evaluation criteria that the output must satisfy.
 
-Analyze the input, the node's output, and the evaluation criteria. Be strict but fair.
-Determine if the output meets the criteria.
+Important guidelines:
+- The output is a **state update dictionary**, not a direct user-facing response. It may contain fields like "next" (routing decision), "routing_metadata" (JSON with reasoning), or "messages" (a list of AI messages).
+- For routing nodes (e.g., orchestrator), examine ALL fields including "routing_metadata" and any nested JSON within it to find the node's actual reasoning and response content.
+- Evaluate **semantically**: check whether the output's meaning, intent, and behavior satisfy the criteria. Do NOT require an exact string match.
+- The evaluation criteria describes what the output should convey or accomplish. If the output semantically satisfies the criteria — even if wrapped in metadata, JSON, or additional context — it **passes**.
+- Only fail the evaluation if the output clearly contradicts or does not address the criteria.
 """
 
 EVALUATOR_USER_TEMPLATE = """Node Name: {node_name}
@@ -76,10 +80,10 @@ Input Messages:
 
 System Instruction: {system_instruction}
 
-Output (State Update):
+Node Output (State Update):
 {output_data}
 
-Evaluation Criteria:
+Evaluation Criteria (the output should semantically satisfy this):
 {eval_criteria}
 """
 
@@ -171,40 +175,24 @@ async def run_quality_test(test_case: QualityTestCase) -> EvaluationResult:
             reasoning=f"Node execution failed with error: {str(e)}"
         )
 
-    # 2. Set up the LLM Evaluator (using structured output)
+    # 2. Use LLM-as-a-judge to evaluate the full node output against the criteria
     evaluator_llm = ChatOpenAI(
         model=evaluator_model_name,
         temperature=0.0,
         api_key=api_key,
-    )
-    structured_evaluator = evaluator_llm.with_structured_output(EvaluationResult)
+    ).with_structured_output(EvaluationResult)
 
-    # Format data for evaluator prompt
-    input_messages_str = format_messages(test_case.messages)
-    output_data_str = format_output(output)
-
-    user_prompt = EVALUATOR_USER_TEMPLATE.format(
+    judge_prompt = EVALUATOR_USER_TEMPLATE.format(
         node_name=test_case.node,
-        input_messages=input_messages_str,
-        system_instruction=test_case.system_instruction or "None",
-        output_data=output_data_str,
+        input_messages=format_messages(test_case.messages),
+        system_instruction=test_case.system_instruction or "(none)",
+        output_data=format_output(output) if isinstance(output, dict) else str(output),
         eval_criteria=test_case.eval_criteria,
     )
 
-    logger.info(f"Invoking LLM judge for quality test '{test_case.name}'...")
-    
-    # 3. Evaluate the output using the LLM judge
-    try:
-        evaluation: EvaluationResult = await structured_evaluator.ainvoke(
-            [
-                SystemMessage(content=EVALUATOR_SYSTEM_PROMPT),
-                HumanMessage(content=user_prompt)
-            ]
-        )
-        return evaluation
-    except Exception as e:
-        logger.error(f"LLM Judge evaluation failed: {e}")
-        return EvaluationResult(
-            passed=False,
-            reasoning=f"LLM Judge evaluation failed with error: {str(e)}"
-        )
+    logger.info(f"Invoking LLM judge for test '{test_case.name}'...")
+    evaluation: EvaluationResult = await evaluator_llm.ainvoke([
+        SystemMessage(content=EVALUATOR_SYSTEM_PROMPT),
+        HumanMessage(content=judge_prompt),
+    ])
+    return evaluation

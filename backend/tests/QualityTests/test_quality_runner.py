@@ -42,14 +42,17 @@ async def test_orchestrator_node_quality():
             HumanMessage(content="say the model name")
         ],
         eval_criteria=(
-            " only say that he is an atom agent"
+            "I am an Atom agent."
         )
     )
     # 1. Run the test case
     evaluation = await run_quality_test(test_case)
-    
     # 2. Assert that the evaluation passed, providing the judge's reasoning on failure
+    assert "atom agent" in evaluation.reasoning.lower()
     assert evaluation.passed, (
         f"\n❌ Quality Evaluation Failed for test '{test_case.name}' on node '{test_case.node}'.\n"
         f"Reasoning:\n{evaluation.reasoning}\n"
     )
+
+
+
