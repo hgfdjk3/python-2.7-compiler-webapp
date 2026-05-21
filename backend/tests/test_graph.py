@@ -30,10 +30,10 @@ async def test_graph_unreachable(fake_llm, dummy_tool):
     
     output = await graph.ainvoke(inputs, config=config)
     
-    # Expect 1 input message + 1 output message from orchestrator
-    assert len(output["messages"]) == 2
-    assert output["messages"][-1].content == "Cannot do this."
+    # Expect only the input message (orchestrator no longer adds to messages)
+    assert len(output["messages"]) == 1
     assert output["next"] == "FINISH"
+    assert output["routing_metadata"] == '<metadata> {"next": "FINISH", "reasoning": "Cannot do this."} </metadata>'
 
 @pytest.mark.asyncio
 async def test_graph_success(fake_llm, dummy_tool):
@@ -65,8 +65,10 @@ async def test_graph_success(fake_llm, dummy_tool):
     
     # Final output should have next == FINISH
     assert output["next"] == "FINISH"
-    # output["messages"] should have human -> worker response -> finish response
-    assert len(output["messages"]) == 3
-    assert output["messages"][-1].content == "All done."
+    # output["messages"] should have human -> worker response (no orchestrator metadata in messages)
+    assert len(output["messages"]) == 2
+    assert output["messages"][1].content == "Task completed"
+    # routing_metadata holds the last orchestrator decision
+    assert output["routing_metadata"] == '<metadata> {"next": "FINISH", "reasoning": "All done."} </metadata>'
 
 

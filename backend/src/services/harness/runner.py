@@ -2,6 +2,7 @@ import os
 import logging
 from typing import Any, Dict, List, AsyncGenerator, Optional
 from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
@@ -169,6 +170,15 @@ class AgentRunner:
                     yield {
                         "chatbot": {
                             "messages": [message]
+                        }
+                    }
+            elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "orchestrator":
+                output = event["data"].get("output")
+                if isinstance(output, dict) and "routing_metadata" in output:
+                    metadata_content = output["routing_metadata"]
+                    yield {
+                        "chatbot": {
+                            "messages": [AIMessage(content=metadata_content)]
                         }
                     }
 

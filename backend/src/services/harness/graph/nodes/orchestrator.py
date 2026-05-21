@@ -1,6 +1,8 @@
 from typing import Any, Dict, Literal
 from pydantic import BaseModel, Field
-from langchain_core.messages import SystemMessage, AIMessage
+import json
+from langchain_core.messages import SystemMessage
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
@@ -14,10 +16,13 @@ class Route(BaseModel):
         description="Explanation of why you are routing to this node. If 'FINISH', this will be shown to the user."
     )
 
-ORCHESTRATOR_SYSTEM_PROMPT = """You are an AI Supervisor. 
-Your goal is to understand the user's intent. 
-If the user's request requires work to be done (e.g. answering a complex question, performing a task), route to 'worker'.
-If the request is simple, already completed, or impossible, route to 'FINISH' and provide a helpful response in 'reasoning'.
+ORCHESTRATOR_SYSTEM_PROMPT = """You are an AI Supervisor.
+Your goal is to manage the conversation flow and determine the next step.
+
+Analyze the conversation history:
+1. If the user's latest request has already been successfully addressed, answered, or completed by the worker in the message history, route to 'FINISH'. Do NOT route to 'worker' again if the work is already done.
+2. If the user's request requires new work that has NOT yet been done, or if the worker's previous attempt was incomplete or requires correction/refinement, route to 'worker'.
+3. If the request is simple (greetings, chit-chat), impossible, or does not require task execution, route to 'FINISH' and provide a helpful response.
 """
 
 async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
@@ -43,10 +48,12 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[s
             "messages": [AIMessage(content="I'm sorry, I couldn't process that request.")]
         }
         
-    updates = {"next": route_result.next}
-    
-    if route_result.next == "FINISH":
-        updates["messages"] = [AIMessage(content=route_result.reasoning)]
-        
-    return updates
+    route_json = json.dumps({
+        "next": route_result.next,
+        "reasoning": route_result.reasoning
+    })
+    return {
+        "next": route_result.next,
+        "routing_metadata": f"<metadata> {route_json} </metadata>"
+    }
 

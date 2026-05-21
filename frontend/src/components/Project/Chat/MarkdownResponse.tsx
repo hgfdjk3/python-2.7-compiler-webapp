@@ -1,8 +1,9 @@
-import React from 'react';
-import { Anchor, Box } from '@mantine/core';
+import React, { useState } from 'react';
+import { Anchor, Box, Collapse, Group, Text } from '@mantine/core';
 import { Streamdown } from 'streamdown';
 import 'streamdown/styles.css';
 import './MarkdownResponse.css';
+import { ReasoningBlock } from './ReasoningBlock/ReasoningBlock';
 
 export interface MarkdownResponseProps {
   content: string;
@@ -19,7 +20,12 @@ const components: any = {
     <Anchor href={href} target="_blank" rel="noopener noreferrer">
       {children}
     </Anchor>
-  )
+  ),
+  metadata: ({ children }: { children?: React.ReactNode }) => {
+    const rawContent = children?.toString() || '';
+    return <>1111{JSON.parse(rawContent).next}</>
+    // return <ReasoningBlock content={rawContent} />;
+  }
 };
 
 export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content }) => {
@@ -34,7 +40,7 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content }) =
         isAnimating={false}
         caret="block"
         components={components}
-        allowedTags={{ 'my-component': [] }}
+        allowedTags={{ 'my-component': [], 'metadata': [] }}
       // skipHtml={false}
       >
         {content}

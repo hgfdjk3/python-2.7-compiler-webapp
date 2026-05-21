@@ -72,7 +72,7 @@ export const streamAsk = async (
     if (chunk.error) {
       throw new Error(chunk.error);
     }
-    
+
     const messages = chunk.chatbot?.messages;
     if (messages) {
       for (const msg of messages) {

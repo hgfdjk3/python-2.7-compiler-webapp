@@ -13,5 +13,7 @@ class AgentState(TypedDict):
     
     # Supervisor routing field
     next: Optional[str]
+    # Routing metadata for frontend display only (not part of conversation history)
+    routing_metadata: Optional[str]
 
 

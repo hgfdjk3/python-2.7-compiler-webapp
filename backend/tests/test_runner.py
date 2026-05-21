@@ -32,7 +32,7 @@ async def test_runner_run(mock_mcp_manager, fake_llm):
 
         assert "messages" in result
         assert len(result["messages"]) == 2  # Input Human + Output AI (from FINISH route)
-        assert result["messages"][-1].content == "Success response"
+        assert result["messages"][-1].content == '<metadata>{"next": "FINISH", "reasoning": "Success response"}</metadata>'
         
 @pytest.mark.asyncio
 async def test_runner_stream_run(mock_mcp_manager, fake_llm):
