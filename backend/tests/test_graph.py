@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages.tool import ToolCall
 
-from src.agent.graph import create_graph
+from src.services.harness.graph.builder import create_graph
 
 @pytest.mark.asyncio
 async def test_graph_direct_flow(fake_llm, dummy_tool):

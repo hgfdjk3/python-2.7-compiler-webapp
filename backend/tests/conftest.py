@@ -84,7 +84,7 @@ def mock_mcp_manager(mocker, dummy_tool):
     Mocks MCPClientManager to prevent actual network/subprocess spawning
     during runner tests, returning a mock set of tools instead.
     """
-    mock_mgr = mocker.patch("src.harness.runner.MCPClientManager", autospec=True)
+    mock_mgr = mocker.patch("src.services.harness.runner.MCPClientManager", autospec=True)
     instance = mock_mgr.return_value
     
     # Configure mock responses

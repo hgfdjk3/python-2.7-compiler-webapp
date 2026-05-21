@@ -3,8 +3,8 @@ from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
-from src.agent.state import AgentState
-from src.agent.prompts import DEFAULT_SYSTEM_INSTRUCTION
+from src.services.harness.graph.state import AgentState
+from src.services.harness.graph.prompts import DEFAULT_SYSTEM_INSTRUCTION
 
 async def chatbot_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     """
@@ -29,7 +29,7 @@ async def chatbot_node(state: AgentState, config: RunnableConfig) -> Dict[str, A
     # 3. Formulate prompt (prepend system instruction if present)
     system_instruction = state.get("system_instruction") or DEFAULT_SYSTEM_INSTRUCTION
     
-    messages = [SystemMessage(content=system_instruction)] + list(state["messages"])
+    messages = [SystemMessage(content=system_instruction)] + list(state.get("messages", []))
 
     # 4. Invoke LLM asynchronously
     response = await llm.ainvoke(messages)

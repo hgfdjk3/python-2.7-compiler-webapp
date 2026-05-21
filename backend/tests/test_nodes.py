@@ -2,8 +2,8 @@ import pytest
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.runnables import RunnableConfig
 
-from src.agent.nodes.chatbot import chatbot_node
-from src.agent.state import AgentState
+from src.services.harness.graph.nodes.chatbot import chatbot_node
+from src.services.harness.graph.state import AgentState
 
 @pytest.mark.asyncio
 async def test_chatbot_node_basic(fake_llm):

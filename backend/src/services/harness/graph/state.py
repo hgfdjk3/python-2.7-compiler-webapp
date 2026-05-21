@@ -9,5 +9,4 @@ class AgentState(TypedDict):
     """
     messages: Annotated[Sequence[BaseMessage], add_messages]
     system_instruction: str
-    # Keeps track of tool execution errors or MCP server states if needed.
     metadata: dict[str, str]

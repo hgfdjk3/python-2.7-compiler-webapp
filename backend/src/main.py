@@ -3,7 +3,6 @@ import sys
 import asyncio
 import argparse
 import logging
-from dotenv import load_dotenv
 
 # Ensure the root backend directory is in the path so package imports resolve correctly
 backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -17,7 +16,8 @@ while src_dir in sys.path:
     sys.path.remove(src_dir)
 
 
-from src.harness.runner import AgentRunner
+from src.services.harness.runner import AgentRunner
+from src.config import OPENAI_API_KEY
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 # Configure logging
@@ -111,20 +111,12 @@ async def run_single(runner: AgentRunner, message: str, system_instruction: str 
         print(f"Error: {e}")
 
 async def main():
-    # Load dotenv first to check the key and configure defaults
-    load_dotenv()
-    
     # Check if NVIDIA API key is used and set appropriate defaults
-    api_key = os.getenv("OPENAI_API_KEY", "")
+    api_key = OPENAI_API_KEY or ""
     default_model = "gpt-4o-mini"
     
     if api_key.startswith("nvapi-"):
         default_model = "meta/llama-3.1-70b-instruct"
-        # Ensure the OpenAI SDK points to the NVIDIA API endpoint
-        if not os.getenv("OPENAI_BASE_URL"):
-            os.environ["OPENAI_BASE_URL"] = "https://integrate.api.nvidia.com/v1"
-        if not os.getenv("OPENAI_API_BASE"):
-            os.environ["OPENAI_API_BASE"] = "https://integrate.api.nvidia.com/v1"
 
     parser = argparse.ArgumentParser(description="Run the Atom LangGraph Agent.")
     parser.add_argument("--message", "-m", type=str, help="Run a single message and exit.")
@@ -137,7 +129,7 @@ async def main():
     setup_logging(args.verbose)
     
     # Warn user if API key is missing
-    if not os.getenv("OPENAI_API_KEY"):
+    if not OPENAI_API_KEY:
         print("WARNING: 'OPENAI_API_KEY' environment variable not set.")
         print("Please configure it in a '.env' file in the 'backend' directory.")
         print("Example contents of backend/.env:")

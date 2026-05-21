@@ -1,5 +1,5 @@
 import pytest
-from src.harness.runner import AgentRunner
+from src.services.harness.runner import AgentRunner
 
 @pytest.mark.asyncio
 async def test_runner_context_manager_lifecycle(mock_mcp_manager):

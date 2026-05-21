@@ -1,14 +1,13 @@
 import os
 import logging
 from typing import Any, Dict, List, AsyncGenerator, Optional
-from dotenv import load_dotenv
-
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
-from src.agent.graph import create_graph
-from src.mcp.client import MCPClientManager
+from src.config import OPENAI_API_KEY
+from src.services.harness.graph.builder import create_graph
+from src.services.harness.mcp.client import MCPClientManager
 
 # Configure logging
 logging.basicConfig(
@@ -29,9 +28,7 @@ class AgentRunner:
         model_name: str = "gpt-4o-mini",
         temperature: float = 0.7
     ):
-        # 1. Load environment variables
-        load_dotenv()
-        
+        # 1. Setup options
         self.mcp_configs = mcp_configs or {}
         self.model_name = model_name
         self.temperature = temperature
@@ -52,7 +49,7 @@ class AgentRunner:
         logger.info("Initializing AgentRunner...")
         
         # Resolve OpenAI key
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = OPENAI_API_KEY
         if not api_key:
             logger.warning("OPENAI_API_KEY environment variable is not set. Real model calls will fail.")
             api_key = "mock-key-for-testing"
