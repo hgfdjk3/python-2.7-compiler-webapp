@@ -6,6 +6,7 @@ from langchain_core.language_models.chat_models import SimpleChatModel
 from langchain_core.messages import BaseMessage, AIMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.tools import tool, BaseTool
+from langchain_core.runnables import RunnableLambda
 
 # Add src directory to path so imports work correctly
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -52,6 +53,13 @@ class FakeChatModel(SimpleChatModel):
     def bind_tools(self, tools: List[Any], **kwargs: Any) -> Any:
         self.bound_tools = tools
         return self
+
+    def with_structured_output(self, schema: Any, **kwargs: Any) -> Any:
+        async def fake_invoke(prompt):
+            res = self.responses[self.index]
+            self.index = (self.index + 1) % len(self.responses)
+            return res
+        return RunnableLambda(fake_invoke)
 
     @property
     def _llm_type(self) -> str:
