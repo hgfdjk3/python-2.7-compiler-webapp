@@ -1,0 +1,71 @@
+/* =============================================
+   Chat Item — Premium Redesign
+   ============================================= */
+
+.chat-item {
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 150ms ease;
+  position: relative;
+  background-color: transparent;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chat-item:hover {
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+}
+
+.chat-item:active {
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-7));
+}
+
+.chat-item-title {
+  color: light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0));
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.chat-item-preview {
+  color: var(--mantine-color-dimmed);
+  line-height: 1.2;
+  font-size: 12px;
+}
+
+.chat-item-meta {
+  color: var(--mantine-color-dimmed);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.chat-item-time-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.chat-item-actions {
+  opacity: 0;
+  transition: opacity 150ms ease;
+  display: flex;
+  gap: 2px;
+}
+
+.chat-item:hover .chat-item-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.save-icon {
+  transition: transform 200ms ease, color 200ms ease;
+}
+
+.save-icon.active {
+  color: var(--mantine-color-amber-5);
+}
+
+.save-icon:hover {
+  transform: scale(1.1);
+}

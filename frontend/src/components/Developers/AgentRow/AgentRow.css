@@ -1,0 +1,45 @@
+.agent-row {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.agent-row:first-child .agent-row-main,
+.agent-row:first-child {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.agent-row-main {
+  padding: 14px 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.agent-row-main:hover {
+  opacity: 0.8;
+}
+
+.agent-row-icon {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.agent-row-main:hover .agent-row-icon {
+  transform: scale(1.08);
+}
+
+.agent-row-detail {
+  padding: 12px 0 16px 48px;
+  border-top: 1px solid var(--mantine-color-default-border);
+  background: transparent;
+}
+
+.agent-row-token {
+  font-size: 11px;
+  background: var(--mantine-color-default-hover) !important;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  padding: 4px 8px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,47 @@
+.promptActionButton {
+  transition: all 0.2s ease;
+  color: var(--mantine-color-dimmed);
+}
+
+.promptActionButton:hover {
+  background-color: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+  transform: translateY(-1px);
+}
+
+.promptActionButton:active {
+  transform: translateY(0);
+}
+
+.promptActionItem {
+  transition: all 0.15s ease;
+  font-weight: 500;
+  height: 30px;
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.promptActionItem:hover {
+  color: var(--mantine-color-primary-filled) !important;
+}
+
+.promptActionItem [data-menu-item-section] {
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.itemChevron {
+  opacity: 0.4;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.promptActionItem:hover .itemChevron {
+  opacity: 0.8;
+  transform: translateX(2px);
+}
+
+.promptActionItem:hover [data-menu-item-section] {
+  opacity: 1;
+}
+
+

@@ -1,0 +1,74 @@
+.projects-header-container {
+  padding-bottom: var(--mantine-spacing-xl);
+  width: 100%;
+}
+
+.projects-title {
+  font-weight: 600;
+  font-size: rem(40px);
+  color: var(--mantine-color-text);
+  letter-spacing: -0.02em;
+}
+
+.sort-label {
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+}
+
+.sort-select .mantine-Input-input {
+  background-color: var(--mantine-color-default);
+  border-radius: var(--mantine-radius-md);
+  padding-left: var(--mantine-spacing-sm) !important;
+  padding-right: rem(32px) !important;
+  height: rem(36px);
+  font-size: var(--mantine-font-size-sm);
+  border: 1px solid var(--mantine-color-default-border);
+  color: var(--mantine-color-text);
+  font-weight: 500;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.sort-select .mantine-Input-input:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.new-project-button {
+  background-color: var(--mantine-color-text);
+  color: var(--mantine-color-body);
+  font-weight: 600;
+  border: none;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.new-project-button:hover {
+  opacity: 0.9;
+}
+
+.new-project-button:active {
+  transform: scale(0.98);
+}
+
+.projects-search .mantine-Input-input {
+  background-color: var(--mantine-color-default);
+  border: 1px solid var(--mantine-color-default-border);
+  height: rem(54px);
+  font-size: var(--mantine-font-size-md);
+  border-radius: var(--mantine-radius-md);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.projects-search .mantine-Input-input:focus {
+  border-color: var(--mantine-primary-color-filled);
+  box-shadow: 0 0 0 1px var(--mantine-primary-color-filled);
+}
+
+[data-mantine-color-scheme="dark"] .new-project-button {
+  background-color: var(--mantine-color-white);
+  color: var(--mantine-color-black);
+}
+
+[data-mantine-color-scheme="light"] .new-project-button {
+  background-color: var(--mantine-color-black);
+  color: var(--mantine-color-white);
+}

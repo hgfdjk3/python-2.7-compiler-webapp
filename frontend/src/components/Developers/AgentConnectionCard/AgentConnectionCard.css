@@ -1,0 +1,83 @@
+.agent-conn-card {
+  position: relative;
+  border-radius: var(--mantine-radius-lg);
+  border: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.agent-conn-card:hover {
+  border-color: color-mix(in srgb, var(--agent-color) 30%, var(--mantine-color-default-border));
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+[data-mantine-color-scheme='dark'] .agent-conn-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.agent-conn-strip {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--agent-color) 0%,
+    color-mix(in srgb, var(--agent-color) 40%, transparent) 100%
+  );
+  opacity: 0.7;
+}
+
+.agent-conn-card--enabled .agent-conn-strip {
+  opacity: 1;
+}
+
+.agent-conn-icon {
+  transition: transform 0.25s ease;
+}
+
+.agent-conn-card:hover .agent-conn-icon {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+/* Pulsing badge */
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(32, 201, 151, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(32, 201, 151, 0); }
+}
+
+.agent-conn-badge-pulse {
+  animation: badge-pulse 2.5s ease-in-out infinite;
+}
+
+/* Status dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot--ok {
+  background: var(--mantine-color-teal-5);
+  box-shadow: 0 0 6px var(--mantine-color-teal-5);
+}
+
+/* Token code box */
+.agent-token-code {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default-hover) !important;
+  border: 1px solid var(--mantine-color-default-border);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.agent-token-code:hover {
+  border-color: var(--mantine-color-zinc-5);
+}

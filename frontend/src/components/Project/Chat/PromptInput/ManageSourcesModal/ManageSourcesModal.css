@@ -1,0 +1,50 @@
+.manageSourcesHeader {
+  border-bottom: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-6));
+  padding-bottom: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.manageSourcesBody {
+  padding-top: 0;
+}
+
+.searchInput {
+  border-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-5));
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--mantine-color-blue-5);
+}
+
+.typeFilterButton {
+  padding: 6px 14px;
+  border-radius: var(--mantine-radius-xl);
+  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-5));
+  background: transparent;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.typeFilterButton:hover {
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.typeFilterButton.active {
+  background: light-dark(var(--mantine-color-blue-0), var(--mantine-color-blue-9));
+  border-color: var(--mantine-color-blue-5);
+  color: light-dark(var(--mantine-color-blue-7), var(--mantine-color-blue-2));
+}
+
+.projectSourcesDropZone {
+  flex: 1;
+  border-radius: var(--mantine-radius-md);
+  transition: background-color 0.2s ease;
+  padding: var(--mantine-spacing-xs);
+  margin: calc(var(--mantine-spacing-xs) * -1);
+}
+
+.projectSourcesDropZone.active {
+  background-color: light-dark(var(--mantine-color-blue-0), rgba(24, 100, 171, 0.15));
+}

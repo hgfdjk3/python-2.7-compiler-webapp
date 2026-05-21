@@ -1,0 +1,80 @@
+.react-flow__node-automation {
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.automation-node-card {
+  width: 380px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  transition: box-shadow 0.2s ease;
+  box-shadow: var(--mantine-shadow-md);
+  overflow: visible;
+}
+
+.automation-node-card:hover {
+  border-color: var(--node-color, var(--mantine-color-blue-5));
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px var(--node-color, var(--mantine-color-blue-5));
+}
+
+.automation-handle {
+  width: 12px;
+  height: 12px;
+  background: var(--mantine-color-blue-6);
+  border: 3px solid var(--mantine-color-body);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.automation-handle:hover {
+  transform: scale(1.5);
+  background: var(--node-color, var(--mantine-color-blue-4)) !important;
+  box-shadow: 0 0 12px var(--node-color, var(--mantine-color-blue-6)) !important;
+}
+
+.automation-node-description {
+  line-height: var(--mantine-line-height-sm);
+  color: var(--mantine-color-dimmed);
+}
+
+.ai-rewrite-input {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.automation-tool-item {
+  border-radius: var(--mantine-radius-xs);
+  padding: 5px;
+  border: 1px solid var(--mantine-color-default-border);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  background-color: light-dark(var(--mantine-color-zinc-1), var(--mantine-color-zinc-8));
+}
+
+.automation-tool-item:hover {
+  background-color: light-dark(var(--mantine-color-zinc-1), var(--mantine-color-zinc-8));
+}
+
+.automation-tool-item .mantine-ThemeIcon-root {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.automation-paginator-btn:disabled {
+  background-color: transparent !important;
+  opacity: 0.25 !important;
+}

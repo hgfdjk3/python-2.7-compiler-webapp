@@ -1,0 +1,53 @@
+.dev-hub-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.dev-hub-content {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* Row-style choice option */
+.hub-option {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.hub-option:first-of-type {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.hub-option-icon {
+  color: var(--mantine-color-text);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hub-option-arrow {
+  color: var(--mantine-color-dimmed);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.hub-option:hover .hub-option-icon {
+  opacity: 1;
+}
+
+.hub-option:hover .hub-option-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}

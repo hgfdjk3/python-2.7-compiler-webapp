@@ -1,0 +1,13 @@
+.agent-usage-chart {
+  width: 100%;
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+}
+
+.agent-chart-tooltip {
+  background: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  padding: 6px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}

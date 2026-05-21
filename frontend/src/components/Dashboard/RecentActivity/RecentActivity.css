@@ -1,0 +1,26 @@
+.recent-activity {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-activity-inner {
+  padding: var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+  transition: border-color 0.2s ease;
+}
+
+.recent-activity:hover .recent-activity-inner {
+  border-color: var(--mantine-color-zinc-4);
+}
+
+.activity-item {
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.activity-item:hover {
+  background-color: var(--mantine-color-default-hover);
+}

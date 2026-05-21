@@ -1,0 +1,40 @@
+.enter-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--mantine-color-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.enter-loading-overlay::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    light-dark(
+      color-mix(in srgb, var(--mantine-primary-color-filled) 6%, transparent),
+      color-mix(in srgb, var(--mantine-primary-color-filled) 12%, transparent)
+    ) 0%,
+    transparent 70%
+  );
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.enter-loading-glow {
+  filter: drop-shadow(
+    0 0 20px
+    light-dark(
+      color-mix(in srgb, var(--mantine-primary-color-filled) 20%, transparent),
+      color-mix(in srgb, var(--mantine-primary-color-filled) 40%, transparent)
+    )
+  );
+}

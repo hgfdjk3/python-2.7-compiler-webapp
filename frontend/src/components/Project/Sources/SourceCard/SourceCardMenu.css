@@ -1,0 +1,20 @@
+.menuTrigger {
+    transition: opacity 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.menuTrigger[data-visible="true"] {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.menuTriggerIcon {
+    width: 14px;
+    height: 14px;
+}
+
+.menuItemIcon {
+    width: 14px;
+    height: 14px;
+}

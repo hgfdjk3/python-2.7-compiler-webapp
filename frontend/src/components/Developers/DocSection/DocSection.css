@@ -1,0 +1,82 @@
+.doc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.doc-card {
+  padding: 18px;
+  border-radius: var(--mantine-radius-lg);
+  border: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.doc-card:hover {
+  border-color: var(--mantine-color-violet-8);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.08);
+}
+
+[data-mantine-color-scheme='dark'] .doc-card:hover {
+  box-shadow: 0 4px 24px rgba(139, 92, 246, 0.15);
+}
+
+.doc-card-icon {
+  transition: transform 0.2s ease;
+}
+
+.doc-card:hover .doc-card-icon {
+  transform: scale(1.08);
+}
+
+.doc-card-link {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.doc-card:hover .doc-card-link {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Endpoint list */
+.endpoint-section {
+  padding: 20px;
+  border-radius: var(--mantine-radius-lg);
+  border: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+}
+
+.endpoint-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.endpoint-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  transition: background-color 0.15s ease;
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+}
+
+.endpoint-row:last-child {
+  border-bottom: none;
+}
+
+.endpoint-row:hover {
+  background-color: var(--mantine-color-default-hover);
+  padding-left: 8px;
+  padding-right: 8px;
+  margin-left: -8px;
+  margin-right: -8px;
+}

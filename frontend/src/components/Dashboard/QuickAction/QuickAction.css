@@ -1,0 +1,28 @@
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  padding: var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 100%;
+  cursor: pointer;
+}
+
+.quick-action:hover {
+  border-color: var(--mantine-color-zinc-4);
+  background-color: var(--mantine-color-default-hover);
+}
+
+.quick-action-icon {
+  transition: transform 0.3s ease;
+}
+
+.quick-action:hover .quick-action-icon {
+  transform: scale(1.1) rotate(-4deg);
+}
+
+[data-mantine-color-scheme='dark'] .quick-action:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,70 @@
+.stat-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-card-inner {
+  padding: var(--mantine-spacing-lg);
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mantine-color-default-border),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover .stat-card-inner {
+  border-color: var(--mantine-color-zinc-4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.stat-card:hover .stat-card-inner::before {
+  opacity: 1;
+}
+
+.stat-card-label {
+  letter-spacing: 0.5px;
+  font-size: 11px;
+}
+
+.stat-card-value {
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card-icon {
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-card-icon {
+  transform: scale(1.1);
+}
+
+.stat-card-trend {
+  display: flex;
+  align-items: center;
+}
+
+/* Dark mode subtle glow */
+[data-mantine-color-scheme='dark'] .stat-card:hover .stat-card-inner {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}

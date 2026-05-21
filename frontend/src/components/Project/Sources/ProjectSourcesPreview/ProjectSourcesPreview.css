@@ -1,0 +1,25 @@
+.previewRoot {
+    min-height: 300px;
+}
+
+.standaloneSourcesContainer {
+    border-radius: var(--mantine-radius-md);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+
+.standaloneSourcesContainer[data-over="true"] {
+    background-color: light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-7));
+    border-color: light-dark(var(--mantine-color-zinc-3), var(--mantine-color-zinc-7));
+}
+
+.emptyPreviewState {
+    background-color: var(--mantine-color-zinc-8);
+    border-radius: var(--mantine-radius-md);
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--mantine-color-zinc-7);
+}

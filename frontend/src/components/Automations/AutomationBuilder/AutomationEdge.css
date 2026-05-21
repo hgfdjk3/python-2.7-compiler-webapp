@@ -1,0 +1,37 @@
+.automation-edge-path {
+  stroke: var(--mantine-color-default-border);
+  stroke-width: 2px;
+  transition: all 0.3s ease;
+}
+
+.automation-edge-path:hover {
+  stroke: var(--mantine-color-blue-5);
+  stroke-width: 3px;
+}
+
+.edge-delete-button,
+.edge-plus-button {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--mantine-color-body) !important;
+  border: 1px solid var(--mantine-color-default-border) !important;
+}
+
+.automation-edge-label:hover .edge-delete-button,
+.automation-edge-label:hover .edge-plus-button,
+.edge-delete-button.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.automation-edge-label {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  z-index: 10;
+}

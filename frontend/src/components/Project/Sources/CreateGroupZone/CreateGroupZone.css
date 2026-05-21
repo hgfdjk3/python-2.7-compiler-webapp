@@ -1,0 +1,31 @@
+.createGroupZoneRoot {
+  border-style: dashed;
+  background-color: transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-height: 50px;
+}
+
+/* Light mode hover/over */
+.createGroupZoneRoot[data-over="true"] {
+  background-color: var(--mantine-color-blue-0);
+  border-color: var(--mantine-color-blue-4);
+  border-style: solid;
+}
+
+/* Dark mode hover/over */
+[data-mantine-color-scheme="dark"] .createGroupZoneRoot[data-over="true"] {
+  background-color: rgba(34, 139, 230, 0.1);
+  border-color: var(--mantine-color-blue-8);
+}
+
+/* Visual hint when dragging anything but not over this zone */
+.createGroupZoneRoot[data-dragging="true"]:not([data-over="true"]) {
+  border-color: var(--mantine-color-blue-2);
+  background-color: rgba(34, 139, 230, 0.02);
+}
+
+[data-mantine-color-scheme="dark"] .createGroupZoneRoot[data-dragging="true"]:not([data-over="true"]) {
+  border-color: var(--mantine-color-dark-4);
+  background-color: rgba(34, 139, 230, 0.05);
+}

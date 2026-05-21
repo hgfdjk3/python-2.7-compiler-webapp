@@ -1,0 +1,104 @@
+.agent-modal .mantine-Modal-content {
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9)) !important;
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+  overflow: hidden;
+}
+
+.agent-modal .mantine-Modal-header {
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9)) !important;
+  border-bottom: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+}
+
+.agent-modal-hero {
+  position: relative;
+  padding: 24px 24px;
+  background: radial-gradient(circle at top left,
+      color-mix(in srgb, var(--agent-modal-brand-color) 12%, transparent) 0%,
+      transparent 70%);
+  margin: 0;
+  display: flex;
+  border-bottom: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+}
+
+.agent-modal-icon-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agent-modal-icon-aura {
+  position: absolute;
+  inset: -15px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--agent-modal-brand-color) 25%, transparent) 0%, transparent 70%);
+  filter: blur(10px);
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.agent-modal-icon-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--mantine-color-zinc-9);
+  border: 1px solid var(--mantine-color-zinc-8);
+  border-radius: 20px;
+  color: var(--agent-modal-brand-color);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.agent-modal-icon-wrapper:hover .agent-modal-icon-inner {
+  border-color: color-mix(in srgb, var(--agent-modal-brand-color) 40%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+}
+
+.agent-modal-title {
+  letter-spacing: -1.5px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.agent-modal-section {
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9));
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+  padding: 16px;
+  border-radius: var(--mantine-radius-md);
+}
+
+.agent-modal-source-card {
+  padding: 6px 14px;
+  background-color: light-dark(var(--mantine-color-zinc-1), var(--mantine-color-zinc-9));
+  border: 1px solid light-dark(var(--mantine-color-zinc-4), var(--mantine-color-zinc-8));
+  border-left: 4px solid var(--source-color);
+  border-radius: var(--mantine-radius-sm);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.agent-modal-source-card:hover {
+  background-color: light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+  transform: translateX(2px);
+}
+
+.agent-modal-button {
+  height: 48px;
+  color: light-dark(var(--mantine-color-zinc-9), var(--mantine-color-zinc-1));
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease !important;
+}
+
+
+.agent-modal-button:not([data-disabled]):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -5px color-mix(in srgb, var(--agent-modal-brand-color, var(--mantine-color-red-filled)) 40%, transparent);
+}

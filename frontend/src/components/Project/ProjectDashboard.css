@@ -1,0 +1,117 @@
+/* =============================================
+   Chat Content — Recent Chats & Automations
+   ============================================= */
+
+/* ---- Scroll Container ---- */
+.chat-scroll-container {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: var(--mantine-spacing-sm);
+}
+
+.chat-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb {
+  background-color: var(--mantine-color-default-border);
+  border-radius: 3px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mantine-color-dimmed);
+}
+
+/* ---- Content Area ---- */
+.chat-content-area {
+  /* max-width: 680px; */
+  width: 100%;
+  margin: 0 auto;
+  height: 100%;
+  padding: var(--mantine-spacing-lg) var(--mantine-spacing-md);
+}
+
+/* ---- Content Section Card ---- */
+.content-section-card {
+  background-color: var(--mantine-color-default);
+  transition: box-shadow 200ms ease;
+}
+
+.content-section-card:hover {
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+/* ---- Recent Chats Section ---- */
+/* Styles moved to RecentChats.css and ChatItem.css */
+
+/* ---- Automation Item ---- */
+.automation-item {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 180ms ease;
+  position: relative;
+}
+
+.automation-item:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.automation-item .automation-item-actions {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.automation-item:hover .automation-item-actions {
+  opacity: 1;
+}
+
+/* Keep switch always visible */
+.automation-item .mantine-Switch-root {
+  opacity: 1 !important;
+}
+
+/* ---- Automation Icon ---- */
+.automation-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: var(--mantine-radius-sm);
+  background-color: var(--mantine-color-default-hover);
+  color: var(--mantine-color-dimmed);
+  transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+  margin-top: 2px;
+}
+
+.automation-icon-wrapper.automation-icon-active {
+  background-color: var(--mantine-color-green-light);
+  color: var(--mantine-color-green-light-color);
+  box-shadow: 0 0 0 1px var(--mantine-color-green-outline);
+}
+
+/* ---- Automations Section ---- */
+.automations-section {
+  animation: fadeSlideIn 350ms ease 80ms both;
+}
+
+/* ---- Animations ---- */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

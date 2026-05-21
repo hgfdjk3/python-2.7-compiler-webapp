@@ -1,0 +1,94 @@
+.agent-card {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  height: 100%;
+  --agent-brand-color: var(--mantine-color-blue-filled);
+  /* Default fallback */
+  background: linear-gradient(180deg, var(--mantine-color-zinc-9) 0%, var(--mantine-color-black) 100%);
+  border-color: var(--mantine-color-zinc-8);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Base Gradient Overlay for depth - ALWAYS VISIBLE */
+.agent-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,
+      color-mix(in srgb, var(--agent-brand-color) 12%, transparent) 0%,
+      transparent 60%);
+  opacity: 1;
+  /* Always visible now */
+  transition: opacity 0.4s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Hover Glow Overlay - Always slightly visible, more intense on hover */
+.agent-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right,
+      color-mix(in srgb, var(--agent-brand-color) 8%, transparent) 0%,
+      transparent 70%);
+  opacity: 0.6;
+  /* Slightly visible base */
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.agent-card:hover {
+  /* transform: translateY(-4px) scale(1.01); */
+  box-shadow: 0 16px 32px -8px color-mix(in srgb, var(--agent-brand-color) 25%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--agent-brand-color) 50%, transparent);
+  border-color: transparent;
+}
+
+.agent-card:hover::after {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.agent-card:active {
+  transform: translateY(-1px) scale(0.99);
+  box-shadow: 0 8px 16px -8px color-mix(in srgb, var(--agent-brand-color) 35%, transparent);
+}
+
+.agent-card>* {
+  position: relative;
+  z-index: 1;
+}
+
+.agent-icon-wrapper {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background-color: var(--mantine-color-zinc-9) !important;
+  color: var(--mantine-color-zinc-4) !important;
+  border: 1px solid var(--mantine-color-zinc-8);
+}
+
+.agent-card:hover .agent-icon-wrapper {
+  color: var(--agent-brand-color) !important;
+  background-color: color-mix(in srgb, var(--agent-brand-color) 15%, transparent) !important;
+  border-color: color-mix(in srgb, var(--agent-brand-color) 30%, transparent);
+  /* Replaced rotate with a subtle lift and glow */
+  transform: scale(1.1) translateY(-2px);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--agent-brand-color) 50%, transparent));
+}
+
+.agent-card:hover .agent-desc {
+  color: var(--mantine-color-zinc-3) !important;
+}
+
+
+.status-indicator-glass {
+  border: var(--mantine-color-default-border) solid 1px;
+}

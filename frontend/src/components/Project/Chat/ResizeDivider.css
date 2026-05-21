@@ -1,0 +1,64 @@
+.resize-divider {
+  height: 8px;
+  width: 100%;
+  cursor: row-resize;
+  position: relative;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  margin-top: -4px;
+  margin-bottom: -4px;
+  transition: background 0.3s ease;
+}
+
+.resize-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--mantine-color-default-border);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.resize-divider:hover::after,
+.resize-divider.is-resizing::after {
+  opacity: 1;
+  background: var(--mantine-color-default-border);
+  height: 2px;
+}
+
+.divider-handle {
+  width: 48px;
+  height: 6px;
+  border-radius: 100px;
+  background: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
+  border: 1px solid var(--mantine-color-default-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  z-index: 51;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.resize-divider:hover .divider-handle,
+.resize-divider.is-resizing .divider-handle {
+  width: 64px;
+  background: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-2));
+  border-color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-2));
+  box-shadow: 0 4px 12px rgba(34, 139, 230, 0.3);
+}
+
+
+.resize-divider:hover .handle-dot,
+.resize-divider.is-resizing .handle-dot {
+  background: white;
+  opacity: 1;
+}

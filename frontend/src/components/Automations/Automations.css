@@ -1,0 +1,49 @@
+/* Automations.css */
+
+.automations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.automation-row {
+  position: relative;
+  border-radius: var(--mantine-radius-md);
+  padding: 12px 16px;
+  background: light-dark(var(--mantine-color-body), var(--mantine-color-dark-8));
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-color: var(--mantine-color-default-border);
+}
+
+.automation-row:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.automation-row.is-active {
+  /* background: var(--mantine-color-body); */
+  border-color: var(--mantine-color-default-border);
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+
+
+.action-btn {
+  opacity: 1;
+  transform: none;
+  transition: all 0.2s ease;
+}
+
+.automation-switch {
+  margin-left: 4px;
+}
+
+.automation-empty-state {
+  border-radius: var(--mantine-radius-md);
+  border: 1px dashed var(--mantine-color-default-border);
+  background: var(--mantine-color-default-hover);
+}

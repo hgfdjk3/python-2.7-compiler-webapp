@@ -1,0 +1,8 @@
+.automation-board-container {
+  width: 100%;
+  height: 100%;
+}
+
+.automation-board-background {
+  background-color: light-dark(var(--mantine-color-body), var(--mantine-color-zinc-8));
+}

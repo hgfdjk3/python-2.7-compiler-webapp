@@ -1,0 +1,39 @@
+.new-project-view {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--mantine-color-body);
+}
+
+.new-project-title {
+  font-family: 'Geist', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.new-project-description-text {
+  max-width: 480px;
+}
+
+.form-label {
+  font-family: 'Geist', sans-serif;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--mantine-color-text);
+}
+
+.form-input {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: var(--mantine-primary-color-filled) !important;
+}
+
+.create-button {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.create-button:not(:disabled):active {
+  transform: scale(0.98);
+}

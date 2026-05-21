@@ -1,0 +1,50 @@
+.dev-sub-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 40px 24px;
+}
+
+.dev-sub-content {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Generic row list pattern */
+.row-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.guide-row:first-child {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.guide-row:hover {
+  opacity: 0.75;
+}
+
+.endpoint-row {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.endpoint-row:first-child {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.endpoint-row:hover {
+  opacity: 0.75;
+}

@@ -1,0 +1,58 @@
+.markdown-response-container {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0 auto;
+  line-height: var(--mantine-line-height-md);
+  color: var(--mantine-color-text);
+}
+
+.special-note {
+  margin: var(--mantine-spacing-md) 0;
+  padding: var(--mantine-spacing-md);
+  border-left: 4px solid var(--mantine-color-purple-6);
+  background-color: light-dark(var(--mantine-color-purple-0), var(--mantine-color-dark-8));
+  border-top-right-radius: var(--mantine-radius-md);
+  border-bottom-right-radius: var(--mantine-radius-md);
+}
+
+.special-note-title {
+  font-weight: 600;
+  color: var(--mantine-color-purple-8);
+}
+
+/* Ensure markdown content looks good with Mantine variables */
+.markdown-response-container h1,
+.markdown-response-container h2,
+.markdown-response-container h3 {
+  margin-top: var(--mantine-spacing-xl);
+  margin-bottom: var(--mantine-spacing-md);
+  color: var(--mantine-color-bright);
+}
+
+.markdown-response-container p {
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.markdown-response-container code {
+  background-color: var(--mantine-color-dark-light);
+  color: var(--mantine-color-violet-light-color);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--mantine-radius-xs);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.markdown-response-container pre {
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
+  padding: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-md);
+  overflow-x: auto;
+  margin: var(--mantine-spacing-md) 0;
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.markdown-response-container pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+}
