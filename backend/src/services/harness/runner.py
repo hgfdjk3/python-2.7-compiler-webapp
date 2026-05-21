@@ -54,12 +54,14 @@ class AgentRunner:
             logger.warning("OPENAI_API_KEY environment variable is not set. Real model calls will fail.")
             api_key = "mock-key-for-testing"
 
-        # Instantiate OpenAI ChatModel
+        # Instantiate OpenAI ChatModel with streaming enabled
         self.model = ChatOpenAI(
             model=self.model_name,
             temperature=self.temperature,
-            api_key=api_key
+            api_key=api_key,
+            streaming=True
         )
+
         
         # Connect to MCP servers and fetch tools
         self.tools = await self.mcp_manager.connect_all()
@@ -132,7 +134,7 @@ class AgentRunner:
         system_instruction: Optional[str] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        Streams step-by-step nodes updates from the execution graph.
+        Streams step-by-step token and node updates from the execution graph.
         """
         if not self.graph:
             raise RuntimeError("AgentRunner is not started. Call 'start()' or use as a context manager.")
@@ -145,5 +147,14 @@ class AgentRunner:
             
         config = self._prepare_config(thread_id)
         
-        async for event in self.graph.astream(inputs, config=config, stream_mode="updates"):
-            yield event
+        async for event in self.graph.astream_events(inputs, config=config, version="v2"):
+            event_type = event.get("event")
+            if event_type == "on_chat_model_stream":
+                chunk = event["data"]["chunk"]
+                if chunk.content:
+                    yield {
+                        "chatbot": {
+                            "messages": [chunk]
+                        }
+                    }
+
