@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Group, Stack, Text, Textarea, ThemeIcon, ActionIcon } from '@mantine/core';
 import { IconHelpCircle, IconSend, IconCheck } from '@tabler/icons-react';
+import { ClarificationQuestionData } from '../PromptInput/PromptClarification/PromptClarification';
 import './ClarificationBlock.css';
 
 export interface ClarificationQuestion {
@@ -17,6 +18,7 @@ export interface ClarificationData {
 export interface ClarificationBlockProps {
   content: string;
   onSubmitAnswer?: (answer: string) => void;
+  onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
 }
 
 /**
@@ -78,10 +80,29 @@ const repairAndParseJson = (jsonStr: string): ClarificationData => {
   }
 };
 
-export const ClarificationBlock: React.FC<ClarificationBlockProps> = ({ content, onSubmitAnswer }) => {
+export const ClarificationBlock: React.FC<ClarificationBlockProps> = ({ content, onSubmitAnswer, onTriggerClarification }) => {
   const data = repairAndParseJson(content);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const hasTriggered = useRef(false);
+
+  // When questions with options are parsed, trigger the floating PromptClarification
+  useEffect(() => {
+    if (hasTriggered.current || !onTriggerClarification) return;
+    const mcQuestions = data.questions.filter(
+      (q) => q.type === 'multiple_choice' && q.options && q.options.length > 0
+    );
+    if (mcQuestions.length > 0) {
+      hasTriggered.current = true;
+      const converted: ClarificationQuestionData[] = mcQuestions.map((q) => ({
+        question: q.question,
+        options: q.options || [],
+        allowCustom: true,
+        customPlaceholder: 'Something else',
+      }));
+      onTriggerClarification(converted);
+    }
+  }, [data.questions, onTriggerClarification]);
 
   const handleSelectOption = (index: number, option: string) => {
     if (submitted) return;

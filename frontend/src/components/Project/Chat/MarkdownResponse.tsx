@@ -4,10 +4,12 @@ import { Streamdown } from 'streamdown';
 import 'streamdown/styles.css';
 import './MarkdownResponse.css';
 import { ClarificationBlock } from './ClarificationBlock/ClarificationBlock';
+import { ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 
 export interface MarkdownResponseProps {
   content: string;
   onSubmitAnswer?: (answer: string) => void;
+  onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
 }
 
 /**
@@ -26,7 +28,7 @@ const getTextFromChildren = (children: React.ReactNode): string => {
   return '';
 };
 
-export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onSubmitAnswer }) => {
+export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onSubmitAnswer, onTriggerClarification }) => {
   const components = React.useMemo(() => ({
     'my-component': ({ children }: { children?: React.ReactNode }) => (
       <div className="special-note">
@@ -44,10 +46,16 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
     },
     clarification: ({ children }: { children?: React.ReactNode }) => {
       const rawContent = getTextFromChildren(children);
-      return <ClarificationBlock content={rawContent} onSubmitAnswer={onSubmitAnswer} />;
+      return (
+        <ClarificationBlock
+          content={rawContent}
+          onSubmitAnswer={onSubmitAnswer}
+          onTriggerClarification={onTriggerClarification}
+        />
+      );
     },
     table: Table.withProps({ variant: 'striped', withRowBorders: true, striped: 'even', })
-  }), [onSubmitAnswer]);
+  }), [onSubmitAnswer, onTriggerClarification]);
 
   return (
     <Box className="markdown-response-container" w={{ base: '100%', md: 800, lg: 1100 }}>

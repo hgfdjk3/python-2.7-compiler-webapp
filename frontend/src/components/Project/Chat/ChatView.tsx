@@ -13,6 +13,7 @@ import { ManageSourcesModal } from './PromptInput/ManageSourcesModal/ManageSourc
 import '../ProjectDashboard.css';
 import { AutomationBuilder } from '@/components/Automations/AutomationBuilder/AutomationBuilder';
 import { ResizeDivider } from './ResizeDivider';
+import { PromptClarification, ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 
 const MOCK_CHATS: ChatItemData[] = [
   { id: 'c1', title: 'Optimizing vector embeddings', preview: 'We discussed chunking strategies and how to improve retrieval accuracy with hybrid search...', timestamp: '2h ago', isSaved: true },
@@ -55,6 +56,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isManageSourcesModalOpen, setIsManageSourcesModalOpen] = useState(false);
 
+  // Clarification questions state — driven externally by MarkdownResponse
+  const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestionData[]>([]);
+  const [showClarification, setShowClarification] = useState(false);
+
   const { mutate, streamedContent, isPending, data } = useChatStream();
 
   const handleSendMessage = useCallback((value: string) => {
@@ -79,6 +84,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
     });
   }, [mutate]);
+
+  /** Called from MarkdownResponse / ClarificationBlock to show clarification above the prompt */
+  const handleTriggerClarification = useCallback((questions: ClarificationQuestionData[]) => {
+    setClarificationQuestions(questions);
+    setShowClarification(true);
+  }, []);
+
+  const handleClarificationSubmit = useCallback((formattedAnswer: string) => {
+    setShowClarification(false);
+    setClarificationQuestions([]);
+    handleSendMessage(formattedAnswer);
+  }, [handleSendMessage]);
+
+  const handleClarificationClose = useCallback(() => {
+    setShowClarification(false);
+    setClarificationQuestions([]);
+  }, []);
 
   const [isAutomationMode, setIsAutomationMode] = useState(false);
 
@@ -162,6 +184,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 streamedContent={streamedContent} 
                 isStreaming={isPending} 
                 onSubmitAnswer={handleSendMessage}
+                onTriggerClarification={handleTriggerClarification}
               />
             </motion.div>
           ) : (
@@ -219,6 +242,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
             padding: '0 20px',
           }}
         >
+          <AnimatePresence>
+            {showClarification && clarificationQuestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 16, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: 16, height: 0 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <PromptClarification
+                  questions={clarificationQuestions}
+                  onSubmit={handleClarificationSubmit}
+                  onClose={handleClarificationClose}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
           <PromptInput
             initialValue=""
             onSubmit={(value, modeId) => {

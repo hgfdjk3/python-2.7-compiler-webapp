@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Stack } from '@mantine/core';
 import { MarkdownResponse } from '../MarkdownResponse';
 import { UserMessage } from '../UserMessage/UserMessage';
+import { ClarificationQuestionData } from '../PromptInput/PromptClarification/PromptClarification';
 
 export interface ChatMessage {
   id: string;
@@ -15,6 +16,7 @@ export interface ChatConversationProps {
   streamedContent?: string;
   isStreaming?: boolean;
   onSubmitAnswer?: (answer: string) => void;
+  onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
 }
 
 export const ChatConversation: React.FC<ChatConversationProps> = ({ 
@@ -22,6 +24,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
   streamedContent, 
   isStreaming,
   onSubmitAnswer,
+  onTriggerClarification,
 }) => {
   return (
     <Box style={{ height: '100%' }}>
@@ -31,14 +34,22 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
             {msg.role === 'user' ? (
               <UserMessage content={msg.content} timestamp={msg.timestamp} />
             ) : (
-              <MarkdownResponse content={msg.content} onSubmitAnswer={onSubmitAnswer} />
+              <MarkdownResponse
+                content={msg.content}
+                onSubmitAnswer={onSubmitAnswer}
+                onTriggerClarification={onTriggerClarification}
+              />
             )}
           </Box>
         ))}
 
         {isStreaming && (
           <Box>
-            <MarkdownResponse content={streamedContent || ''} onSubmitAnswer={onSubmitAnswer} />
+            <MarkdownResponse
+              content={streamedContent || ''}
+              onSubmitAnswer={onSubmitAnswer}
+              onTriggerClarification={onTriggerClarification}
+            />
           </Box>
         )}
       </Stack>
