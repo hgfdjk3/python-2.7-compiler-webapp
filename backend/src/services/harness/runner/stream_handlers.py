@@ -10,8 +10,8 @@ Each handler follows the same contract:
 """
 
 from typing import Any, Dict, Optional
-from langchain_core.messages import AIMessage
-
+import json
+from langchain_core.messages import AIMessage, ToolMessage
 
 def wrap_message(msg) -> Dict[str, Any]:
     """Wraps a LangChain message in the SSE‑friendly envelope the frontend expects."""
@@ -73,4 +73,60 @@ def handle_clarifier_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         if messages and len(messages) > 0:
             return wrap_message(messages[0])
     return None
+
+
+def handle_tool_start(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Extracts the tool name and input when a tool starts execution,
+    and returns a synthetic AIMessage containing a <tool_call> tag.
+    """
+    import json
+    name = event.get("name")
+    tool_input = event.get("data", {}).get("input")
+    
+    payload = {
+        "name": name,
+        "input": tool_input
+    }
+    
+    try:
+        payload_str = json.dumps(payload)
+    except Exception:
+        payload_str = json.dumps({"name": name, "input": str(tool_input)})
+        
+    return wrap_message(AIMessage(content=f'<toolcall name="{name}"> {payload_str} '))
+
+
+def handle_tool_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Extracts the tool name and output when a tool finishes execution,
+    and returns a synthetic AIMessage containing a <tool_output> tag.
+    """
+
+    
+    name = event.get("name")
+    tool_output = event.get("data", {}).get("output")
+    
+    if isinstance(tool_output, ToolMessage):
+        output_content = tool_output.content
+    elif isinstance(tool_output, (dict, list)):
+        try:
+            output_content = json.dumps(tool_output)
+        except Exception:
+            output_content = str(tool_output)
+    else:
+        output_content = str(tool_output)
+        
+    payload = {
+        "name": name,
+        "output": output_content
+    }
+    
+    try:
+        payload_str = json.dumps(payload)
+    except Exception:
+        payload_str = json.dumps({"name": name, "output": str(output_content)})
+        
+    return wrap_message(AIMessage(content=f" {payload_str} </toolcall>"))
+
 

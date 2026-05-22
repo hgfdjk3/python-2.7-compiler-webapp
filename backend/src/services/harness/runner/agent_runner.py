@@ -12,6 +12,8 @@ from src.services.harness.runner.stream_handlers import (
     handle_model_end,
     handle_orchestrator_end,
     handle_clarifier_end,
+    handle_tool_start,
+    handle_tool_end,
 )
 
 
@@ -205,6 +207,18 @@ class AgentRunner:
             # ── Non-streamed model completion (fallback) ─────────
             elif event_type == "on_chat_model_end" and event_node not in ("orchestrator", "clarifier") and not tokens_streamed:
                 result = handle_model_end(event)
+                if result:
+                    yield result
+
+            # ── Tool execution start ─────────────────────────────
+            elif event_type == "on_tool_start":
+                result = handle_tool_start(event)
+                if result:
+                    yield result
+
+            # ── Tool execution end ───────────────────────────────
+            elif event_type == "on_tool_end":
+                result = handle_tool_end(event)
                 if result:
                     yield result
 

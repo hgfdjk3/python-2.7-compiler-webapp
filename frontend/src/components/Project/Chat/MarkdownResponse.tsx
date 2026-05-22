@@ -5,6 +5,7 @@ import 'streamdown/styles.css';
 import './MarkdownResponse.css';
 import { ClarificationBlock } from './ClarificationBlock/ClarificationBlock';
 import { ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
+import { ToolCallBlock, ToolOutputBlock } from './ToolBlock/ToolBlock';
 
 export interface MarkdownResponseProps {
   content: string;
@@ -54,6 +55,7 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
         />
       );
     },
+    toolcall: ToolCallBlock,
     table: Table.withProps({ variant: 'striped', withRowBorders: true, striped: 'even', })
   }), [onSubmitAnswer, onTriggerClarification]);
 
@@ -67,11 +69,13 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
         isAnimating={false}
         caret="block"
         components={components}
-        allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [] }}
+        allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [], 'toolcall': ['name'] }}
+        literalTagContent={["toolcall"]}
       >
         {content}
       </Streamdown>
     </Box>
   );
 };
+
 
