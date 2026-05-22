@@ -18,6 +18,7 @@ from src.services.harness.runner import AgentRunner
 from src.config import OPENAI_API_KEY
 from src.api.routes import router as api_router
 from src.api.routes.connectors import router as connectors_router
+from src.api.routes.connectors import CONNECTORS_DB
 
 # Determine model configuration
 api_key = OPENAI_API_KEY or ""
@@ -29,7 +30,7 @@ if api_key.startswith("nvapi-"):
 async def lifespan(app: FastAPI):
     # Startup: Start the agent runner (connect to MCP servers, compile graph)
     agent_runner = AgentRunner(
-        mcp_configs={},  # Set up with empty MCP configs by default
+        mcp_configs=CONNECTORS_DB,  # Set up with loaded connectors
         model_name=default_model,
         temperature=0.7
     )

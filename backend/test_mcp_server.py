@@ -34,36 +34,29 @@ def get_multi_city_weather(cities: list[str]) -> str:
     
     return "\n".join(weather_results)
 
-@mcp.resource()
-class FileBrowser:
-    """A simple file browser resource for the MCP server."""
+
+@mcp.tool()
+def list_directory(path: str = ".") -> list[str]:  
+    """List the contents of a directory in the files ystem."""
+    import os
     
-    def __init__(self, root: str = "."):
-        """Initialize the file browser."""
-        self.root = root
+    full_path = os.path.join(path)
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Directory not found: {path}")
     
-    @mcp.tool()
-    def list_directory(self, path: str = ".") -> list[str]:  
-        """List the contents of a directory."""
-        import os
-        
-        full_path = os.path.join(self.root, path)
-        if not os.path.exists(full_path):
-            raise FileNotFoundError(f"Directory not found: {path}")
-        
-        return os.listdir(full_path)
+    return os.listdir(full_path)
+
+@mcp.tool()
+def read_file(path: str,Field) -> str:
+    """Read the contents of a file."""
+    import os
     
-    @mcp.tool()
-    def read_file(self, path: str) -> str:
-        """Read the contents of a file."""
-        import os
-        
-        full_path = os.path.join(self.root, path)
-        if not os.path.exists(full_path):
-            raise FileNotFoundError(f"File not found: {path}")
-        
-        with open(full_path, "r") as f:
-            return f.read()
+    full_path = os.path.join(path)
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"File not found: {path}")
+    
+    with open(full_path, "r") as f:
+        return f.read()
 
 if __name__ == "__main__":
     # Default port is 8012. If a port number is passed as an argument, use it.
