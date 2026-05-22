@@ -4,15 +4,11 @@ from mcp.server.fastmcp import FastMCP
 from starlette.routing import Route
 
 # Initialize the FastMCP server
-mcp = FastMCP("Test-MCP-Server")
+mcp = FastMCP("Weather app")
+
 
 @mcp.tool()
-def add(a: float, b: float) -> float:
-    """Add two numbers together."""
-    return a + b
-
-@mcp.tool()
-def get_weather(city: str) -> str:
+def get_weather_in_city(city: str) -> str:
     """Get the current weather for a given city (Mock data)."""
     city_lower = city.lower()
     if "london" in city_lower:
@@ -23,9 +19,51 @@ def get_weather(city: str) -> str:
         return f"Mild and 20°C in {city}"
 
 @mcp.tool()
-def echo(message: str) -> str:
-    """Echoes back the message provided."""
-    return f"Server Echo: {message}"
+def get_multi_city_weather(cities: list[str]) -> str:
+    """Get the current weather for multiple cities."""
+    
+    weather_results = []
+    for city in cities:
+        # This could call an external API or use the logic from get_weather
+        if "london" in city.lower():
+            weather_results.append(f"{city}: Rainy and 15°C")
+        elif "new york" in city.lower():
+            weather_results.append(f"{city}: Sunny and 22°C")
+        else:
+            weather_results.append(f"{city}: Mild and 20°C")
+    
+    return "\n".join(weather_results)
+
+@mcp.resource()
+class FileBrowser:
+    """A simple file browser resource for the MCP server."""
+    
+    def __init__(self, root: str = "."):
+        """Initialize the file browser."""
+        self.root = root
+    
+    @mcp.tool()
+    def list_directory(self, path: str = ".") -> list[str]:  
+        """List the contents of a directory."""
+        import os
+        
+        full_path = os.path.join(self.root, path)
+        if not os.path.exists(full_path):
+            raise FileNotFoundError(f"Directory not found: {path}")
+        
+        return os.listdir(full_path)
+    
+    @mcp.tool()
+    def read_file(self, path: str) -> str:
+        """Read the contents of a file."""
+        import os
+        
+        full_path = os.path.join(self.root, path)
+        if not os.path.exists(full_path):
+            raise FileNotFoundError(f"File not found: {path}")
+        
+        with open(full_path, "r") as f:
+            return f.read()
 
 if __name__ == "__main__":
     # Default port is 8012. If a port number is passed as an argument, use it.
