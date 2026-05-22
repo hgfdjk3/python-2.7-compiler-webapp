@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { AnimatePresence, motion } from 'motion/react';
 import './PromptClarification.css';
+import { ThemeIcon } from '@mantine/core';
 
 export interface ClarificationQuestionData {
   question: string;
@@ -185,7 +186,9 @@ export const PromptClarification: React.FC<PromptClarificationProps> = ({
                   {option}
                 </span>
                 <span className="prompt-clarification-option-arrow">
-                  <IconArrowRight size={16} stroke={1.5} />
+                  <ThemeIcon radius="sm">
+                    <IconArrowRight size={16} stroke={1.5} />
+                  </ThemeIcon>
                 </span>
               </button>
             ))}

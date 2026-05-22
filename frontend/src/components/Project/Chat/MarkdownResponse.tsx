@@ -58,7 +58,7 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
   }), [onSubmitAnswer, onTriggerClarification]);
 
   return (
-    <Box className="markdown-response-container" w={{ base: '100%', md: 800, lg: 1100 }}>
+    <Box className="markdown-response-container" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }}>
       <Streamdown
         animated={{
           animation: "blurIn",
