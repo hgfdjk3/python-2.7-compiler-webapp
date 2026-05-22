@@ -46,8 +46,18 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
         {"worker": "worker", "clarifier": "clarifier", END: END}
     )
     
-    # From worker, go back to orchestrator to evaluate
-    workflow.add_edge("worker", "orchestrator")
+    # From worker, go to tools if worker wants to execute tools, otherwise back to orchestrator
+    workflow.add_conditional_edges(
+        "worker",
+        tools_condition,
+        {
+            "tools": "tools",
+            END: "orchestrator"
+        }
+    )
+    
+    # From tools, go back to worker so worker can compile/use the tool execution results
+    workflow.add_edge("tools", "worker")
     
     # Clarifier always ends the run — user needs to respond
     workflow.add_edge("clarifier", END)

@@ -1,0 +1,15 @@
+.add-connector-modal {
+  border-radius: 12px;
+  border: 1px solid var(--mantine-color-dark-4);
+  background-color: var(--mantine-color-dark-7);
+}
+
+.add-connector-modal .mantine-Modal-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--mantine-color-dark-4);
+  padding: 16px 24px;
+}
+
+.add-connector-modal .mantine-Modal-body {
+  padding: 24px;
+}

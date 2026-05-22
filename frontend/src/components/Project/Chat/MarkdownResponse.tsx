@@ -23,7 +23,7 @@ const getTextFromChildren = (children: React.ReactNode): string => {
     return children.map(getTextFromChildren).join('');
   }
   if (React.isValidElement(children)) {
-    return getTextFromChildren(children.props.children);
+    return getTextFromChildren((children.props as any).children);
   }
   return '';
 };
@@ -42,7 +42,7 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
       </Anchor>
     ),
     metadata: ({ children }: { children?: React.ReactNode }) => {
-      return <Card withBorder> {JSON.parse(String(children)).reasoning}</Card>;
+      return <Card withBorder> {JSON.parse(String(children)).next}:{JSON.parse(String(children)).reasoning}</Card>;
     },
     clarification: ({ children }: { children?: React.ReactNode }) => {
       const rawContent = getTextFromChildren(children);

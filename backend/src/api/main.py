@@ -17,6 +17,7 @@ while src_dir in sys.path:
 from src.services.harness.runner import AgentRunner
 from src.config import OPENAI_API_KEY
 from src.api.routes import router as api_router
+from src.api.routes.connectors import router as connectors_router
 
 # Determine model configuration
 api_key = OPENAI_API_KEY or ""
@@ -58,4 +59,5 @@ app.add_middleware(
 
 # Include the modular API routes
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(connectors_router, prefix="/api/v1")
 

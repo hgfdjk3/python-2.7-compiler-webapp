@@ -70,10 +70,29 @@ class AgentRunner:
         logger.info("LangGraph workflow compiled successfully.")
 
     async def stop(self):
-        """Performs cleanup, shutting down all child MCP server subprocesses."""
+        """Performs cleanup, shutting down all active connections."""
         logger.info("Shutting down AgentRunner...")
         await self.mcp_manager.disconnect_all()
         logger.info("AgentRunner shutdown complete.")
+
+    async def reload_mcp_servers(self, new_configs: Dict[str, Dict[str, Any]]):
+        """
+        Hot-reloads MCP servers with new configurations and recompiles the graph.
+        """
+        logger.info("Reloading MCP servers...")
+        # Disconnect old
+        await self.mcp_manager.disconnect_all()
+        
+        # Update configs and reconnect
+        self.mcp_configs = new_configs
+        self.mcp_manager.server_configs = new_configs
+        self.tools = await self.mcp_manager.connect_all()
+        logger.info(f"Loaded {len(self.tools)} total tools from reloaded MCP servers.")
+        
+        # Recompile graph
+        self.graph = create_graph(tools=self.tools)
+        logger.info("LangGraph workflow recompiled successfully.")
+
 
     async def __aenter__(self):
         await self.start()
@@ -129,6 +148,11 @@ class AgentRunner:
             system_instruction: Optional system prompt override.
         """
         self._ensure_started()
+        
+        # Log accessible MCP tools for debugging
+        tool_names = [t.name for t in self.tools]
+        logger.info(f"[AgentRunner] Initiating run. Accessible MCP tools: {tool_names}")
+        
         inputs = self._build_inputs(message, system_instruction)
         config = self._prepare_config(thread_id)
         return await self.graph.ainvoke(inputs, config=config)
@@ -157,6 +181,11 @@ class AgentRunner:
         └─────────────────────────┴────────────────────────────────────┘
         """
         self._ensure_started()
+        
+        # Log accessible MCP tools for debugging
+        tool_names = [t.name for t in self.tools]
+        logger.info(f"[AgentRunner] Initiating stream_run. Accessible MCP tools: {tool_names}")
+        
         inputs = self._build_inputs(message, system_instruction)
         config = self._prepare_config(thread_id)
 

@@ -1,9 +1,12 @@
+import logging
 from typing import Any, Dict
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
 from src.services.harness.graph.state import AgentState
+
+logger = logging.getLogger("worker_node")
 
 async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     configurable = config.get("configurable", {})
@@ -14,6 +17,15 @@ async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, An
         model_name = configurable.get("model_name", "gpt-4o-mini")
         temperature = configurable.get("temperature", 0.7)
         llm = ChatOpenAI(model=model_name, temperature=temperature)
+
+    # Bind tools to the LLM if any are registered
+    tools = configurable.get("tools", [])
+    if tools:
+        tool_names = [t.name for t in tools]
+        logger.info(f"Worker node active. Binding tools: {tool_names}")
+        llm = llm.bind_tools(tools)
+    else:
+        logger.info("Worker node active. No tools bound.")
 
     # 2. Formulate prompt specifically for this task
     system_instruction = """You are a specialized worker node.
