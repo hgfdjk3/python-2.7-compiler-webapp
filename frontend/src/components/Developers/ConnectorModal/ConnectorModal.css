@@ -1,0 +1,54 @@
+.connector-modal {
+  background: var(--mantine-color-body);
+  border: 1px solid var(--mantine-color-default-border);
+  box-shadow: var(--mantine-shadow-xl);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+}
+
+.connector-modal-header {
+  background: transparent;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.connector-modal-title {
+  width: 100%;
+}
+
+.modal-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default-hover);
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.connector-modal-form {
+  padding: 24px;
+}
+
+.form-section {
+  background: transparent;
+  padding: 0;
+  position: relative;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mantine-color-text);
+  margin-bottom: 16px;
+}
+
+.premium-input {
+  /* Inherits from mantine, removing custom styling */
+}
+
+.modal-actions {
+  border-top: 1px solid var(--mantine-color-default-border);
+  padding-top: 24px;
+}

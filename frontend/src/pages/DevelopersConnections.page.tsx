@@ -1,58 +1,55 @@
 import React, { useState } from 'react';
-import { Box, Text, Group, Anchor, Button, Loader } from '@mantine/core';
-import { IconArrowRight, IconPlus } from '@tabler/icons-react';
+import { Box, Text, Group, Button, Loader } from '@mantine/core';
+import { IconPlus, IconPlugConnected } from '@tabler/icons-react';
 import { ProjectLayout } from '../components/Layout/ProjectLayout';
 import { DevSubHeader } from '../components/Developers/DevSubHeader/DevSubHeader';
-import { AgentRow } from '../components/Developers/AgentRow/AgentRow';
-import { AGENTS_DIRECTORY, AgentInfo } from '../utils/agentUtils';
-import { useConnectors, useAddConnector, ConnectorFormData } from '../api/connectors';
-import { AddConnectorModal } from '../components/Developers/AddConnectorModal/AddConnectorModal';
-import { IconServer } from '@tabler/icons-react';
+import { useConnectors, useAddConnector, useUpdateConnector, useDeleteConnector, ConnectorFormData } from '../api/connectors';
+import { ConnectorModal } from '../components/Developers/ConnectorModal/ConnectorModal';
+import { ConnectorRow } from '../components/Developers/ConnectorRow/ConnectorRow';
 import './DevelopersConnections.css';
-
-const ENABLED_AGENTS = new Set(['github']);
 
 export const DevelopersConnectionsPage: React.FC = () => {
   const [modalOpened, setModalOpened] = useState(false);
+  const [editingConnector, setEditingConnector] = useState<ConnectorFormData | null>(null);
 
   const { data: dynamicConnectors = [], isLoading } = useConnectors();
   const addConnectorMutation = useAddConnector();
+  const updateConnectorMutation = useUpdateConnector();
+  const deleteConnectorMutation = useDeleteConnector();
 
-  // Map dynamic connectors to AgentInfo
-  const dynamicAgents: AgentInfo[] = dynamicConnectors.map((c) => ({
-    id: c.id,
-    name: c.name,
-    description: c.description || `Dynamic MCP connection to ${c.url}`,
-    developer: 'Custom Connection',
-    category: 'Dynamic MCP',
-    brandColor: c.color || '#6366F1',
-    icon: <IconServer size={24} stroke={1.5} />,
-    sourcesAdded: ['Dynamic Tools'],
-    toolsEnabled: ['Remote Execution']
-  }));
+  const handleOpenAdd = () => {
+    setEditingConnector(null);
+    setModalOpened(true);
+  };
 
-  // Combine static enabled agents and dynamic agents
-  const staticActive = AGENTS_DIRECTORY.filter((a) => ENABLED_AGENTS.has(a.id));
-  const active = [...staticActive, ...dynamicAgents];
+  const handleOpenEdit = (connector: ConnectorFormData) => {
+    setEditingConnector(connector);
+    setModalOpened(true);
+  };
 
-  const staticInactive = AGENTS_DIRECTORY.filter((a) => !ENABLED_AGENTS.has(a.id));
-  const inactive = staticInactive;
+  const handleSubmit = async (data: ConnectorFormData) => {
+    if (editingConnector) {
+      await updateConnectorMutation.mutateAsync({ id: editingConnector.id, data });
+    } else {
+      await addConnectorMutation.mutateAsync(data);
+    }
+  };
 
-  const handleAddConnector = async (data: ConnectorFormData) => {
-    await addConnectorMutation.mutateAsync(data);
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to remove this connection?')) {
+      await deleteConnectorMutation.mutateAsync(id);
+    }
   };
 
   return (
     <ProjectLayout>
       <Box className="dev-sub-root">
         <Box className="dev-sub-content">
-          <Group justify="space-between" align="flex-start" mb="lg">
-            <DevSubHeader title="Agent Connections" backTo="/developers" />
+          <Group justify="space-between" align="flex-start" mb="xl">
+            <DevSubHeader title="Your Connections" backTo="/developers" />
             <Button
               leftSection={<IconPlus size={16} />}
-              color="indigo"
-              variant="light"
-              onClick={() => setModalOpened(true)}
+              onClick={handleOpenAdd}
             >
               Add Connection
             </Button>
@@ -60,64 +57,47 @@ export const DevelopersConnectionsPage: React.FC = () => {
 
           {isLoading ? (
             <Group justify="center" mt={40}>
-              <Loader color="indigo" type="dots" />
+              <Loader color="gray" type="dots" />
             </Group>
+          ) : dynamicConnectors.length === 0 ? (
+            <Box mt={60} style={{ textAlign: 'center' }}>
+              <IconPlugConnected size={48} color="var(--mantine-color-dimmed)" stroke={1.5} style={{ opacity: 0.5 }} />
+              <Text mt="md" size="lg" fw={600}>No custom connections</Text>
+              <Text size="sm" c="dimmed" mt={4} mb="xl">
+                You haven't added any custom Model Context Protocol connections yet.
+              </Text>
+              <Button leftSection={<IconPlus size={16} />} onClick={handleOpenAdd}>
+                Add Your First Connection
+              </Button>
+            </Box>
           ) : (
-            <>
-              {/* Active */}
-              {active.length > 0 && (
-                <Box mb={40}>
-                  <Group justify="space-between" mb="md">
-                    <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.6px' }}>
-                      Active · {active.length}
-                    </Text>
-                  </Group>
-                  {active.map((agent, i) => (
-                    <AgentRow key={agent.id} agent={agent} status="enabled" delay={i * 0.04} />
-                  ))}
-                </Box>
-              )}
+            <Box mb={40}>
+              <Group justify="space-between" mb="md">
+                <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.6px' }}>
+                  Added by you · {dynamicConnectors.length}
+                </Text>
+              </Group>
 
-              {/* Inactive */}
-              {inactive.length > 0 && (
-                <Box>
-                  <Group justify="space-between" mb="md">
-                    <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.6px', opacity: 0.6 }}>
-                      Inactive · {inactive.length}
-                    </Text>
-                    <Anchor
-                      size="xs"
-                      c="dimmed"
-                      href="/agents"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <Group gap={4}>
-                        Browse marketplace
-                        <IconArrowRight size={12} />
-                      </Group>
-                    </Anchor>
-                  </Group>
-                  <Box style={{ opacity: 0.5 }}>
-                    {inactive.map((agent, i) => (
-                      <AgentRow
-                        key={agent.id}
-                        agent={agent}
-                        status="disabled"
-                        delay={active.length * 0.04 + i * 0.03}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </>
+              <Box>
+                {dynamicConnectors.map((connector) => (
+                  <ConnectorRow
+                    key={connector.id}
+                    connector={connector}
+                    onEdit={handleOpenEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </Box>
+            </Box>
           )}
         </Box>
       </Box>
 
-      <AddConnectorModal
+      <ConnectorModal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        onAdd={handleAddConnector}
+        onSubmit={handleSubmit}
+        initialData={editingConnector}
       />
     </ProjectLayout>
   );

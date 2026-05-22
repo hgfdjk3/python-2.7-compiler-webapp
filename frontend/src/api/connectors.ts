@@ -6,6 +6,7 @@ export interface ConnectorFormData {
   name: string;
   url: string;
   color: string;
+  icon?: string;
   description: string;
   headers?: Record<string, string>;
 }
@@ -22,6 +23,11 @@ export const addConnector = async (data: ConnectorFormData): Promise<ConnectorFo
 
 export const deleteConnector = async (id: string): Promise<{ message: string }> => {
   const response = await apiClient.delete<{ message: string }>(`/connectors/${id}`);
+  return response.data;
+};
+
+export const updateConnector = async ({ id, data }: { id: string; data: ConnectorFormData }): Promise<ConnectorFormData> => {
+  const response = await apiClient.put<ConnectorFormData>(`/connectors/${id}`, data);
   return response.data;
 };
 
@@ -44,6 +50,21 @@ export const useAddConnector = () => {
       console.error('Failed to add connector:', err);
       const errMsg = err?.response?.data?.detail || err?.message || String(err);
       alert('Failed to add connector: ' + errMsg);
+    },
+  });
+};
+
+export const useUpdateConnector = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateConnector,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connectors'] });
+    },
+    onError: (err: any) => {
+      console.error('Failed to update connector:', err);
+      const errMsg = err?.response?.data?.detail || err?.message || String(err);
+      alert('Failed to update connector: ' + errMsg);
     },
   });
 };
