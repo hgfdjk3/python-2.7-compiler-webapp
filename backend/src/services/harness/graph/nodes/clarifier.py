@@ -55,10 +55,11 @@ Your job is to generate 2-4 specific, concise clarifying questions that would he
 understand exactly what the user needs before work can begin.
 
 Guidelines:
-- Start with a brief summary of what you understood from the request.
+- Start with a very short summary of what you understood from the request.
 - Use 'multiple_choice' questions when there are a small set of likely options (2-5 choices).
 - Keep questions focused and actionable — avoid generic questions like "Can you elaborate?".
 - Order questions from most important to least important.
+- Do Not  use other as one of the options!
 """
 
 
@@ -93,19 +94,6 @@ async def clarifier_node(state: AgentState, config: RunnableConfig) -> Dict[str,
 
     if not result:
         return {"messages": [AIMessage(content="Please provide the model name for the clarification")]}
-    #     # Fallback: ask a generic clarification
-    #     result = ClarificationResponse(
-    #         context="I wasn't able to fully analyze your request.",
-    #         questions=[
-    #             ClarificationQuestion(
-    #                 question="Could you provide more details about what you'd like me to do?",
-    #                 type="multiple_choice",
-    #                 options=["Yes, let me rephrase", "Start over", "Skip clarification"]
-    #             )
-    #         ]
-    #     )
-
-    # Serialize to JSON for the <clarification> tag
     clarification_json = json.dumps({
         "context": result.context,
         "questions": [q.model_dump() for q in result.questions]

@@ -39,19 +39,20 @@ QUALITY_TEST_CASES = [
         )
     ),
 
-    # # ── Clarifier Node Quality Tests ──────────────────────────────────────
-    # QualityTestCase(
-    #     name="clarifier_asks_about_ambiguous_deployment",
-    #     node="clarifier",
-    #     messages=[
-    #         HumanMessage(content="Deploy the server script for me.")
-    #     ],
-    #     eval_criteria=(
-    #         "The clarifier output must contain a <clarification> tag enclosing a JSON structure. "
-    #         "The JSON must contain specific, helpful clarifying questions regarding the deployment "
-    #         "(e.g., asking what script, which hosting provider/server, or deployment method)."
-    #     )
-    # ),
+    QualityTestCase(
+        name="clarifier_options_shouldnt_contain_other",
+        node="clarifier",
+        messages=[
+            HumanMessage(content="""Which Ted are you referring to? A personal acquaintance or colleague
+If you are looking for a public figure, which area are they associated with? Sports
+Do you need a brief overview or more detailed information (e.g., biography, achievements, role)? Detailed biography
+"""),
+        ],
+        eval_criteria=(
+            "The clarifier output must contain a <clarification> tag enclosing a JSON structure. "
+            "The JSON must not contain 'other' as a multiple choice option"
+        )
+    ),
 
     # # ── Chatbot Node Quality Tests ────────────────────────────────────────
     # QualityTestCase(
