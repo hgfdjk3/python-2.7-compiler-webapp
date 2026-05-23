@@ -73,7 +73,7 @@ class MCPClientManager:
                 
                 # Prefix and sanitize tool names to prevent collisions
                 for tool in server_tools:
-                    tool.name = re.sub(r"[^a-zA-Z0-9_]", "_", f"{name}_{tool.name}")
+                    tool.name = re.sub(r"[^a-zA-Z0-9_]", "_", f"{tool.name}")
                     logger.info(f"Loaded tool: {tool.name}")
                 
                 all_tools.extend(server_tools)

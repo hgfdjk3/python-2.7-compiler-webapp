@@ -27,6 +27,10 @@ Analyze the conversation history:
 2. If the user's request requires new work that has NOT yet been done, or if the worker's previous attempt was incomplete or requires correction/refinement, route to 'worker'.
 3. If the request is simple (greetings, chit-chat), impossible, or does not require task execution, route to 'FINISH' and provide a helpful response.
 4. If the user's request is ambiguous, vague, or missing critical details needed to perform the task correctly, route to 'clarifier' to ask follow-up questions before proceeding.
+5. If the user's requests answers or things to be done check in the tools first, if the tool is available then route to 'worker' to perform the task, else route to 'clarifier' to ask for the missing information.
+
+Available Tools:
+{tools_info}
 
 tell the user what you think! and what you are doing. make it short.
 
@@ -42,10 +46,23 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[s
         temperature = configurable.get("temperature", 0.0)
         llm = ChatOpenAI(model=model_name, temperature=temperature)
 
+    # Extract tools from configuration and format descriptions for the supervisor
+    tools = configurable.get("tools", [])
+    if tools:
+        tools_list = []
+        for t in tools:
+            name = getattr(t, "name", str(t))
+            desc = getattr(t, "description", "")
+            tools_list.append(f"- {name}: {desc}")
+        tools_info = "\n".join(tools_list)
+    else:
+        tools_info = "No tools are currently available."
+
     # Use structured output for routing
     structured_llm = llm.with_structured_output(Route, method="function_calling")
     
-    messages = [SystemMessage(content=ORCHESTRATOR_SYSTEM_PROMPT)] + list(state.get("messages", []))
+    system_prompt = ORCHESTRATOR_SYSTEM_PROMPT.format(tools_info=tools_info)
+    messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
     
     try:
         route_result: Route | None = await structured_llm.ainvoke(messages)

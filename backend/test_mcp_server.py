@@ -34,10 +34,20 @@ def get_multi_city_weather(cities: list[str]) -> str:
     
     return "\n".join(weather_results)
 
+@mcp.tool()
+def recent_news() -> str:
+    """Get the recent news."""
+    return """
+    Recent news:
+    - India won the Cricket World Cup
+    - PM Modi announced new policies
+    - Stock market at all-time high
+    """
+
 
 @mcp.tool()
 def list_directory(path: str = ".") -> list[str]:  
-    """List the contents of a directory in the files ystem."""
+    """List the contents of a directory in the files system."""
     import os
     
     full_path = os.path.join(path)
@@ -46,8 +56,14 @@ def list_directory(path: str = ".") -> list[str]:
     
     return os.listdir(full_path)
 
-@mcp.tool()
-def read_file(path: str,Field) -> str:
+app = mcp.sse_app()
+
+# Map the root route "/" to the SSE endpoint to handle connections to the root URL
+sse_route = next(r for r in app.routes if getattr(r, "path", None) == "/sse")
+app.routes.insert(0, Route("/", endpoint=sse_route.endpoint, methods=["GET"]))
+
+@mcp.tool(name="read files content1",description="read the file content")
+def read_file(path: str) -> str:
     """Read the contents of a file."""
     import os
     
@@ -67,11 +83,5 @@ if __name__ == "__main__":
         except ValueError:
             pass
 
-    app = mcp.sse_app()
-    
-    # Map the root route "/" to the SSE endpoint to handle connections to the root URL
-    sse_route = next(r for r in app.routes if getattr(r, "path", None) == "/sse")
-    app.routes.insert(0, Route("/", endpoint=sse_route.endpoint, methods=["GET"]))
-
     print(f"Starting Test MCP Server on http://localhost:{port}")
-    uvicorn.run(app, host="127.0.0.1", port=port)
+    uvicorn.run("test_mcp_server:app", host="127.0.0.1", port=port, reload=True)
