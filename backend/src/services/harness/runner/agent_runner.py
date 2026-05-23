@@ -3,6 +3,7 @@ from typing import Any, Dict, AsyncGenerator, Optional
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import MemorySaver
 
 from src.config import OPENAI_API_KEY
 from src.services.harness.graph.builder import create_graph
@@ -35,6 +36,7 @@ class AgentRunner:
         self.model_name = model_name
         self.temperature = temperature
         self.model = model
+        self.checkpointer = MemorySaver()
 
     def _prepare_config(self, thread_id: str, model: Any, tools: list) -> RunnableConfig:
         """Creates standard LangGraph execution config with context injection."""
@@ -76,7 +78,7 @@ class AgentRunner:
                 api_key=OPENAI_API_KEY or "mock-key-for-testing",
                 streaming=True,
             )
-            graph = create_graph(tools=tools)
+            graph = create_graph(tools=tools, checkpointer=self.checkpointer)
             inputs = self._build_inputs(message, system_instruction)
             config = self._prepare_config(thread_id, model, tools)
             return await graph.ainvoke(inputs, config=config)
@@ -102,7 +104,7 @@ class AgentRunner:
                 api_key=OPENAI_API_KEY or "mock-key-for-testing",
                 streaming=True,
             )
-            graph = create_graph(tools=tools)
+            graph = create_graph(tools=tools, checkpointer=self.checkpointer)
             inputs = self._build_inputs(message, system_instruction)
             config = self._prepare_config(thread_id, model, tools)
 

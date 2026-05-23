@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { AnimatePresence, motion } from 'motion/react';
 import { ProjectHeader } from '../ProjectHeader';
@@ -60,7 +60,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestionData[]>([]);
   const [showClarification, setShowClarification] = useState(false);
 
-  const { mutate, streamedContent, isPending, data } = useChatStream();
+  const threadIdRef = useRef(`chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
+  const { mutate, streamedContent, isPending, data } = useChatStream(threadIdRef.current);
 
   const handleSendMessage = useCallback((value: string) => {
     if (isPending) {

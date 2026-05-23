@@ -25,9 +25,7 @@ Your goal is to manage the conversation flow and determine the next step.
 Analyze the conversation history:
 1. If the user's latest request has already been successfully addressed, answered, or completed by the worker in the message history, route to 'FINISH'. Do NOT route to 'worker' again if the work is already done.
 2. If the user's request requires new work that has NOT yet been done, or if the worker's previous attempt was incomplete or requires correction/refinement, route to 'worker'.
-3. If the request is simple (greetings, chit-chat), impossible, or does not require task execution, route to 'FINISH' and provide a helpful response.
-4. If the user's request is ambiguous, vague, or missing critical details needed to perform the task correctly, route to 'clarifier' to ask follow-up questions before proceeding.
-5. If the user's requests answers or things to be done check in the tools first, if the tool is available then route to 'worker' to perform the task, else route to 'clarifier' to ask for the missing information.
+3. If the user's requests answers or things to be done check in the tools first, if the tool is available then route to 'worker' to perform the task, else route to 'clarifier' to ask for the missing information.
 
 Available Tools:
 {tools_info}
