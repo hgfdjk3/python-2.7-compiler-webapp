@@ -1,4 +1,5 @@
 import React from 'react';
+import { useConnectors } from '../api/connectors';
 import {
   IconBrandGithub,
   IconBrandGitlab,
@@ -139,9 +140,25 @@ export const getAgentInfo = (id: string): AgentInfo | undefined => {
 };
 
 export const useAgentInfo = () => {
+  const { data: connectors = [] } = useConnectors();
+
+  const agents: AgentInfo[] = React.useMemo(() => {
+    return connectors.map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description || 'Custom Connector',
+      developer: 'Local',
+      category: 'Installed Connectors',
+      brandColor: c.color || '#228be6',
+      icon: <IconTool size={24} stroke={1.5} />,
+      sourcesAdded: [],
+      toolsEnabled: []
+    }));
+  }, [connectors]);
+
   return {
-    agents: AGENTS_DIRECTORY,
-    getAgent: getAgentInfo
+    agents: agents.length > 0 ? agents : [],
+    getAgent: (id: string) => agents.find(a => a.id === id) || getAgentInfo(id)
   };
 };
 

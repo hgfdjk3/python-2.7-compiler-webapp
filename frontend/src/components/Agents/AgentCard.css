@@ -81,7 +81,7 @@
   border-color: color-mix(in srgb, var(--agent-brand-color) 30%, transparent);
   /* Replaced rotate with a subtle lift and glow */
   transform: scale(1.1) translateY(-2px);
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--agent-brand-color) 50%, transparent));
+  box-shadow: drop-shadow(0 0 4px color-mix(in srgb, var(--agent-brand-color) 50%, transparent));
 }
 
 .agent-card:hover .agent-desc {

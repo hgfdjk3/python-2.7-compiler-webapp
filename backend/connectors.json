@@ -3,7 +3,7 @@
     "id": "weather-and-filesystem",
     "name": "weather and filesystem",
     "url": "http://127.0.0.1:8012/sse",
-    "color": "#3b82f6",
+    "color": "#3abd3a",
     "icon": "server",
     "description": "",
     "headers": null
