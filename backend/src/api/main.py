@@ -28,19 +28,13 @@ if api_key.startswith("nvapi-"):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Start the agent runner (connect to MCP servers, compile graph)
-    agent_runner = AgentRunner(
-        mcp_configs=CONNECTORS_DB,  # Set up with loaded connectors
+    # Setup AgentRunner (connections are dynamically managed per request)
+    app.state.agent_runner = AgentRunner(
+        mcp_configs=CONNECTORS_DB,
         model_name=default_model,
         temperature=0.7
     )
-    await agent_runner.start()
-    app.state.agent_runner = agent_runner
-    
     yield
-    
-    # Shutdown: Stop the agent runner (disconnect MCP servers)
-    await agent_runner.stop()
 
 app = FastAPI(
     title="Atom LangGraph Agent API",

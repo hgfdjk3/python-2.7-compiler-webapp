@@ -18,6 +18,7 @@ while src_dir in sys.path:
 
 from src.services.harness.runner import AgentRunner
 from src.config import OPENAI_API_KEY
+from src.api.routes.connectors import CONNECTORS_DB
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 # Configure logging
@@ -38,7 +39,7 @@ async def run_interactive(runner: AgentRunner, system_instruction: str = None):
     print("Type your message and press Enter.")
     print("Commands: 'exit' or 'quit' to end the session.")
     print(f"Model: {runner.model_name}")
-    print(f"Loaded Tools: {[t.name for t in runner.tools]}")
+    print(f"Configured MCP Servers: {list(runner.mcp_configs.keys())}")
     print("="*60 + "\n")
 
     thread_id = "default_cli_session"
@@ -135,18 +136,17 @@ async def main():
         print("Example contents of backend/.env:")
         print("OPENAI_API_KEY=your_openai_api_key_here\n")
     
-    # Instantiate the agent runner (uses empty mcp_configs by default)
+    # Instantiate the agent runner
     runner = AgentRunner(
-        mcp_configs={},
+        mcp_configs=CONNECTORS_DB,
         model_name=args.model,
         temperature=args.temperature
     )
     
-    async with runner:
-        if args.message:
-            await run_single(runner, args.message, args.system)
-        else:
-            await run_interactive(runner, args.system)
+    if args.message:
+        await run_single(runner, args.message, args.system)
+    else:
+        await run_interactive(runner, args.system)
 
 if __name__ == "__main__":
     if sys.platform == 'win32':

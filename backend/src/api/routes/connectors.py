@@ -63,10 +63,10 @@ async def add_connector(connector: ConnectorCreate, request: Request):
     CONNECTORS_DB[connector.id] = connector.model_dump()
     save_connectors(CONNECTORS_DB)
     
-    # Reload AgentRunner graph
+    # Update AgentRunner connectors configuration
     agent_runner = getattr(request.app.state, "agent_runner", None)
     if agent_runner:
-        await agent_runner.reload_mcp_servers(CONNECTORS_DB)
+        agent_runner.mcp_configs = CONNECTORS_DB
         
     return CONNECTORS_DB[connector.id]
 
@@ -85,10 +85,10 @@ async def update_connector(connector_id: str, connector: ConnectorCreate, reques
     CONNECTORS_DB[connector.id] = connector.model_dump()
     save_connectors(CONNECTORS_DB)
     
-    # Reload AgentRunner graph
+    # Update AgentRunner connectors configuration
     agent_runner = getattr(request.app.state, "agent_runner", None)
     if agent_runner:
-        await agent_runner.reload_mcp_servers(CONNECTORS_DB)
+        agent_runner.mcp_configs = CONNECTORS_DB
         
     return CONNECTORS_DB[connector.id]
 
@@ -100,9 +100,9 @@ async def delete_connector(connector_id: str, request: Request):
     del CONNECTORS_DB[connector_id]
     save_connectors(CONNECTORS_DB)
     
-    # Reload AgentRunner graph
+    # Update AgentRunner connectors configuration
     agent_runner = getattr(request.app.state, "agent_runner", None)
     if agent_runner:
-        await agent_runner.reload_mcp_servers(CONNECTORS_DB)
+        agent_runner.mcp_configs = CONNECTORS_DB
         
     return {"message": "Connector deleted"}
