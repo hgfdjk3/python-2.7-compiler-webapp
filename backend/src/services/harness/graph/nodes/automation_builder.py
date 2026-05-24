@@ -61,7 +61,7 @@ Available tools from connected services:
 
 Guidelines:
 - CRITICAL: Only set is_vague to True if the request is completely unrelated to building an automation (e.g. general greeting like 'hello', 'who are you', 'tell me a joke').
-- If the request asks to build, design, or create any kind of automation, set is_vague to False.
+- If the request asks to build, design, or create any kind of automation, with a general idea set is_vague to False.
 - You can be creative and fill missing parts with your own ideas, using the available tools list.
 - Design the workflow with 3-5 sequential stages.
 - Each stage should have a clear, action-oriented title.
