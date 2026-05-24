@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Edge } from '@xyflow/react';
 import { AppNode } from './types';
-import { Box, Paper } from '@mantine/core';
+import { Box, Paper, Group, ActionIcon, Button, Tooltip } from '@mantine/core';
+import { useStateHistory } from '@mantine/hooks';
+import { useCreateAutomation } from '../../../api/automations';
+import { AutomationSaveButton } from '../AutomationSaveButton';
+import { AutomationHistoryButtons } from '../AutomationHistoryButtons';
 import { AutomationActionButton } from '../AutomationActionButton';
 import { ScheduleConfiguratorModal } from '../ScheduleConfiguratorModal';
 import { ScheduleConfig } from '../ScheduleConfigurator';
@@ -94,6 +98,9 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
 }) => {
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
 
+  const [historyState, handlers, historyValue] = useStateHistory({ nodes: initialNodes, edges: initialEdges });
+  const createAutomation = useCreateAutomation();
+
   // Automation State
   const [isScheduled, setIsScheduled] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -121,23 +128,44 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
           right: '10px',
         }}
       >
-        <AutomationActionButton
-          isActive={isActive}
-          isScheduled={isScheduled}
-          isRunning={isRunning}
-          schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
-          onToggle={() => setIsActive(!isActive)}
-          onRun={() => {
-            setIsRunning(true);
-            setTimeout(() => setIsRunning(false), 2000);
-          }}
-          onScheduleClick={() => setScheduleModalOpened(true)}
-        />
+        <Group gap="sm">
+          <AutomationHistoryButtons
+            canUndo={historyValue.current > 0}
+            canRedo={historyValue.current < historyValue.history.length - 1}
+            onUndo={() => handlers.back()}
+            onRedo={() => handlers.forward()}
+          />
+          <AutomationSaveButton
+            isSaving={createAutomation.isPending}
+            onSave={() => {
+              createAutomation.mutate({
+                name: 'New Automation',
+                nodes: historyState.nodes,
+                edges: historyState.edges,
+                automation_type: isScheduled ? 'scheduled' : 'manual',
+                schedule_config: scheduleConfig,
+              });
+            }}
+          />
+          <AutomationActionButton
+            isActive={isActive}
+            isScheduled={isScheduled}
+            isRunning={isRunning}
+            schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
+            onToggle={() => setIsActive(!isActive)}
+            onRun={() => {
+              setIsRunning(true);
+              setTimeout(() => setIsRunning(false), 2000);
+            }}
+            onScheduleClick={() => setScheduleModalOpened(true)}
+          />
+        </Group>
       </Box>
 
       <AutomationBoard
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
+        initialNodes={historyState.nodes}
+        initialEdges={historyState.edges}
+        onStructureChange={(nodes, edges) => handlers.set({ nodes, edges })}
       />
 
       <ScheduleConfiguratorModal

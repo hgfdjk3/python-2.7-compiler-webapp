@@ -1,53 +1,19 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  ReactFlow,
-  Background,
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
-  NodeChange,
-  EdgeChange,
-  Connection,
-  Edge,
-  Node,
-  BackgroundVariant,
-  ReactFlowProvider,
-  useReactFlow,
-  useNodesState,
-  useEdgesState
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import { useCallback, useEffect, useRef } from 'react';
+import { useNodesState, useEdgesState, useReactFlow, addEdge, Connection, Node, Edge } from '@xyflow/react';
 import { getLayoutedElements } from './utils/layout';
-import { AutomationEdge } from './AutomationEdge';
-import { AutomationNode } from './AutomationNode/AutomationNode';
 import { AppNode } from './types';
-import './AutomationBoard.css';
 
-
-const nodeTypes = {
-  automation: AutomationNode,
-};
-
-const edgeTypes = {
-  automation: AutomationEdge,
-};
-
-const defaultEdgeOptions = {
-  type: 'automation',
-  animated: true,
-};
-
-export interface AutomationBoardProps {
+export interface UseAutomationBoardProps {
   initialNodes?: AppNode[];
   initialEdges?: Edge[];
   onStructureChange?: (nodes: AppNode[], edges: Edge[]) => void;
 }
 
-const AutomationBoardInternal: React.FC<AutomationBoardProps> = ({
+export function useAutomationBoard({
   initialNodes = [],
   initialEdges = [],
   onStructureChange,
-}) => {
+}: UseAutomationBoardProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(getLayoutedElements(initialNodes, initialEdges));
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const { fitView } = useReactFlow();
@@ -128,38 +94,14 @@ const AutomationBoardInternal: React.FC<AutomationBoardProps> = ({
     return () => observer.disconnect();
   }, [fitView]);
 
-  return (
-    <div ref={containerRef} className="automation-board-container">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        defaultEdgeOptions={defaultEdgeOptions}
-        fitView
-        nodesDraggable={false}
-        minZoom={0.2}
-        maxZoom={1.5}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background
-          variant={BackgroundVariant.Dots}
-          className="automation-board-background"
-          gap={16}
-          size={1}
-        />
-      </ReactFlow>
-    </div>
-  );
-};
-
-export const AutomationBoard: React.FC<AutomationBoardProps> = (props) => (
-  <ReactFlowProvider>
-    <AutomationBoardInternal {...props} />
-  </ReactFlowProvider>
-);
+  return {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onNodeClick,
+    onPaneClick,
+    containerRef,
+  };
+}

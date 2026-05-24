@@ -1,0 +1,91 @@
+{
+  "c08ea6ba-7c28-4b63-b2b7-29eae0ecb8c3": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 50,
+          "y": 150
+        },
+        "data": {
+          "title": "Schedule Trigger",
+          "description": "Run the workflow every morning at a set time (e.g., 8:00 AM) to start the daily summary process.",
+          "tools": [],
+          "isRewriting": false,
+          "toolsExpanded": false
+        },
+        "measured": {
+          "width": 380,
+          "height": 112
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 570,
+          "y": 150
+        },
+        "data": {
+          "title": "Collect Data",
+          "description": "Retrieve the current weather for a chosen city and fetch the latest headlines.",
+          "tools": [
+            "get_weather_in_city",
+            "recent_news"
+          ],
+          "isRewriting": false,
+          "toolsExpanded": false
+        },
+        "measured": {
+          "width": 380,
+          "height": 154
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 1090,
+          "y": 150
+        },
+        "data": {
+          "title": "Compose Summary",
+          "description": "Combine the weather information and news headlines into a concise text block ready for distribution.",
+          "tools": []
+        },
+        "measured": {
+          "width": 380,
+          "height": 112
+        },
+        "selected": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true,
+        "data": {
+          "popoverOpened": false
+        }
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true,
+        "data": {
+          "popoverOpened": false
+        }
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "c08ea6ba-7c28-4b63-b2b7-29eae0ecb8c3"
+  }
+}
