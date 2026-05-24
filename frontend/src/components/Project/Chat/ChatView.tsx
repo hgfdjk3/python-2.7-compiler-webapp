@@ -151,7 +151,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       <ProjectHeader title="Operation Grandma" />
 
       <AnimatePresence initial={false}>
-        {showMarkdownResponse && isAutomationMode && (
+        {showMarkdownResponse && isAutomationMode && automationBuilderData && (
           <>
             <motion.div
               key="automation-board-container"

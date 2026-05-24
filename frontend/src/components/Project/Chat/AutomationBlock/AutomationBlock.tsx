@@ -7,11 +7,13 @@ export interface AutomationBlockProps {
 }
 
 export const AutomationBlock: React.FC<AutomationBlockProps> = ({ content, onAutomationGenerated }) => {
+  const [jsonData, setJsonData] = React.useState<any>(null);
   React.useEffect(() => {
     if (!onAutomationGenerated || !content) return;
     try {
       const data = JSON.parse(content);
       if (data && data.nodes && data.edges) {
+        setJsonData(data);
         onAutomationGenerated(data);
       }
     } catch (e) {
@@ -46,6 +48,7 @@ export const AutomationBlock: React.FC<AutomationBlockProps> = ({ content, onAut
           <Text fw={500} size="sm">Automation Generated</Text>
           <Text size="xs" c="dimmed">The automation workflow has been loaded into the builder above.</Text>
         </Box>
+        {jsonData?.nodes.length} nodes and {jsonData?.edges.length} edges
       </Group>
     </Card>
   );

@@ -55,7 +55,7 @@ Available tools from connected services:
 {tools_info}
 
 Guidelines:
-- Design a workflow with 3-7 sequential stages.
+- Design a workflow with 3-5 sequential stages.
 - Each stage should have a clear, action-oriented title.
 - Write concise descriptions explaining what each stage does.
 - Select 1-4 appropriate tools from the available tools list for each stage.
