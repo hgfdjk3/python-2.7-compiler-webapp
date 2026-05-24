@@ -112,11 +112,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleAutomationGenerated = useCallback((data: any) => {
     setAutomationBuilderData(data);
     setIsAutomationMode(true);
-    // Expand the board if it's currently collapsed to minimum height
-    setBoardHeight((prev) => (prev <= 150 ? 400 : prev));
   }, []);
 
-  const [boardHeight, setBoardHeight] = useState(400);
+  const [boardHeight, setBoardHeight] = useState(150);
   const [isResizing, setIsResizing] = useState(false);
 
   const handleResize = useCallback((deltaY: number) => {
@@ -169,10 +167,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 userSelect: isResizing ? 'none' : 'auto'
               }}
             >
-              <AutomationBuilder 
-                height="100%" 
-                initialNodes={automationBuilderData?.nodes} 
-                initialEdges={automationBuilderData?.edges} 
+              <AutomationBuilder
+                height="100%"
+                initialNodes={automationBuilderData?.nodes}
+                initialEdges={automationBuilderData?.edges}
               />
             </motion.div>
             <ResizeDivider
@@ -278,8 +276,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           <PromptInput
             initialValue=""
             onSubmit={(value, modeId) => {
-              const msg = modeId === 'automation' ? `Create Automation: ${value}` : value;
-              handleSendMessage(msg, modeId === 'automation');
+              handleSendMessage(value, modeId === 'automation');
             }}
             attachedSources={sources.filter((source) => attachedSourceIds.includes(source.id))}
             onDetachSource={onDetachSource}
