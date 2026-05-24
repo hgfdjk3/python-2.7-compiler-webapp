@@ -63,7 +63,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const threadIdRef = useRef(`chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
   const { mutate, streamedContent, isPending, data } = useChatStream(threadIdRef.current);
 
-  const handleSendMessage = useCallback((value: string) => {
+  const handleSendMessage = useCallback((value: string, isAutomation: boolean = false) => {
     if (isPending) {
       return;
     }
@@ -77,7 +77,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       timestamp
     }]);
 
-    mutate(value, {
+    mutate({ prompt: value, isAutomation }, {
       onSuccess: (finalContent) => {
         setMessages((prev) => [...prev, {
           id: (Date.now() + 1).toString(),
@@ -107,8 +107,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, []);
 
   const [isAutomationMode, setIsAutomationMode] = useState(false);
+  const [automationBuilderData, setAutomationBuilderData] = useState<{ nodes: any[], edges: any[] } | null>(null);
 
-  const [boardHeight, setBoardHeight] = useState(150);
+  const handleAutomationGenerated = useCallback((data: any) => {
+    setAutomationBuilderData(data);
+    setIsAutomationMode(true);
+    // Expand the board if it's currently collapsed to minimum height
+    setBoardHeight((prev) => (prev <= 150 ? 400 : prev));
+  }, []);
+
+  const [boardHeight, setBoardHeight] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
 
   const handleResize = useCallback((deltaY: number) => {
@@ -161,7 +169,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 userSelect: isResizing ? 'none' : 'auto'
               }}
             >
-              <AutomationBuilder height="100%" />
+              <AutomationBuilder 
+                height="100%" 
+                initialNodes={automationBuilderData?.nodes} 
+                initialEdges={automationBuilderData?.edges} 
+              />
             </motion.div>
             <ResizeDivider
               onResize={handleResize}
@@ -189,6 +201,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 isStreaming={isPending}
                 onSubmitAnswer={handleSendMessage}
                 onTriggerClarification={handleTriggerClarification}
+                onAutomationGenerated={handleAutomationGenerated}
               />
             </motion.div>
           ) : (
@@ -266,7 +279,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             initialValue=""
             onSubmit={(value, modeId) => {
               const msg = modeId === 'automation' ? `Create Automation: ${value}` : value;
-              handleSendMessage(msg);
+              handleSendMessage(msg, modeId === 'automation');
             }}
             attachedSources={sources.filter((source) => attachedSourceIds.includes(source.id))}
             onDetachSource={onDetachSource}

@@ -15,6 +15,7 @@ from src.services.harness.runner.stream_handlers import (
     handle_clarifier_end,
     handle_tool_start,
     handle_tool_end,
+    handle_automation_builder_end,
 )
 
 logger = logging.getLogger("agent_runner")
@@ -49,7 +50,7 @@ class AgentRunner:
         }
 
     def _build_inputs(
-        self, message: str, system_instruction: Optional[str] = None
+        self, message: str, system_instruction: Optional[str] = None, automation: bool = False
     ) -> Dict[str, Any]:
         """Builds the initial graph input dict from a user message."""
         inputs: Dict[str, Any] = {
@@ -57,6 +58,8 @@ class AgentRunner:
         }
         if system_instruction:
             inputs["system_instruction"] = system_instruction
+        if automation:
+            inputs["automation"] = True
         return inputs
 
     async def run(
@@ -64,6 +67,7 @@ class AgentRunner:
         thread_id: str,
         message: str,
         system_instruction: Optional[str] = None,
+        automation: bool = False,
     ) -> Dict[str, Any]:
         """
         Executes the agent workflow and returns the final state.
@@ -79,7 +83,7 @@ class AgentRunner:
                 streaming=True,
             )
             graph = create_graph(tools=tools, checkpointer=self.checkpointer)
-            inputs = self._build_inputs(message, system_instruction)
+            inputs = self._build_inputs(message, system_instruction, automation=automation)
             config = self._prepare_config(thread_id, model, tools)
             return await graph.ainvoke(inputs, config=config)
         finally:
@@ -90,6 +94,7 @@ class AgentRunner:
         thread_id: str,
         message: str,
         system_instruction: Optional[str] = None,
+        automation: bool = False,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streams real-time events from the execution graph.
@@ -105,7 +110,7 @@ class AgentRunner:
                 streaming=True,
             )
             graph = create_graph(tools=tools, checkpointer=self.checkpointer)
-            inputs = self._build_inputs(message, system_instruction)
+            inputs = self._build_inputs(message, system_instruction, automation=automation)
             config = self._prepare_config(thread_id, model, tools)
 
             tokens_streamed = False
@@ -121,7 +126,7 @@ class AgentRunner:
                         yield result
 
                 # ── Non-streamed model completion (fallback) ─────────
-                elif event_type == "on_chat_model_end" and event_node not in ("orchestrator", "clarifier") and not tokens_streamed:
+                elif event_type == "on_chat_model_end" and event_node not in ("orchestrator", "clarifier", "automation_builder") and not tokens_streamed:
                     result = handle_model_end(event)
                     if result:
                         yield result
@@ -147,6 +152,12 @@ class AgentRunner:
                 # ── Clarifier output (yield clarifying questions) ────
                 elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "clarifier":
                     result = handle_clarifier_end(event)
+                    if result:
+                        yield result
+
+                # ── Automation builder output (yield generated workflow) ────
+                elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "automation_builder":
+                    result = handle_automation_builder_end(event)
                     if result:
                         yield result
         finally:

@@ -6,7 +6,7 @@ export const useChatStream = (threadId?: string) => {
   const [streamedContent, setStreamedContent] = useState('');
 
   const mutation = useMutation({
-    mutationFn: async (prompt: string) => {
+    mutationFn: async ({ prompt, isAutomation = false }: { prompt: string; isAutomation?: boolean }) => {
       setStreamedContent('');
       try {
         return await streamAsk(
@@ -14,7 +14,8 @@ export const useChatStream = (threadId?: string) => {
           (content) => {
             setStreamedContent(content);
           },
-          threadId
+          threadId,
+          isAutomation
         );
       } catch (err: any) {
         console.error('Chat stream error:', err);

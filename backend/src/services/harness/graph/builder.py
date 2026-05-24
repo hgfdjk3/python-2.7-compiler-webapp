@@ -8,6 +8,16 @@ from src.services.harness.graph.state import AgentState
 from src.services.harness.graph.nodes.orchestrator import orchestrator_node
 from src.services.harness.graph.nodes.worker import worker_node
 from src.services.harness.graph.nodes.clarifier import clarifier_node
+from src.services.harness.graph.nodes.automation_builder import automation_builder_node
+
+def route_start(state: AgentState):
+    """
+    Routes from START: if automation flag is set, go directly to automation_builder.
+    Otherwise, follow normal orchestrator flow.
+    """
+    if state.get("automation"):
+        return "automation_builder"
+    return "orchestrator"
 
 def route_orchestrator(state: AgentState):
     """
@@ -31,13 +41,19 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     workflow.add_node("orchestrator", orchestrator_node)
     workflow.add_node("worker", worker_node)
     workflow.add_node("clarifier", clarifier_node)
+    workflow.add_node("automation_builder", automation_builder_node)
     
     # ToolNode executes the LLM's requested tool calls
     tool_node = ToolNode(tools)
     workflow.add_node("tools", tool_node)
 
     # 3. Add flow edges
-    workflow.add_edge(START, "orchestrator")
+    # Conditional start: automation requests bypass orchestrator
+    workflow.add_conditional_edges(
+        START,
+        route_start,
+        {"automation_builder": "automation_builder", "orchestrator": "orchestrator"}
+    )
     
     # Orchestrator decides: worker (do work), clarifier (ask questions), or END (done)
     workflow.add_conditional_edges(
@@ -61,9 +77,13 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     
     # Clarifier always ends the run — user needs to respond
     workflow.add_edge("clarifier", END)
+    
+    # Automation builder always ends — returns the generated workflow
+    workflow.add_edge("automation_builder", END)
 
     # 4. Compile with checkpointer
     if checkpointer is None:
         checkpointer = MemorySaver()
         
     return workflow.compile(checkpointer=checkpointer)
+

@@ -31,7 +31,8 @@ class AgentService:
                 final_state = await self.runner.run(
                     thread_id=body.thread_id,
                     message=body.message,
-                    system_instruction=body.system_instruction
+                    system_instruction=body.system_instruction,
+                    automation=body.automation,
                 )
                 return serialize_state(final_state)
             except Exception as e:
@@ -42,7 +43,8 @@ class AgentService:
             async for event in self.runner.stream_run(
                 thread_id=body.thread_id,
                 message=body.message,
-                system_instruction=body.system_instruction
+                system_instruction=body.system_instruction,
+                automation=body.automation,
             ):
                 serialized = serialize_state(event)
                 yield f"data: {json.dumps(serialized)}\n\n"

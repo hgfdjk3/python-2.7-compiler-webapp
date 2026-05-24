@@ -130,3 +130,16 @@ def handle_tool_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return wrap_message(AIMessage(content=f"  </toolcall>"))
 
 
+def handle_automation_builder_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Extracts the automation builder's output when the node finishes.
+    This contains the generated automation workflow wrapped in an <automation> tag.
+    """
+    output = event["data"].get("output")
+    if isinstance(output, dict) and "messages" in output:
+        messages = output["messages"]
+        if messages and len(messages) > 0:
+            return wrap_message(messages[0])
+    return None
+
+

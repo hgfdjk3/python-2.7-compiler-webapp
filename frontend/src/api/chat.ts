@@ -4,6 +4,7 @@ export interface AskRequestPayload {
   message: string;
   thread_id?: string;
   stream?: boolean;
+  automation?: boolean;
 }
 
 /**
@@ -46,7 +47,8 @@ async function* parseSSEStream<T>(stream: ReadableStream<Uint8Array>): AsyncGene
 export const streamAsk = async (
   prompt: string,
   onUpdate: (content: string) => void,
-  threadId: string = 'default_api_session'
+  threadId: string = 'default_api_session',
+  isAutomation: boolean = false
 ): Promise<string> => {
   const response = await apiClient.post<ReadableStream>(
     '/ask',
@@ -54,6 +56,7 @@ export const streamAsk = async (
       message: prompt,
       thread_id: threadId,
       stream: true,
+      automation: isAutomation,
     },
     {
       responseType: 'stream',

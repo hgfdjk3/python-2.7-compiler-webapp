@@ -15,5 +15,7 @@ class AgentState(TypedDict):
     next: Optional[str]
     # Routing metadata for frontend display only (not part of conversation history)
     routing_metadata: Optional[str]
+    # When True, routes directly to automation_builder node instead of orchestrator
+    automation: Optional[bool]
 
 

@@ -6,3 +6,4 @@ class AskRequest(BaseModel):
     thread_id: Optional[str] = "default_api_session"
     system_instruction: Optional[str] = None
     stream: Optional[bool] = False
+    automation: Optional[bool] = False
