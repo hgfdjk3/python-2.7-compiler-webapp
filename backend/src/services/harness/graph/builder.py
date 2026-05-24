@@ -30,6 +30,15 @@ def route_orchestrator(state: AgentState):
         return "clarifier"
     return END
 
+def route_automation_builder(state: AgentState):
+    """
+    Decides the next node to transition to from automation_builder.
+    Routes to clarifier if next is 'clarifier', otherwise ends the run.
+    """
+    if state.get("next") == "clarifier":
+        return "clarifier"
+    return END
+
 def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> StateGraph:
     """
     Compiles the LangGraph StateGraph workflow for a multi-agent system.
@@ -62,6 +71,14 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
         {"worker": "worker", "clarifier": "clarifier", END: END}
     )
     
+    # Route from automation_builder to clarifier or END
+    workflow.add_conditional_edges(
+        "automation_builder", 
+        route_automation_builder, 
+        {"clarifier": "clarifier", END: END}
+    )
+
+
     # From worker, go to tools if worker wants to execute tools, otherwise back to orchestrator
     workflow.add_conditional_edges(
         "worker",
