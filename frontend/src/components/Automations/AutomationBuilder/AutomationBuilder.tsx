@@ -99,6 +99,12 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
 
   const [historyState, handlers, historyValue] = useStateHistory({ nodes: initialNodes, edges: initialEdges });
+  
+  // Sync with incoming props (e.g., from LLM generation)
+  React.useEffect(() => {
+    handlers.set({ nodes: initialNodes, edges: initialEdges });
+  }, [initialNodes, initialEdges]);
+
   const createAutomation = useCreateAutomation();
 
   // Automation State

@@ -167,6 +167,6 @@ async def automation_builder_node(state: AgentState, config: RunnableConfig) -> 
     logger.info(f"Generated automation '{result.name or 'Automation Workflow'}' with {len(result.stages)} stages")
 
     return {
-        "messages": [AIMessage(content=f"<automation> {json.dumps(automation_json)} </automation>")],
+        "messages": [AIMessage(content=f" <automation> {json.dumps(automation_json)} </automation> ")],
         "next": "end"
     }

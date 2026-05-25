@@ -76,7 +76,7 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
         caret="block"
         components={components}
         allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [], 'automation': [], 'toolcall': ['name'] }}
-        literalTagContent={["toolcall"]}
+        literalTagContent={["toolcall", "automation"]}
       >
         {content}
       </Streamdown>

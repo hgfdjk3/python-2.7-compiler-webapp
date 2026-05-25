@@ -1,5 +1,5 @@
 .automation-edge-path {
-  stroke: var(--mantine-color-default-border);
+  stroke: light-dark(var(--mantine-color-zinc-8), var(--mantine-color-zinc-4));
   stroke-width: 2px;
   transition: all 0.3s ease;
 }
