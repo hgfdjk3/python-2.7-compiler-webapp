@@ -853,5 +853,177 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "6db5d914-68be-4590-b2b0-030f8432837b"
+  },
+  "59a96cda-a62e-42d1-94f3-f20eab4fa417": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Trigger Automation",
+          "description": "Start the workflow manually or on a scheduled interval (e.g., daily at 8\u202fAM).",
+          "tools": []
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Five Random Cities",
+          "description": "Pick five city names at random from a predefined master list (e.g., stored in a config file). If the list is empty, log an error and stop.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Current Weather for Selected Cities",
+          "description": "Call the `get_multi_city_weather` service with the five chosen city names to retrieve temperature, conditions, and humidity for each.",
+          "tools": [
+            "get_multi_city_weather"
+          ]
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Compile and Deliver Report",
+          "description": "Format the weather data into a concise summary (e.g., bullet list) and output it to the console or send via email/notification. Include error handling for any failed city look\u2011ups.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "59a96cda-a62e-42d1-94f3-f20eab4fa417"
+  },
+  "ec34f905-5c17-4c7e-9105-cdeb12e747ec": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Load Candidate Cities",
+          "description": "Read a predefined file containing a list of city names to evaluate.",
+          "tools": [
+            "read_files_content1"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Current Weather for Cities",
+          "description": "Query the weather service for all candidate cities to obtain their current temperatures.",
+          "tools": [
+            "get_multi_city_weather"
+          ]
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Filter and Select Random City",
+          "description": "From the returned data, keep only cities where temperature exceeds 50\u00b0F, then randomly pick one. If the filtered list is empty, mark the workflow as failed.",
+          "tools": []
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Report Result",
+          "description": "Output the selected city and its temperature, or emit a failure message if no city met the criteria.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "ec34f905-5c17-4c7e-9105-cdeb12e747ec"
   }
 }
