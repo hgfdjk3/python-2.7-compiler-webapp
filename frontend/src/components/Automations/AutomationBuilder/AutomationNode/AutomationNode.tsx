@@ -41,12 +41,12 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
         n.id === id
           ? n
           : {
-              ...n,
-              data: {
-                ...n.data,
-                toolsExpanded: false
-              }
+            ...n,
+            data: {
+              ...n.data,
+              toolsExpanded: false
             }
+          }
       )
     );
   };
@@ -102,6 +102,8 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
 
           {data.executionState && (
             <AutomationNodeExecution state={data.executionState} />
+
+
           )}
         </Stack>
 

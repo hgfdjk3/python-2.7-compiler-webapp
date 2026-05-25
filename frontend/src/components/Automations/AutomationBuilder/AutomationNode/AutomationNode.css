@@ -80,7 +80,7 @@
 }
 
 .automation-node-running {
-  animation: nodePulse 2s infinite ease-in-out;
+  animation: nodePulse 1s infinite ease-in-out;
   border-color: var(--node-color, var(--mantine-color-blue-5)) !important;
 }
 
@@ -88,9 +88,11 @@
   0% {
     box-shadow: 0 0 5px var(--node-color, var(--mantine-color-blue-5));
   }
+
   50% {
     box-shadow: 0 0 20px var(--node-color, var(--mantine-color-blue-5));
   }
+
   100% {
     box-shadow: 0 0 5px var(--node-color, var(--mantine-color-blue-5));
   }

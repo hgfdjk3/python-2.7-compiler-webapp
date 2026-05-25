@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Text, Group, Loader } from '@mantine/core';
-import { NodeExecutionState } from '../../../../../api/automations';
 import { IconCheck, IconX, IconTool, IconBrain } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { NodeExecutionState } from '@/api/automations';
 
 export interface AutomationNodeExecutionProps {
   state: NodeExecutionState;
@@ -13,19 +13,19 @@ export const AutomationNodeExecution: React.FC<AutomationNodeExecutionProps> = (
 
   // Determine what to show
   let content = null;
-  
+
   if (state.status === 'completed') {
     content = (
       <Group gap="xs" wrap="nowrap">
-        <IconCheck size={14} color="var(--mantine-color-teal-6)" />
-        <Text size="xs" fw={500} c="teal.6">Completed</Text>
+        <IconCheck size={14} />
+        <Text size="xs" fw={500}>Completed </Text>
       </Group>
     );
   } else if (state.status === 'error') {
     content = (
       <Group gap="xs" wrap="nowrap">
         <IconX size={14} color="var(--mantine-color-red-6)" />
-        <Text size="xs" fw={500} c="red.6">Failed</Text>
+        <Text size="xs" fw={500} c="red.6" truncate>Failed: {state.content}</Text>
       </Group>
     );
   } else if (state.status === 'running') {
@@ -34,40 +34,39 @@ export const AutomationNodeExecution: React.FC<AutomationNodeExecutionProps> = (
     if (activeTool) {
       content = (
         <Group gap="xs" wrap="nowrap">
-          <Loader size="xs" color="blue" />
-          <IconTool size={14} color="var(--mantine-color-blue-6)" />
-          <Text size="xs" fw={500} c="blue.6">Running {activeTool.name}...</Text>
+          <Loader size="xs" color="zinc" />
+          <IconTool size={14} />
+          <Text size="xs" fw={500}>Running {activeTool.name}...</Text>
         </Group>
       );
     } else {
       content = (
-        <Group gap="xs" wrap="nowrap">
-          <Loader size="xs" color="blue" type="dots" />
-          <IconBrain size={14} color="var(--mantine-color-blue-6)" />
-          <Text size="xs" fw={500} c="blue.6">Thinking...</Text>
+        <Group gap="xs" wrap="nowrap" w="100%">
+          <Loader size="xs" color="zinc" type="dots" />
+          <IconBrain size={14} />
+          <Text size="xs" fw={500} truncate inline>{state.content || "Thinking..."}</Text>
         </Group>
       );
     }
   }
 
   // Generate a stable key for the animation based on current state
-  const animKey = state.status === 'running' 
+  const animKey = state.status === 'running'
     ? `${state.status}-${state.tools?.find(t => t.output === null)?.name || 'thinking'}`
     : state.status;
 
   return (
-    <Box mt="xs" style={{ minHeight: 28, display: 'flex', alignItems: 'center' }}>
+    <Box mt="xs" w="100%" style={{ minHeight: 28, display: 'flex', alignItems: 'center' }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={animKey}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0, x: -15 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 15 }}
+          transition={{ duration: 0.5 }}
+          style={{ width: '100%', overflow: 'hidden' }}
         >
-          <Box bg="var(--mantine-color-gray-0)" px={8} py={4} style={{ borderRadius: 6, border: '1px solid var(--mantine-color-gray-3)', display: 'inline-block' }}>
-            {content}
-          </Box>
+          {content}
         </motion.div>
       </AnimatePresence>
     </Box>

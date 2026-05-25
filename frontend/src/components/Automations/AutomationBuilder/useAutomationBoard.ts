@@ -48,6 +48,10 @@ export function useAutomationBoard({
       const state = nodeExecutionStates[n.id];
       if (state) {
         return { ...n, data: { ...n.data, executionState: state } };
+      } else if (n.data.executionState) {
+        // Clear executionState if it's no longer in the map (e.g. on new run)
+        const { executionState, ...restData } = n.data;
+        return { ...n, data: restData };
       }
       return n;
     }));
