@@ -2,7 +2,7 @@ import operator
 from typing import TypedDict, Annotated, List, Any, Dict, Optional
 from langchain_core.messages import AnyMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import BaseTool
+from langchain_core.tools import BaseTool, tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import create_react_agent, ToolNode
@@ -12,6 +12,13 @@ from src.config import OPENAI_API_KEY
 
 class AutomationState(TypedDict):
     messages: Annotated[List[AnyMessage], operator.add]
+    node_outputs: Annotated[Dict[str, Any], operator.ior]
+    is_stopped: bool
+
+@tool
+def stop_execution(reason: str):
+    """Use this tool to stop the entire automation early (e.g., if a condition is not met or a failure occurs)."""
+    return f"Execution stopped. Reason: {reason}"
 
 def create_automation_graph(
     automation_data: Dict[str, Any], 
@@ -60,8 +67,9 @@ def create_automation_graph(
         desc = data.get("description", "")
         tool_names = data.get("tools", [])
 
-        # Get specific tools for this node
+        # Get specific tools for this node and append the stop tool
         node_tools = [tool_map[t] for t in tool_names if t in tool_map]
+        node_tools.append(stop_execution)
 
         # Define the system prompt for this stage
         automation_type = automation_data.get("automation_type", "manual")
@@ -81,34 +89,93 @@ def create_automation_graph(
         )
 
         # Create a closure to capture the agent and avoid variable binding issues in loops
-        def create_node_func(agent, n_id):
+        def create_node_func(agent, n_id, prev_node_ids):
             async def node_function(state: AutomationState, config: RunnableConfig):
-                # The react agent expects a state with 'messages'
-                # We invoke it with the current accumulated messages
-                res = await agent.ainvoke({"messages": state["messages"]}, config)
+                import json
                 
-                # The agent returns the full list of messages.
-                # We only want to return the newly added messages to the parent graph's state.
-                # State accumulation via operator.add will append them.
-                new_messages = res["messages"][len(state["messages"]):]
-                return {"messages": new_messages}
+                # Gather inputs from previous stages
+                prev_outputs = {str(p): state.get("node_outputs", {}).get(str(p)) for p in prev_node_ids}
+                messages_to_pass = list(state.get("messages", []))
+                
+                # Filter None values from prev_outputs
+                prev_outputs = {k: v for k, v in prev_outputs.items() if v is not None}
+                if prev_outputs:
+                    input_msg = HumanMessage(content=f"Inputs from previous stages:\n{json.dumps(prev_outputs)}")
+                    messages_to_pass.append(input_msg)
+
+                # We invoke the agent with the injected messages
+                res = await agent.ainvoke({"messages": messages_to_pass}, config)
+                
+                # The agent returns the full list of messages. We extract just the new ones.
+                new_messages = res["messages"][len(messages_to_pass):]
+                
+                is_stopped = False
+                final_output = ""
+                
+                for msg in reversed(new_messages):
+                    if msg.type == "ai" and msg.content:
+                        final_output = msg.content
+                        break
+                        
+                for msg in new_messages:
+                    if msg.type == "ai" and hasattr(msg, "tool_calls"):
+                        for call in msg.tool_calls:
+                            if call.get("name") == "stop_execution":
+                                is_stopped = True
+                                
+                return {
+                    "messages": new_messages,
+                    "node_outputs": {str(n_id): final_output},
+                    "is_stopped": is_stopped
+                }
             node_function.__name__ = str(n_id)
             return node_function
 
-        workflow.add_node(str(node_id), create_node_func(stage_agent, node_id))
+        workflow.add_node(str(node_id), create_node_func(stage_agent, node_id, incoming_edges.get(node_id, [])))
 
     # Connect START to all start nodes
     for sn in start_nodes:
         workflow.add_edge(START, str(sn))
 
-    # Connect edges
-    for e in edges:
-        source_id = e["source"]
-        target_id = e["target"]
-        workflow.add_edge(str(source_id), str(target_id))
+    # Define router for conditional edges
+    def should_continue(state: AutomationState):
+        if state.get("is_stopped", False):
+            return "__end__"
+        return "continue"
 
-    # END is implicitly reached when a node has no outgoing edges
-    for en in end_nodes:
-        workflow.add_edge(str(en), END)
+    # Connect edges using conditional logic
+    for source_id, targets in outgoing_edges.items():
+        if str(source_id) not in [str(n["id"]) for n in nodes]:
+            continue # skipped node
+            
+        if not targets:
+            # End nodes
+            workflow.add_conditional_edges(
+                str(source_id),
+                should_continue,
+                {"__end__": END, "continue": END}
+            )
+        else:
+            # Note: We do a parallel fan-out manually if there are multiple targets
+            # Since langgraph v0.2 supports returning a list of nodes, we can use a wrapper
+            def route_targets(state: AutomationState, t=targets):
+                if state.get("is_stopped", False):
+                    return "__end__"
+                valid_targets = [str(x) for x in t if str(x) in [str(n["id"]) for n in nodes]]
+                if len(valid_targets) == 1:
+                    return valid_targets[0]
+                return valid_targets
+            
+            # Map dynamic targets to their physical nodes for validation
+            target_map = {"__end__": END}
+            for t in targets:
+                if str(t) in [str(n["id"]) for n in nodes]:
+                    target_map[str(t)] = str(t)
+                    
+            workflow.add_conditional_edges(
+                str(source_id),
+                route_targets,
+                target_map
+            )
 
     return workflow.compile(checkpointer=MemorySaver())

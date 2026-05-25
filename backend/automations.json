@@ -375,5 +375,92 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "255be134-bca1-40db-a3d3-235fb250b74c"
+  },
+  "065dcbbc-cbe8-4b44-8b9c-58dbfbad6124": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List and Filter Capitalized Files",
+          "description": "Use the file system to list directory contents and filter for filenames that start with an uppercase letter.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select a Rhyming City for Each File",
+          "description": "For each filtered filename, apply a rhyming algorithm (or lookup table) to pick a city name that rhymes with the file name. If multiple matches exist, pick one at random.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Current Weather for the Chosen City",
+          "description": "Call the weather service with the selected city name to retrieve the current weather conditions.",
+          "tools": [
+            "get_weather_in_city"
+          ]
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Compile and Deliver Results",
+          "description": "Combine the filename, chosen city, and weather data into a concise report and output it (e.g., print to console or write to a log file).",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "065dcbbc-cbe8-4b44-8b9c-58dbfbad6124"
   }
 }
