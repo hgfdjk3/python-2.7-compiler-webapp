@@ -462,5 +462,396 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "065dcbbc-cbe8-4b44-8b9c-58dbfbad6124"
+  },
+  "e67f181c-dbb7-4579-9175-15c10b7cc5f2": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Root Directory Discovery",
+          "description": "Iterate through a predefined list of possible root paths (e.g., '/', '/home', '/var', 'C:\\', etc.) and use `list_directory` to test each. The first path that returns a successful directory listing is selected as the root for the scan.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Recursive File Enumeration",
+          "description": "Starting from the discovered root, repeatedly call `list_directory` to walk the directory tree depth\u2011first, collecting the full path of every regular file. Sub\u2011directories are queued for further listing until the entire tree is traversed.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Longest Path Calculation",
+          "description": "Process the accumulated list of file paths, compute the character length of each full pathname, and keep the entry with the maximum length.",
+          "tools": []
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Result Notification",
+          "description": "Emit the longest file path and its length to the user (e.g., via console output, email, or messaging service). If no files were found, report that outcome.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "e67f181c-dbb7-4579-9175-15c10b7cc5f2"
+  },
+  "dee8d7d1-ac3b-4123-a1a8-9885c584aa0b": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List Root Directory Contents",
+          "description": "Use the list_directory tool to retrieve all items in the root directory without descending into subfolders.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Determine File Sizes",
+          "description": "For each listed item, check if it is a file. If the list_directory output includes size metadata, use it directly; otherwise, read a small portion of the file with read_files_content1 to estimate its size and record the exact byte length.",
+          "tools": [
+            "read_files_content1"
+          ]
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Identify Largest File",
+          "description": "Compare the recorded sizes and select the file with the maximum size.",
+          "tools": []
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Report Result",
+          "description": "Return the name and size of the largest file to the user.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "dee8d7d1-ac3b-4123-a1a8-9885c584aa0b"
+  },
+  "9ba3f252-168d-48a8-90f8-a0b3f0075af2": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List Root Directory Contents",
+          "description": "Retrieve the items in the root directory without recursion, then take the first 10 entries.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Filter Files and Gather Sizes",
+          "description": "From the first 10 entries, keep only files. Use read_files_content1 (or metadata if available) to obtain each file's size in bytes.",
+          "tools": [
+            "read_files_content1"
+          ]
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Identify Largest File",
+          "description": "Compare the sizes of the filtered files and select the one with the maximum size.",
+          "tools": []
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Report Result",
+          "description": "Return the name and size of the largest file among the first 10 files to the user.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "9ba3f252-168d-48a8-90f8-a0b3f0075af2"
+  },
+  "4dd1445c-6478-4d93-9430-3531f7254858": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List Root Directory Contents",
+          "description": "Retrieve a flat list of all files and directories directly under the root path.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Determine Longest Name",
+          "description": "Iterate through the returned items, calculate the length of each name, and keep the item with the maximum length.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Report Result",
+          "description": "Output the name (and optionally the type) of the longest\u2011named entry found at the root level.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "4dd1445c-6478-4d93-9430-3531f7254858"
+  },
+  "6db5d914-68be-4590-b2b0-030f8432837b": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List Root Directory Files",
+          "description": "Retrieve a non-recursive list of all items in the root directory.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Identify Longest Filename",
+          "description": "Parse the directory listing, filter out directories, and determine the file with the longest name.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Report Result",
+          "description": "Output the name (and optional path) of the longest\u2011named file, handling cases where no files are found.",
+          "tools": []
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "6db5d914-68be-4590-b2b0-030f8432837b"
   }
 }

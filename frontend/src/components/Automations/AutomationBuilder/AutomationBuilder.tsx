@@ -10,7 +10,8 @@ import { AutomationActionButton } from '../AutomationActionButton';
 import { ScheduleConfiguratorModal } from '../ScheduleConfiguratorModal';
 import { ScheduleConfig } from '../ScheduleConfigurator';
 import { AutomationBoard } from './AutomationBoard';
-import { AutomationRunnerModal } from '../AutomationRunnerModal';
+import { AutomationExecutionPanel } from './AutomationExecutionPanel';
+import { useAutomationRun } from '../../../hooks/useAutomationRun';
 
 const getScheduleString = (config: ScheduleConfig): string => {
   const { frequency, interval, time } = config;
@@ -101,7 +102,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
 }) => {
   const [currentAutomationId, setCurrentAutomationId] = useState<string | undefined>(automationId);
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
-  const [runnerModalOpened, setRunnerModalOpened] = useState(false);
+  const [panelOpened, setPanelOpened] = useState(false);
 
   const [historyState, handlers, historyValue] = useStateHistory({ nodes: initialNodes, edges: initialEdges });
   
@@ -117,6 +118,8 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   const [isActive, setIsActive] = useState(false);
   const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig | undefined>(undefined);
   const [isRunning, setIsRunning] = useState(false);
+
+  const { mutate: runAutomation, nodeExecutionStates, isPending: isRunningAutomation } = useAutomationRun(currentAutomationId || '');
 
   return (
     <Paper
@@ -180,11 +183,13 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
                 }, {
                   onSuccess: (data) => {
                     setCurrentAutomationId(data.id);
-                    setRunnerModalOpened(true);
+                    setPanelOpened(true);
+                    runAutomation({ inputText: 'Run this automation now.' });
                   }
                 });
               } else {
-                setRunnerModalOpened(true);
+                setPanelOpened(true);
+                runAutomation({ inputText: 'Run this automation now.' });
               }
             }}
             onScheduleClick={() => setScheduleModalOpened(true)}
@@ -196,6 +201,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
         initialNodes={historyState.nodes}
         initialEdges={historyState.edges}
         onStructureChange={(nodes, edges) => handlers.set({ nodes, edges })}
+        nodeExecutionStates={nodeExecutionStates}
       />
 
       <ScheduleConfiguratorModal
@@ -211,13 +217,12 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
         automationName="Automation Workflow"
       />
 
-      {currentAutomationId && (
-        <AutomationRunnerModal
-          opened={runnerModalOpened}
-          onClose={() => setRunnerModalOpened(false)}
-          automationId={currentAutomationId}
-        />
-      )}
+      <AutomationExecutionPanel
+        opened={panelOpened}
+        onClose={() => setPanelOpened(false)}
+        nodes={historyState.nodes}
+        nodeExecutionStates={nodeExecutionStates}
+      />
     </Paper>
   );
 };

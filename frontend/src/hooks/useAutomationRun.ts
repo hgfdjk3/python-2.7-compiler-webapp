@@ -1,35 +1,37 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { streamRunAutomation } from '../api/automations';
+import { streamRunAutomation, NodeExecutionState } from '../api/automations';
 
 export const useAutomationRun = (automationId: string) => {
-  const [streamedContent, setStreamedContent] = useState('');
+  const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, NodeExecutionState>>({});
 
   const mutation = useMutation({
     mutationFn: async ({ inputText }: { inputText?: string }) => {
-      setStreamedContent('');
+      setNodeExecutionStates({});
       try {
-        return await streamRunAutomation(
+        await streamRunAutomation(
           automationId,
           inputText,
-          (content) => {
-            setStreamedContent(content);
+          (states) => {
+            setNodeExecutionStates(states);
           }
         );
       } catch (err: any) {
         console.error('Automation run error:', err);
-        const errMsg = `Error: Failed to run automation.\n\nDetails: ${err.message || err}`;
-        setStreamedContent(errMsg);
-        return errMsg;
+        notifications.show({
+          title: 'Automation Error',
+          message: err.message || 'Failed to run automation',
+          color: 'red',
+        });
       }
     },
   });
 
-  const clearStream = () => setStreamedContent('');
+  const clearStream = () => setNodeExecutionStates({});
 
   return {
     ...mutation,
-    streamedContent,
+    nodeExecutionStates,
     clearStream,
   };
 };

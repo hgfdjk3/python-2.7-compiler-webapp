@@ -86,37 +86,39 @@ class AutomationRunnerService:
             config = {"configurable": {"thread_id": str(uuid.uuid4())}}
             
             tokens_streamed = False
+            current_node_id = None
             async for event in graph.astream_events(inputs, config=config, version="v2"):
                 event_type = event["event"]
                 name = event.get("name")
                 
                 # Check for stage starts
                 if event_type == "on_chain_start" and name in node_titles:
-                    # Yield a stage header as an AI message
-                    header_msg = AIMessage(content=f"\n\n### ⚡ Stage: {node_titles[name]}\n\n---\n\n")
-                    yield f"data: {json.dumps(serialize_state({'chatbot': {'messages': [header_msg]}}))}\n\n"
+                    current_node_id = name
+                    yield f"data: {json.dumps({'type': 'node_start', 'node_id': current_node_id})}\n\n"
                 
-                if event_type == "on_chat_model_stream":
-                    result = handle_token_stream(event)
-                    if result:
-                        tokens_streamed = True
-                        yield f"data: {json.dumps(serialize_state(result))}\n\n"
+                if not current_node_id:
+                    continue
 
-                elif event_type == "on_chat_model_end" and not tokens_streamed:
-                    # In automations, nodes might just be the react agent nodes
-                    result = handle_model_end(event)
-                    if result:
-                        yield f"data: {json.dumps(serialize_state(result))}\n\n"
+                if event_type == "on_chat_model_stream":
+                    chunk = event.get("data", {}).get("chunk")
+                    if chunk and hasattr(chunk, "content") and chunk.content:
+                        yield f"data: {json.dumps({'type': 'node_chunk', 'node_id': current_node_id, 'content': chunk.content})}\n\n"
 
                 elif event_type == "on_tool_start":
-                    result = handle_tool_start(event)
-                    if result:
-                        yield f"data: {json.dumps(serialize_state(result))}\n\n"
+                    # name is the tool name
+                    input_data = event.get("data", {}).get("input")
+                    yield f"data: {json.dumps({'type': 'node_tool_start', 'node_id': current_node_id, 'tool_name': name, 'input': input_data})}\n\n"
 
                 elif event_type == "on_tool_end":
-                    result = handle_tool_end(event)
-                    if result:
-                        yield f"data: {json.dumps(serialize_state(result))}\n\n"
+                    # output is the tool output
+                    output_data = event.get("data", {}).get("output")
+                    if hasattr(output_data, "content"):
+                        output_data = output_data.content
+                    yield f"data: {json.dumps({'type': 'node_tool_end', 'node_id': current_node_id, 'tool_name': name, 'output': str(output_data)})}\n\n"
+
+                elif event_type == "on_chain_end" and name == current_node_id:
+                    yield f"data: {json.dumps({'type': 'node_end', 'node_id': current_node_id})}\n\n"
+                    current_node_id = None
 
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

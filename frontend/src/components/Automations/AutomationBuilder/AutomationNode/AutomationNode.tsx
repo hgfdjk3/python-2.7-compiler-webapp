@@ -7,6 +7,7 @@ import { AutomationNodeHeader } from './AutomationNodeHeader';
 import { AutomationNodeContent } from './AutomationNodeContent';
 import { AutomationNodeRewrite } from './AutomationNodeRewrite';
 import { AutomationExpandedTools } from './AutomationExpandedTools';
+import { AutomationNodeExecution } from './AutomationNodeExecution';
 import { AnimatePresence } from 'motion/react';
 import { getToolInfo } from '../../../../utils/agentUtils';
 import './AutomationNode.css';
@@ -58,10 +59,10 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
     <div onClick={handleNodeClick}>
       <Card
         p="md"
-        className="automation-node-card"
+        className={`automation-node-card ${data.executionState?.status === 'running' ? 'automation-node-running' : ''} ${data.executionState?.status === 'error' ? 'automation-node-error' : ''}`}
         style={{
-          borderLeft: `4px solid ${nodeColor}`,
-          '--node-color': nodeColor,
+          borderLeft: `4px solid ${data.executionState?.status === 'error' ? 'var(--mantine-color-red-6)' : nodeColor}`,
+          '--node-color': data.executionState?.status === 'error' ? 'var(--mantine-color-red-6)' : nodeColor,
         } as React.CSSProperties}
       >
         <Handle
@@ -97,6 +98,10 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
               onRewrite={handleRewrite}
               onCancel={() => setIsRewriting(false)}
             />
+          )}
+
+          {data.executionState && (
+            <AutomationNodeExecution state={data.executionState} />
           )}
         </Stack>
 

@@ -94,11 +94,18 @@ export const runAutomation = async (id: string, inputText?: string) => {
   return data;
 };
 
+export type NodeExecutionState = {
+  status: 'idle' | 'running' | 'completed' | 'error';
+  content: string;
+  tools: any[];
+  inputs?: any;
+};
+
 export const streamRunAutomation = async (
   id: string,
   inputText: string | undefined,
-  onUpdate: (content: string) => void
-): Promise<string> => {
+  onUpdate: (states: Record<string, NodeExecutionState>) => void
+): Promise<void> => {
   const response = await api.post<ReadableStream>(
     `/automations/${id}/run`,
     {
@@ -116,34 +123,41 @@ export const streamRunAutomation = async (
     throw new Error('No stream data received from backend');
   }
 
-  let accumulatedContent = '';
+  const nodeStates: Record<string, NodeExecutionState> = {};
 
   for await (const chunk of parseSSEStream<any>(stream)) {
     if (chunk.error) {
+      // Find the currently running node, if any
+      const runningNodeId = Object.keys(nodeStates).find(id => nodeStates[id].status === 'running');
+      if (runningNodeId) {
+        nodeStates[runningNodeId].status = 'error';
+        nodeStates[runningNodeId].content += `\n\n> [!ERROR]\n> **Execution Error**\n> \n> ${chunk.error}`;
+        onUpdate({ ...nodeStates });
+      }
       throw new Error(chunk.error);
     }
 
-    const messages = chunk.chatbot?.messages;
-    if (messages) {
-      for (const msg of messages) {
-        if (msg.type === 'ai' && msg.content) {
-          accumulatedContent += msg.content;
-          onUpdate(accumulatedContent);
-        } else if (msg.type === 'tool') {
-            accumulatedContent += `\n[Tool Executed: ${msg.name}]\n`;
-            onUpdate(accumulatedContent);
-        }
+    if (chunk.type === 'node_start') {
+      nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+    } else if (chunk.type === 'node_chunk') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+      nodeStates[chunk.node_id].content += chunk.content;
+    } else if (chunk.type === 'node_tool_start') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+      nodeStates[chunk.node_id].tools.push({ name: chunk.tool_name, input: chunk.input, output: null });
+    } else if (chunk.type === 'node_tool_end') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+      const tool = nodeStates[chunk.node_id].tools.find(t => t.name === chunk.tool_name && t.output === null);
+      if (tool) {
+        tool.output = chunk.output;
       }
-    } else {
-        // Handle token stream if present
-        if (chunk.chatbot?.type === 'ai' && chunk.chatbot?.content) {
-            accumulatedContent += chunk.chatbot.content;
-            onUpdate(accumulatedContent);
-        }
+    } else if (chunk.type === 'node_end') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'completed', content: '', tools: [] };
+      nodeStates[chunk.node_id].status = 'completed';
     }
-  }
 
-  return accumulatedContent;
+    onUpdate({ ...nodeStates });
+  }
 };
 
 export const useAutomations = () => {

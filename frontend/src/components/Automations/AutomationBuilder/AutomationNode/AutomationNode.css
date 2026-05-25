@@ -78,3 +78,25 @@
   background-color: transparent !important;
   opacity: 0.25 !important;
 }
+
+.automation-node-running {
+  animation: nodePulse 2s infinite ease-in-out;
+  border-color: var(--node-color, var(--mantine-color-blue-5)) !important;
+}
+
+@keyframes nodePulse {
+  0% {
+    box-shadow: 0 0 5px var(--node-color, var(--mantine-color-blue-5));
+  }
+  50% {
+    box-shadow: 0 0 20px var(--node-color, var(--mantine-color-blue-5));
+  }
+  100% {
+    box-shadow: 0 0 5px var(--node-color, var(--mantine-color-blue-5));
+  }
+}
+
+.automation-node-error {
+  border-color: var(--mantine-color-red-6) !important;
+  box-shadow: 0 0 15px rgba(250, 82, 82, 0.4) !important;
+}

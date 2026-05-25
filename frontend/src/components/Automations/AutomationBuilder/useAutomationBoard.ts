@@ -2,17 +2,20 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useNodesState, useEdgesState, useReactFlow, addEdge, Connection, Node, Edge } from '@xyflow/react';
 import { getLayoutedElements } from './utils/layout';
 import { AppNode } from './types';
+import { NodeExecutionState } from '../../../api/automations';
 
 export interface UseAutomationBoardProps {
   initialNodes?: AppNode[];
   initialEdges?: Edge[];
   onStructureChange?: (nodes: AppNode[], edges: Edge[]) => void;
+  nodeExecutionStates?: Record<string, NodeExecutionState>;
 }
 
 export function useAutomationBoard({
   initialNodes = [],
   initialEdges = [],
   onStructureChange,
+  nodeExecutionStates,
 }: UseAutomationBoardProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(getLayoutedElements(initialNodes, initialEdges));
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -27,10 +30,28 @@ export function useAutomationBoard({
     prevInitialNodes.current = initialNodes;
     prevInitialEdges.current = initialEdges;
     const layouted = getLayoutedElements(initialNodes, initialEdges);
-    setNodes(layouted);
+    setNodes(layouted.map(node => {
+      const state = nodeExecutionStates?.[node.id];
+      if (state) {
+        return { ...node, data: { ...node.data, executionState: state } } as AppNode;
+      }
+      return node;
+    }));
     setEdges(initialEdges);
     lastStructureRef.current = { nodeCount: layouted.length, edgeCount: initialEdges.length };
   }
+
+  // Update nodes with execution states dynamically
+  useEffect(() => {
+    if (!nodeExecutionStates) return;
+    setNodes((nds) => nds.map((n) => {
+      const state = nodeExecutionStates[n.id];
+      if (state) {
+        return { ...n, data: { ...n.data, executionState: state } };
+      }
+      return n;
+    }));
+  }, [nodeExecutionStates, setNodes]);
 
   // Automatically fit view when nodes change (e.g. after layout)
   useEffect(() => {
