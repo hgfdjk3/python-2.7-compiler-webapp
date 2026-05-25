@@ -10,6 +10,7 @@ import { AutomationActionButton } from '../AutomationActionButton';
 import { ScheduleConfiguratorModal } from '../ScheduleConfiguratorModal';
 import { ScheduleConfig } from '../ScheduleConfigurator';
 import { AutomationBoard } from './AutomationBoard';
+import { AutomationRunnerModal } from '../AutomationRunnerModal';
 
 const getScheduleString = (config: ScheduleConfig): string => {
   const { frequency, interval, time } = config;
@@ -26,6 +27,7 @@ const getScheduleString = (config: ScheduleConfig): string => {
 };
 
 export interface AutomationBuilderProps {
+  automationId?: string;
   initialNodes?: AppNode[];
   initialEdges?: Edge[];
   height?: string | number;
@@ -92,11 +94,14 @@ const defaultEdges: Edge[] = [
 ];
 
 export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
+  automationId,
   initialNodes = defaultNodes,
   initialEdges = defaultEdges,
   height = '100%'
 }) => {
+  const [currentAutomationId, setCurrentAutomationId] = useState<string | undefined>(automationId);
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
+  const [runnerModalOpened, setRunnerModalOpened] = useState(false);
 
   const [historyState, handlers, historyValue] = useStateHistory({ nodes: initialNodes, edges: initialEdges });
   
@@ -150,6 +155,10 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
                 edges: historyState.edges,
                 automation_type: isScheduled ? 'scheduled' : 'manual',
                 schedule_config: scheduleConfig,
+              }, {
+                onSuccess: (data) => {
+                  setCurrentAutomationId(data.id);
+                }
               });
             }}
           />
@@ -160,8 +169,23 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
             schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
             onToggle={() => setIsActive(!isActive)}
             onRun={() => {
-              setIsRunning(true);
-              setTimeout(() => setIsRunning(false), 2000);
+              if (!currentAutomationId) {
+                // If not saved, auto-save first
+                createAutomation.mutate({
+                  name: 'New Automation',
+                  nodes: historyState.nodes,
+                  edges: historyState.edges,
+                  automation_type: isScheduled ? 'scheduled' : 'manual',
+                  schedule_config: scheduleConfig,
+                }, {
+                  onSuccess: (data) => {
+                    setCurrentAutomationId(data.id);
+                    setRunnerModalOpened(true);
+                  }
+                });
+              } else {
+                setRunnerModalOpened(true);
+              }
             }}
             onScheduleClick={() => setScheduleModalOpened(true)}
           />
@@ -186,6 +210,14 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
         initialConfig={scheduleConfig}
         automationName="Automation Workflow"
       />
+
+      {currentAutomationId && (
+        <AutomationRunnerModal
+          opened={runnerModalOpened}
+          onClose={() => setRunnerModalOpened(false)}
+          automationId={currentAutomationId}
+        />
+      )}
     </Paper>
   );
 };

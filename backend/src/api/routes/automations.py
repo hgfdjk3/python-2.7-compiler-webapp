@@ -13,8 +13,12 @@ from src.api.services.automations_service import (
     update_existing_automation,
     delete_automation_by_id
 )
+from src.api.services.automation_runner_service import AutomationRunnerService
+from src.api.schemas.automations import AutomationRunRequest, AutomationRunResponse
+from src.api.routes.connectors import CONNECTORS_DB
 
 router = APIRouter()
+automation_runner = AutomationRunnerService(mcp_configs=CONNECTORS_DB)
 
 @router.get("/automations", response_model=List[AutomationResponse])
 async def list_automations():
@@ -47,3 +51,7 @@ async def delete_automation(automation_id: str):
     if not success:
         raise HTTPException(status_code=404, detail="Automation not found")
     return {"message": "Automation deleted"}
+
+@router.post("/automations/{automation_id}/run")
+async def run_automation(automation_id: str, request: AutomationRunRequest):
+    return await automation_runner.run_automation(automation_id, request)

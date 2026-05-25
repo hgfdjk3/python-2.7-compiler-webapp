@@ -71,9 +71,32 @@ class MCPClientManager:
                 else:
                     server_tools = await self.connect_to_server(name, config)
                 
-                # Prefix and sanitize tool names to prevent collisions
+                # Prefix, sanitize, and wrap tool names to prevent collisions and crashes
                 for tool in server_tools:
                     tool.name = re.sub(r"[^a-zA-Z0-9_]", "_", f"{tool.name}")
+                    
+                    # Store original invoke/run methods
+                    original_arun = getattr(tool, "_arun", None)
+                    original_run = getattr(tool, "_run", None)
+                    
+                    if original_arun:
+                        async def safe_arun(*args, orig=original_arun, t=tool, **kwargs):
+                            try:
+                                return await orig(*args, **kwargs)
+                            except Exception as e:
+                                err = f"Tool execution failed: {e}"
+                                return (err, None) if getattr(t, "response_format", None) == "content_and_artifact" else err
+                        tool._arun = safe_arun
+                        
+                    if original_run:
+                        def safe_run(*args, orig=original_run, t=tool, **kwargs):
+                            try:
+                                return orig(*args, **kwargs)
+                            except Exception as e:
+                                err = f"Tool execution failed: {e}"
+                                return (err, None) if getattr(t, "response_format", None) == "content_and_artifact" else err
+                        tool._run = safe_run
+                        
                     logger.info(f"Loaded tool: {tool.name}")
                 
                 all_tools.extend(server_tools)

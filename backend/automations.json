@@ -87,5 +87,293 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "c08ea6ba-7c28-4b63-b2b7-29eae0ecb8c3"
+  },
+  "cc8cc6ca-ce5d-49c3-9736-16c3d4b6ddc2": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Scheduled Trigger",
+          "description": "Run the workflow on a daily schedule (e.g., every morning at 7\u202fAM) to start the weather check.",
+          "tools": []
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Weather Data",
+          "description": "Call **get_multi_city_weather** to obtain the current temperature, condition, humidity, and wind for each city in the configured list.",
+          "tools": [
+            "get_multi_city_weather"
+          ]
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Build Summary Report",
+          "description": "Transform the raw weather payload into a concise, human\u2011readable summary for each city (e.g., \"London: 12\u202f\u00b0C, Light rain, 78\u202f% humidity\").",
+          "tools": []
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Deliver Notification",
+          "description": "Write the summary to a log file using **list_directory** to verify the output location, then optionally send the report to a messaging channel or email.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "cc8cc6ca-ce5d-49c3-9736-16c3d4b6ddc2"
+  },
+  "7fc71f9e-8d40-4016-891c-b4b56825773e": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List and Filter Capitalized Files",
+          "description": "Use the list_directory tool to retrieve all files in the target folder, then filter the list to keep only those whose names start with an uppercase letter.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Rhyming City",
+          "description": "From a built\u2011in list of city names, pick the first city whose name rhymes with the selected file name (simple string ending match). This stage is handled by internal logic without external tools.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Weather for the Chosen City",
+          "description": "Call the get_weather_in_city tool with the rhyming city name to obtain the current weather and output the result.",
+          "tools": [
+            "get_weather_in_city"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "7fc71f9e-8d40-4016-891c-b4b56825773e"
+  },
+  "b3b72d0f-1921-45d7-b094-eafdb8610c50": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List and Filter Capitalized Files",
+          "description": "Use the list_directory tool to retrieve all files in the target folder, then filter the list to keep only those whose names start with an uppercase letter.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Rhyming City",
+          "description": "From a built\u2011in list of city names, pick the first city whose name rhymes with the selected file name (simple string ending match). This stage is handled by internal logic without external tools.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Weather for the Chosen City",
+          "description": "Call the get_weather_in_city tool with the rhyming city name to obtain the current weather and output the result.",
+          "tools": [
+            "get_weather_in_city"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "b3b72d0f-1921-45d7-b094-eafdb8610c50"
+  },
+  "255be134-bca1-40db-a3d3-235fb250b74c": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "List and Filter Capitalized Files",
+          "description": "Use the list_directory tool to retrieve all files in the target folder, then filter the list to keep only those whose names start with an uppercase letter.",
+          "tools": [
+            "list_directory"
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Rhyming City",
+          "description": "From a built\u2011in list of city names, pick the first city whose name rhymes with the selected file name (simple string ending match). This stage is handled by internal logic without external tools.",
+          "tools": []
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Weather for the Chosen City",
+          "description": "Call the get_weather_in_city tool with the rhyming city name to obtain the current weather and output the result.",
+          "tools": [
+            "get_weather_in_city"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "255be134-bca1-40db-a3d3-235fb250b74c"
   }
 }

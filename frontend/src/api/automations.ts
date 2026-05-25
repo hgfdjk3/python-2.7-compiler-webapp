@@ -56,6 +56,96 @@ export const deleteAutomation = async (id: string): Promise<void> => {
   await api.delete(`/automations/${id}`);
 };
 
+async function* parseSSEStream<T>(stream: ReadableStream<Uint8Array>): AsyncGenerator<T, void, unknown> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ')) {
+          try {
+            yield JSON.parse(trimmed.slice(6)) as T;
+          } catch {
+            // Ignore incomplete chunks or malformed JSON
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+export const runAutomation = async (id: string, inputText?: string) => {
+  const { data } = await api.post(`/automations/${id}/run`, {
+    input_text: inputText,
+    stream: false
+  });
+  return data;
+};
+
+export const streamRunAutomation = async (
+  id: string,
+  inputText: string | undefined,
+  onUpdate: (content: string) => void
+): Promise<string> => {
+  const response = await api.post<ReadableStream>(
+    `/automations/${id}/run`,
+    {
+      input_text: inputText,
+      stream: true,
+    },
+    {
+      responseType: 'stream',
+      adapter: 'fetch',
+    }
+  );
+
+  const stream = response.data;
+  if (!stream) {
+    throw new Error('No stream data received from backend');
+  }
+
+  let accumulatedContent = '';
+
+  for await (const chunk of parseSSEStream<any>(stream)) {
+    if (chunk.error) {
+      throw new Error(chunk.error);
+    }
+
+    const messages = chunk.chatbot?.messages;
+    if (messages) {
+      for (const msg of messages) {
+        if (msg.type === 'ai' && msg.content) {
+          accumulatedContent += msg.content;
+          onUpdate(accumulatedContent);
+        } else if (msg.type === 'tool') {
+            accumulatedContent += `\n[Tool Executed: ${msg.name}]\n`;
+            onUpdate(accumulatedContent);
+        }
+      }
+    } else {
+        // Handle token stream if present
+        if (chunk.chatbot?.type === 'ai' && chunk.chatbot?.content) {
+            accumulatedContent += chunk.chatbot.content;
+            onUpdate(accumulatedContent);
+        }
+    }
+  }
+
+  return accumulatedContent;
+};
+
 export const useAutomations = () => {
   return useQuery({
     queryKey: ['automations'],

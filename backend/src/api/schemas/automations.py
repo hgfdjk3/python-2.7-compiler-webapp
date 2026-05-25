@@ -22,3 +22,11 @@ class AutomationResponse(BaseModel):
     edges: List[Dict[str, Any]]
     automation_type: str
     schedule_config: Optional[Dict[str, Any]] = None
+
+class AutomationRunRequest(BaseModel):
+    input_text: Optional[str] = None
+    stream: Optional[bool] = False
+
+class AutomationRunResponse(BaseModel):
+    status: str
+    messages: List[Dict[str, Any]]
