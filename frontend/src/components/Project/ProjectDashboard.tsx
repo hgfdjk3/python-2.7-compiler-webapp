@@ -56,8 +56,8 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
             onAction={() => setExpandedSection(expandedSection === 'automations' ? null : 'automations')}
           >
             <AutomationsList
-              onAutomationClick={(id) => onAutomationClick?.(id)}
-              onRunAutomation={(id) => onRunAutomation?.(id)}
+              onAutomationClick={onAutomationClick}
+              onRunAutomation={onRunAutomation}
               limit={expandedSection === 'automations' ? undefined : 4}
             />
           </ContentSection>

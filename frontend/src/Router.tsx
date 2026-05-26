@@ -8,11 +8,20 @@ import { AgentsPage } from './pages/Agents.page';
 import { DevelopersPage } from './pages/Developers.page';
 import { DevelopersDocsPage } from './pages/DevelopersDocs.page';
 import { DevelopersConnectionsPage } from './pages/DevelopersConnections.page';
+import { AutomationsPage } from './pages/Automations.page';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
+  },
+  {
+    path: '/automations',
+    element: <AutomationsPage />,
+  },
+  {
+    path: '/automations/:automationId',
+    element: <AutomationsPage />,
   },
   {
     path: '/projects',

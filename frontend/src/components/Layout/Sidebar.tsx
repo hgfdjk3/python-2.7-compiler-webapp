@@ -8,6 +8,7 @@ import {
   IconPlug,
   IconCode,
   IconPlus,
+  IconBolt,
 } from '@tabler/icons-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SidebarWorkspace } from './SidebarWorkspace';
@@ -21,6 +22,7 @@ const navItems = [
   { label: 'Search', icon: IconSearch, link: '/' },
   { label: 'Projects', icon: IconFolders, link: '/projects' },
   { label: 'Connectors', icon: IconPlug, link: '/agents' },
+  // { label: 'Automations', icon: IconBolt, link: '/automations' },
   { label: 'Developers', icon: IconCode, link: '/developers' },
 ];
 

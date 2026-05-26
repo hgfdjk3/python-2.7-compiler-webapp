@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Edge } from '@xyflow/react';
 import { AppNode } from './types';
-import { Box, Paper, Group, ActionIcon, Button, Tooltip } from '@mantine/core';
+import { Box, Paper, Group } from '@mantine/core';
 import { useStateHistory } from '@mantine/hooks';
 import { useCreateAutomation, useUpdateAutomation } from '../../../api/automations';
 import { AutomationSaveButton } from '../AutomationSaveButton';
@@ -13,6 +13,8 @@ import { AutomationBoard } from './AutomationBoard';
 import { AutomationExecutionPanel } from './AutomationExecutionPanel';
 import { useAutomationRun } from '../../../hooks/useAutomationRun';
 import { EditableTitle } from '../../Common/EditableTitle';
+import { SaveAutomationModal } from '../SaveAutomationModal/SaveAutomationModal';
+import { RunAutomationModal } from '../RunAutomationModal/RunAutomationModal';
 
 const getScheduleString = (config: ScheduleConfig): string => {
   const { frequency, interval, time } = config;
@@ -108,11 +110,15 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
   const [panelOpened, setPanelOpened] = useState(false);
 
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isRunModalOpen, setIsRunModalOpen] = useState(false);
+
   const [historyState, handlers, historyValue] = useStateHistory({ nodes: initialNodes, edges: initialEdges });
 
   // Sync with incoming props (e.g., from LLM generation)
   React.useEffect(() => {
     handlers.set({ nodes: initialNodes, edges: initialEdges });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialNodes, initialEdges]);
 
   const createAutomation = useCreateAutomation();
@@ -122,9 +128,53 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   const [isScheduled, setIsScheduled] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig | undefined>(undefined);
-  const [isRunning, setIsRunning] = useState(false);
 
   const { mutate: runAutomation, nodeExecutionStates, isPending: isRunningAutomation } = useAutomationRun(currentAutomationId || '');
+
+  const handleSaveAutomation = (name: string) => {
+    setAutomationName(name);
+    const payload = {
+      name,
+      nodes: historyState.nodes,
+      edges: historyState.edges,
+      automation_type: isScheduled ? 'scheduled' : 'manual',
+      schedule_config: scheduleConfig,
+    };
+    if (currentAutomationId) {
+      updateAutomation.mutate({
+        id: currentAutomationId,
+        automation: payload,
+      }, {
+        onSuccess: () => {
+          setIsSaveModalOpen(false);
+        }
+      });
+    } else {
+      createAutomation.mutate(payload, {
+        onSuccess: (data) => {
+          setCurrentAutomationId(data.id);
+          setIsSaveModalOpen(false);
+        }
+      });
+    }
+  };
+
+  const handleConfirmRun = () => {
+    if (!currentAutomationId) return;
+    setIsRunModalOpen(false);
+    setPanelOpened(true);
+    runAutomation({ inputText: 'Run this automation now.' });
+  };
+
+  const calculateToolsUsed = () => {
+    const tools = new Set<string>();
+    historyState.nodes.forEach(node => {
+      if (node.data && node.data.tools) {
+        node.data.tools.forEach((tool: string) => tools.add(tool));
+      }
+    });
+    return tools.size;
+  };
 
   return (
     <Paper
@@ -133,7 +183,6 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
       radius="0"
       shadow="0"
       style={{
-        // borderBottom: "1px solid var(--mantine-color-default-border)",
         borderTop: "1px solid var(--mantine-color-default-border)",
         overflow: 'hidden',
       }}
@@ -172,55 +221,15 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
           />
           <AutomationSaveButton
             isSaving={createAutomation.isPending || updateAutomation.isPending}
-            onSave={() => {
-              const payload = {
-                name: automationName,
-                nodes: historyState.nodes,
-                edges: historyState.edges,
-                automation_type: isScheduled ? 'scheduled' : 'manual',
-                schedule_config: scheduleConfig,
-              };
-              if (currentAutomationId) {
-                updateAutomation.mutate({
-                  id: currentAutomationId,
-                  automation: payload,
-                });
-              } else {
-                createAutomation.mutate(payload, {
-                  onSuccess: (data) => {
-                    setCurrentAutomationId(data.id);
-                  }
-                });
-              }
-            }}
+            onSave={() => setIsSaveModalOpen(true)}
           />
           <AutomationActionButton
             isActive={isActive}
             isScheduled={isScheduled}
-            isRunning={isRunning}
+            isRunning={isRunningAutomation}
             schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
             onToggle={() => setIsActive(!isActive)}
-            onRun={() => {
-              if (!currentAutomationId) {
-                // If not saved, auto-save first
-                createAutomation.mutate({
-                  name: automationName,
-                  nodes: historyState.nodes,
-                  edges: historyState.edges,
-                  automation_type: isScheduled ? 'scheduled' : 'manual',
-                  schedule_config: scheduleConfig,
-                }, {
-                  onSuccess: (data) => {
-                    setCurrentAutomationId(data.id);
-                    setPanelOpened(true);
-                    runAutomation({ inputText: 'Run this automation now.' });
-                  }
-                });
-              } else {
-                setPanelOpened(true);
-                runAutomation({ inputText: 'Run this automation now.' });
-              }
-            }}
+            onRun={() => setIsRunModalOpen(true)}
             onScheduleClick={() => setScheduleModalOpened(true)}
           />
         </Group>
@@ -244,6 +253,28 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
         }}
         initialConfig={scheduleConfig}
         automationName="Automation Workflow"
+      />
+
+      <SaveAutomationModal
+        opened={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        onSave={handleSaveAutomation}
+        initialName={automationName}
+        isSavedBefore={!!currentAutomationId}
+        isSaving={createAutomation.isPending || updateAutomation.isPending}
+        stats={{
+          nodesCount: historyState.nodes.length,
+          edgesCount: historyState.edges.length,
+          toolsUsed: calculateToolsUsed(),
+        }}
+      />
+
+      <RunAutomationModal
+        opened={isRunModalOpen}
+        onClose={() => setIsRunModalOpen(false)}
+        onConfirmRun={handleConfirmRun}
+        isSavedBefore={!!currentAutomationId}
+        isRunning={isRunningAutomation}
       />
 
       <AutomationExecutionPanel

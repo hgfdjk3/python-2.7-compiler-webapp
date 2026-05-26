@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Text, Loader, Center } from '@mantine/core';
 import { motion, Variants } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { AutomationItem, AutomationData } from './AutomationItem';
 import { ScheduleConfiguratorModal } from './ScheduleConfiguratorModal';
 import { ScheduleConfig } from './ScheduleConfigurator';
@@ -51,6 +52,7 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
   onRunAutomation,
   limit,
 }) => {
+  const navigate = useNavigate();
   const { data: backendAutomations = [], isLoading } = useAutomations();
   const deleteAutomation = useDeleteAutomation();
   const automations = backendAutomations.map(toAutomationData);
@@ -74,7 +76,13 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
 
   const handleEdit = (id: string) => {
     const automation = backendAutomations.find((a) => a.id === id);
-    if (automation) onAutomationClick?.(id, automation);
+    if (automation) {
+      if (onAutomationClick) {
+        onAutomationClick(id, automation);
+      } else {
+        navigate(`/automations/${id}`);
+      }
+    }
   };
 
   const handleRun = (id: string) => {
