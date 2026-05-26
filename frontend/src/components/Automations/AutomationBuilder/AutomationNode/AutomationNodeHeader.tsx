@@ -9,6 +9,7 @@ interface AutomationNodeHeaderProps {
   onEdit?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
+  color?: string;
 }
 
 export const AutomationNodeHeader: React.FC<AutomationNodeHeaderProps> = ({
@@ -18,21 +19,22 @@ export const AutomationNodeHeader: React.FC<AutomationNodeHeaderProps> = ({
   onEdit,
   onDuplicate,
   onDelete,
+  color,
 }) => {
   return (
     <Group justify="space-between" align="center" wrap="nowrap" gap="xs">
       <Group gap="xs" style={{ flex: 1 }}>
-        <ThemeIcon variant="light" color="blue" size="md" radius="md">
+        <ThemeIcon variant="light" color={color} size="md" radius="md">
           <IconRobot size={18} stroke={1.5} />
         </ThemeIcon>
         <Text fw={700} size="md" c="bright" truncate>{title}</Text>
       </Group>
 
       <Group gap={4} className="nodrag">
-        <ActionIcon 
-          variant={isRewriting ? 'filled' : 'subtle'} 
-          color="blue" 
-          size="md" 
+        <ActionIcon
+          variant={isRewriting ? 'filled' : 'subtle'}
+          color={color}
+          size="md"
           onClick={onToggleRewrite}
           radius="md"
         >

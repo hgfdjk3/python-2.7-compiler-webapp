@@ -2,7 +2,9 @@ import json
 import os
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+import asyncio
 from typing import Dict, Any, List, Optional
+from src.api.services.connector_tools_service import clear_connector_tools_cache
 
 router = APIRouter()
 
@@ -32,6 +34,15 @@ def save_connectors(connectors: Dict[str, Any]):
 # Format: { "connector_id": { "id": "connector_id", "name": "...", "url": "...", "color": "...", "description": "..." } }
 CONNECTORS_DB: Dict[str, Any] = load_connectors()
 
+def trigger_background_discovery():
+    """Triggers background discovery of tools across all active connectors."""
+    try:
+        from src.services.harness.mcp.client import MCPClientManager
+        mcp_manager = MCPClientManager(CONNECTORS_DB)
+        asyncio.create_task(mcp_manager.connect_all())
+    except Exception:
+        pass
+
 class ConnectorCreate(BaseModel):
     id: str
     name: str
@@ -49,10 +60,27 @@ class ConnectorResponse(BaseModel):
     icon: Optional[str] = None
     description: str
     headers: Optional[Dict[str, str]] = None
+    tools: Optional[List[str]] = None
 
 @router.get("/connectors", response_model=List[ConnectorResponse])
 async def list_connectors():
-    return list(CONNECTORS_DB.values())
+    from src.api.services.connector_tools_service import get_tool_mappings
+    mappings = await get_tool_mappings()
+    
+    # Group tools by connector ID
+    conn_to_tools = {}
+    for tool_name, info in mappings.items():
+        conn_id = info["connector_id"]
+        if conn_id not in conn_to_tools:
+            conn_to_tools[conn_id] = []
+        conn_to_tools[conn_id].append(tool_name)
+        
+    result = []
+    for conn_id, conn in CONNECTORS_DB.items():
+        conn_copy = conn.copy()
+        conn_copy["tools"] = conn_to_tools.get(conn_id, [])
+        result.append(conn_copy)
+    return result
 
 @router.post("/connectors", response_model=ConnectorResponse)
 async def add_connector(connector: ConnectorCreate, request: Request):
@@ -68,6 +96,8 @@ async def add_connector(connector: ConnectorCreate, request: Request):
     if agent_runner:
         agent_runner.mcp_configs = CONNECTORS_DB
         
+    clear_connector_tools_cache()
+    trigger_background_discovery()
     return CONNECTORS_DB[connector.id]
 
 @router.put("/connectors/{connector_id}", response_model=ConnectorResponse)
@@ -90,6 +120,8 @@ async def update_connector(connector_id: str, connector: ConnectorCreate, reques
     if agent_runner:
         agent_runner.mcp_configs = CONNECTORS_DB
         
+    clear_connector_tools_cache()
+    trigger_background_discovery()
     return CONNECTORS_DB[connector.id]
 
 @router.delete("/connectors/{connector_id}")
@@ -105,4 +137,6 @@ async def delete_connector(connector_id: str, request: Request):
     if agent_runner:
         agent_runner.mcp_configs = CONNECTORS_DB
         
+    clear_connector_tools_cache()
+    trigger_background_discovery()
     return {"message": "Connector deleted"}

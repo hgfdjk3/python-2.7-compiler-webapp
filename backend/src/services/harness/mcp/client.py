@@ -8,6 +8,7 @@ import re
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from langchain_mcp_adapters.tools import load_mcp_tools
+from src.api.services.connector_tools_service import register_tool_mapping
 
 logger = logging.getLogger("mcp_client_manager")
 
@@ -97,6 +98,8 @@ class MCPClientManager:
                                 return (err, None) if getattr(t, "response_format", None) == "content_and_artifact" else err
                         tool._run = safe_run
                         
+                    color = config.get("color", "#228be6")
+                    register_tool_mapping(tool.name, name, color)
                     logger.info(f"Loaded tool: {tool.name}")
                 
                 all_tools.extend(server_tools)

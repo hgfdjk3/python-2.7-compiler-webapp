@@ -107,7 +107,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, []);
 
   const [isAutomationMode, setIsAutomationMode] = useState(false);
-  const [automationBuilderData, setAutomationBuilderData] = useState<{ nodes: any[], edges: any[] } | null>(null);
+  const [automationBuilderData, setAutomationBuilderData] = useState<{ nodes: any[], edges: any[], name?: string } | null>(null);
 
   const handleAutomationGenerated = useCallback((data: any) => {
     setAutomationBuilderData(data);
@@ -169,6 +169,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             >
               <AutomationBuilder
                 height="100%"
+                initialName={automationBuilderData?.name}
                 initialNodes={automationBuilderData?.nodes}
                 initialEdges={automationBuilderData?.edges}
               />

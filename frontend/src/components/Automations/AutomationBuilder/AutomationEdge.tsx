@@ -25,7 +25,9 @@ export const AutomationEdge = ({
   source,
   data,
 }: EdgeProps<AppEdge>) => {
-  const { setNodes, setEdges, getEdges } = useReactFlow<AppNode, AppEdge>();
+  const { setNodes, setEdges, getEdges, getNode } = useReactFlow<AppNode, AppEdge>();
+  const sourceNode = getNode(source);
+  const edgeColor = sourceNode?.data?.color || 'var(--mantine-color-blue-6)';
 
   const setPopoverOpened = (val: boolean | ((prev: boolean) => boolean)) => {
     setEdges((eds) => eds.map((e) => {
@@ -146,7 +148,12 @@ export const AutomationEdge = ({
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ ...style, strokeWidth: 2 }} className="automation-edge-path" />
+      <BaseEdge 
+        path={edgePath} 
+        markerEnd={markerEnd} 
+        style={{ ...style, '--edge-stroke-color': edgeColor, strokeWidth: 2 } as React.CSSProperties} 
+        className="automation-edge-path" 
+      />
       <EdgeLabelRenderer>
         <div
           style={{

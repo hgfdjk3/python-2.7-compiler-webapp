@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Group, Paper, Flex, ThemeIcon, Text, Box, ActionIcon } from '@mantine/core';
 import { IconTool, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getToolInfo } from '../../../../utils/agentUtils';
+import { getToolInfo, useAgentInfo } from '../../../../utils/agentUtils';
 import './AutomationNode.css';
 
 export interface AutomationExpandedToolsProps {
@@ -13,6 +13,7 @@ const ITEMS_PER_PAGE = 3;
 
 export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = ({ tools }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const { agents } = useAgentInfo();
 
   if (!tools || tools.length === 0) return null;
 
@@ -54,7 +55,7 @@ export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = (
               >
                 <Flex gap={6} direction="column">
                   {displayedTools.map((tool, index) => {
-                    const toolInfo = getToolInfo(tool);
+                    const toolInfo = getToolInfo(tool, agents);
                     return (
                       <Group
                         key={index}

@@ -33,11 +33,11 @@ async def get_automation(automation_id: str):
 
 @router.post("/automations", response_model=AutomationResponse)
 async def create_automation(automation: AutomationCreate):
-    return create_new_automation(automation.model_dump())
+    return await create_new_automation(automation.model_dump())
 
 @router.put("/automations/{automation_id}", response_model=AutomationResponse)
 async def update_automation(automation_id: str, automation: AutomationUpdate):
-    updated_data = update_existing_automation(
+    updated_data = await update_existing_automation(
         automation_id, 
         automation.model_dump(exclude_unset=True)
     )

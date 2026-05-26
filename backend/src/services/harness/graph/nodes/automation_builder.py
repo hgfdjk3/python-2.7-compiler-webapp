@@ -19,6 +19,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
 from src.services.harness.graph.state import AgentState
+from src.api.services.connector_tools_service import calculate_node_color
 
 logger = logging.getLogger("automation_builder")
 
@@ -76,7 +77,7 @@ Guidelines:
 
 # ── Helper: Convert workflow to frontend JSON ────────────────────────
 
-def workflow_to_frontend_json(name: str, stages: List[AutomationStage]) -> Dict[str, Any]:
+async def workflow_to_frontend_json(name: str, stages: List[AutomationStage]) -> Dict[str, Any]:
     """
     Converts an AutomationResponse's stages into the exact JSON structure
     the frontend AutomationBuilder component expects (nodes + edges).
@@ -86,6 +87,7 @@ def workflow_to_frontend_json(name: str, stages: List[AutomationStage]) -> Dict[
 
     for i, stage in enumerate(stages):
         node_id = str(i + 1)
+        color = await calculate_node_color(stage.tools)
         nodes.append({
             "id": node_id,
             "type": "automation",
@@ -94,6 +96,7 @@ def workflow_to_frontend_json(name: str, stages: List[AutomationStage]) -> Dict[
                 "title": stage.title,
                 "description": stage.description,
                 "tools": stage.tools,
+                "color": color,
             }
         })
 
@@ -163,7 +166,7 @@ async def automation_builder_node(state: AgentState, config: RunnableConfig) -> 
             "next": "clarifier"
         }
 
-    automation_json = workflow_to_frontend_json(result.name or "Automation Workflow", result.stages)
+    automation_json = await workflow_to_frontend_json(result.name or "Automation Workflow", result.stages)
     logger.info(f"Generated automation '{result.name or 'Automation Workflow'}' with {len(result.stages)} stages")
 
     return {

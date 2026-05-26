@@ -1,7 +1,7 @@
 import React from 'react';
 import { Group, Text, ThemeIcon, ActionIcon } from '@mantine/core';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import { getToolInfo } from '../../../../utils/agentUtils';
+import { getToolInfo, useAgentInfo } from '../../../../utils/agentUtils';
 
 export interface AutomationNodeToolsProps {
   tools: string[];
@@ -9,16 +9,18 @@ export interface AutomationNodeToolsProps {
   onToggle: () => void;
 }
 
-export const AutomationNodeTools: React.FC<AutomationNodeToolsProps> = ({ 
-  tools, 
-  expanded, 
-  onToggle 
+export const AutomationNodeTools: React.FC<AutomationNodeToolsProps> = ({
+  tools,
+  expanded,
+  onToggle
 }) => {
+  const { agents } = useAgentInfo();
+
   if (!tools || tools.length === 0) return null;
 
   // Group tools by agent color
   const summary = tools.reduce((acc, toolIdOrName) => {
-    const info = getToolInfo(toolIdOrName);
+    const info = getToolInfo(toolIdOrName, agents);
     const key = info.color;
 
     if (!acc[key]) {

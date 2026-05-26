@@ -1025,5 +1025,255 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "ec34f905-5c17-4c7e-9105-cdeb12e747ec"
+  },
+  "a817a4f1-4f90-4072-a1a4-047c27a198a8": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Random City",
+          "description": "Pick a city at random from a predefined list of major locations.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Current Weather",
+          "description": "Call the get_weather_in_city tool with the selected city to retrieve the latest weather conditions.",
+          "tools": [
+            "get_weather_in_city"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Present Weather Report",
+          "description": "Format the weather data into a concise, human\u2011readable summary and output it (or forward it to a notification channel).",
+          "tools": [],
+          "color": "#228be6"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "a817a4f1-4f90-4072-a1a4-047c27a198a8"
+  },
+  "ab766bf9-09f4-4797-a5b6-227efaae9e5c": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Random City",
+          "description": "Pick a city at random from a predefined list of major locations.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Current Weather",
+          "description": "Call the get_weather_in_city tool with the selected city to retrieve the latest weather conditions.",
+          "tools": [
+            "get_weather_in_city"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Present Weather Report",
+          "description": "Format the weather data into a concise, human\u2011readable summary and output it (or forward it to a notification channel).",
+          "tools": [],
+          "color": "#228be6"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "ab766bf9-09f4-4797-a5b6-227efaae9e5c"
+  },
+  "187ab797-17ad-4b20-9e86-964dbdadfe14": {
+    "name": "New Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Schedule Trigger",
+          "description": "Run the workflow every morning at a set time to start the daily digest.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Multi-City Weather",
+          "description": "Retrieve the current weather for a predefined list of cities.",
+          "tools": [
+            "get_multi_city_weather"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Collect Recent News",
+          "description": "Get the latest headlines from the news service.",
+          "tools": [
+            "recent_news"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Compile Digest",
+          "description": "Combine weather data and news headlines into a formatted text summary.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      },
+      {
+        "id": "5",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Save Digest to File",
+          "description": "Write the compiled summary to a daily log file for later reference.",
+          "tools": [
+            "list_directory"
+          ],
+          "color": "#3abd3a"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e4-5",
+        "source": "4",
+        "target": "5",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "187ab797-17ad-4b20-9e86-964dbdadfe14"
   }
 }

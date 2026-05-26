@@ -9,6 +9,7 @@ export interface ConnectorFormData {
   icon?: string;
   description: string;
   headers?: Record<string, string>;
+  tools?: string[];
 }
 
 export const getConnectors = async (): Promise<ConnectorFormData[]> => {

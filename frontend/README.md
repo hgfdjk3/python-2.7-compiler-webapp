@@ -194,7 +194,7 @@ src/
 │   ├── DevelopersConnections.page.tsx # /developers/connections
 │   └── ...
 ├── utils/
-│   └── agentUtils.tsx   # AgentInfo type, AGENTS_DIRECTORY, TOOLS_DIRECTORY
+│   └── agentUtils.tsx   # AgentInfo type and dynamic agent/tool utilities
 └── theme.ts             # Full Mantine theme with all color scales
 ```
 

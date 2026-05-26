@@ -9,7 +9,6 @@ import { AutomationNodeRewrite } from './AutomationNodeRewrite';
 import { AutomationExpandedTools } from './AutomationExpandedTools';
 import { AutomationNodeExecution } from './AutomationNodeExecution';
 import { AnimatePresence } from 'motion/react';
-import { getToolInfo } from '../../../../utils/agentUtils';
 import './AutomationNode.css';
 
 export interface AutomationNodeProps extends NodeProps<AppNode> { }
@@ -51,9 +50,7 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
     );
   };
 
-  const firstTool = data.tools && data.tools.length > 0 ? data.tools[0] : null;
-  const toolInfo = firstTool ? getToolInfo(firstTool) : null;
-  const nodeColor = toolInfo ? toolInfo.color : 'var(--mantine-color-blue-6)';
+  const nodeColor = (data.color as string) || 'var(--mantine-color-zinq-6)';
 
   return (
     <div onClick={handleNodeClick}>
@@ -82,6 +79,7 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
             title={data.title}
             isRewriting={!!isRewriting}
             onToggleRewrite={() => setIsRewriting(!isRewriting)}
+            color={nodeColor}
           />
 
           {!isRewriting ? (

@@ -50,7 +50,7 @@ export const AutomationBlock: React.FC<AutomationBlockProps> = ({ content, onAut
           </ThemeIcon>
           <Box>
             <Text fw={500} size="sm">Automation Generated Successfully</Text>
-            <Text size="xs" c="dimmed">The automation workflow has been loaded into the builder above.</Text>
+            <Text size="xs" c="dimmed">{jsonData?.name}</Text>
           </Box>
         </Group>
         <ActionIcon variant="subtle" color="gray" onClick={() => setOpened((o) => !o)}>

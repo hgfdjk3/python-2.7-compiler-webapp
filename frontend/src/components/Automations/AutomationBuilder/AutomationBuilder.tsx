@@ -29,6 +29,7 @@ const getScheduleString = (config: ScheduleConfig): string => {
 
 export interface AutomationBuilderProps {
   automationId?: string;
+  initialName?: string;
   initialNodes?: AppNode[];
   initialEdges?: Edge[];
   height?: string | number;
@@ -96,6 +97,7 @@ const defaultEdges: Edge[] = [
 
 export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   automationId,
+  initialName,
   initialNodes = defaultNodes,
   initialEdges = defaultEdges,
   height = '100%'
@@ -105,7 +107,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   const [panelOpened, setPanelOpened] = useState(false);
 
   const [historyState, handlers, historyValue] = useStateHistory({ nodes: initialNodes, edges: initialEdges });
-  
+
   // Sync with incoming props (e.g., from LLM generation)
   React.useEffect(() => {
     handlers.set({ nodes: initialNodes, edges: initialEdges });
