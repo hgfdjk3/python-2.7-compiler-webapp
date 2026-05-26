@@ -14,9 +14,9 @@ export const RecentChats: React.FC<RecentChatsProps> = ({
   chats, 
   onChatClick, 
   onToggleSave, 
-  limit = 4
+  limit
 }) => {
-  const displayedChats = chats.slice(0, limit);
+  const displayedChats = limit ? chats.slice(0, limit) : chats;
 
   return (
     <Box className="recent-chats-container">

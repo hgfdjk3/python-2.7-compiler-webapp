@@ -10,6 +10,8 @@ export interface AutomationActionButtonProps {
   onToggle: () => void;
   onRun: () => void;
   onScheduleClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
@@ -20,6 +22,8 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
   onToggle,
   onRun,
   onScheduleClick,
+  onEdit,
+  onDelete,
 }) => {
   const buttonText = isRunning ? "Running" : (isScheduled ? (schedule || "Scheduled") : "Run");
   const buttonVariant = isActive || !isScheduled ? "light" : "subtle";
@@ -89,11 +93,11 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
           >
             {isScheduled ? 'Edit Schedule' : 'Set Schedule'}
           </Menu.Item>
-          <Menu.Item leftSection={<IconEdit size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }}>
+          <Menu.Item leftSection={<IconEdit size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onEdit}>
             Edit Details
           </Menu.Item>
           <Menu.Divider />
-          <Menu.Item color="red" leftSection={<IconTrash size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }}>
+          <Menu.Item color="red" leftSection={<IconTrash size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onDelete}>
             Delete
           </Menu.Item>
         </Menu.Dropdown>

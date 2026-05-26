@@ -3,7 +3,7 @@ import { Edge } from '@xyflow/react';
 import { AppNode } from './types';
 import { Box, Paper, Group, ActionIcon, Button, Tooltip } from '@mantine/core';
 import { useStateHistory } from '@mantine/hooks';
-import { useCreateAutomation } from '../../../api/automations';
+import { useCreateAutomation, useUpdateAutomation } from '../../../api/automations';
 import { AutomationSaveButton } from '../AutomationSaveButton';
 import { AutomationHistoryButtons } from '../AutomationHistoryButtons';
 import { AutomationActionButton } from '../AutomationActionButton';
@@ -116,6 +116,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   }, [initialNodes, initialEdges]);
 
   const createAutomation = useCreateAutomation();
+  const updateAutomation = useUpdateAutomation();
 
   // Automation State
   const [isScheduled, setIsScheduled] = useState(false);
@@ -170,19 +171,27 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
             onRedo={() => handlers.forward()}
           />
           <AutomationSaveButton
-            isSaving={createAutomation.isPending}
+            isSaving={createAutomation.isPending || updateAutomation.isPending}
             onSave={() => {
-              createAutomation.mutate({
+              const payload = {
                 name: automationName,
                 nodes: historyState.nodes,
                 edges: historyState.edges,
                 automation_type: isScheduled ? 'scheduled' : 'manual',
                 schedule_config: scheduleConfig,
-              }, {
-                onSuccess: (data) => {
-                  setCurrentAutomationId(data.id);
-                }
-              });
+              };
+              if (currentAutomationId) {
+                updateAutomation.mutate({
+                  id: currentAutomationId,
+                  automation: payload,
+                });
+              } else {
+                createAutomation.mutate(payload, {
+                  onSuccess: (data) => {
+                    setCurrentAutomationId(data.id);
+                  }
+                });
+              }
             }}
           />
           <AutomationActionButton

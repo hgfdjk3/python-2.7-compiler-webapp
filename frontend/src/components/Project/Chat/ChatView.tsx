@@ -6,7 +6,6 @@ import { ProjectDashboard } from '../ProjectDashboard';
 import { PromptInput } from './PromptInput/PromptInput';
 import { Source, SourceGroup } from '../Sources/types';
 import { ChatItemData } from './ChatItem';
-import { AutomationData } from '../../Automations/AutomationItem';
 import { ChatConversation, ChatMessage } from './ChatConversation/ChatConversation';
 import { useChatStream } from '../../../hooks/useChatStream';
 import { ManageSourcesModal } from './PromptInput/ManageSourcesModal/ManageSourcesModal';
@@ -24,12 +23,7 @@ const MOCK_CHATS: ChatItemData[] = [
   { id: 'c5', title: 'CI/CD pipeline review', preview: 'Reviewed GitHub Actions workflows and added caching for faster builds...', timestamp: '2 days ago', isSaved: false },
 ];
 
-const MOCK_AUTOMATIONS: AutomationData[] = [
-  { id: 'a1', name: 'Daily status digest', description: 'Summarizes all project activity and sends a report to Slack', isScheduled: true, schedule: 'Every day 9:00 AM', isActive: true, lastRun: '2h ago' },
-  { id: 'a2', name: 'PR review assistant', description: 'Automatically reviews new pull requests and leaves comments', isScheduled: false, isActive: true, lastRun: '30m ago' },
-  { id: 'a3', name: 'Knowledge base sync', description: 'Syncs updated documents from Confluence into project sources', isScheduled: true, schedule: 'Every 6 hours', isActive: false, lastRun: '1 day ago' },
-  { id: 'a4', name: 'Bug triage', description: 'Classifies and prioritizes incoming bug reports from Jira', isScheduled: false, isActive: true },
-];
+
 
 interface ChatViewProps {
   project: Project;
@@ -55,7 +49,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onAddGlobalToProject,
 }) => {
   const [chats, setChats] = useState<ChatItemData[]>(MOCK_CHATS);
-  const [automations, setAutomations] = useState<AutomationData[]>(MOCK_AUTOMATIONS);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isManageSourcesModalOpen, setIsManageSourcesModalOpen] = useState(false);
 
@@ -139,13 +132,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
     );
   };
 
-  const handleToggleAutomationActive = (id: string) => {
-    setAutomations((current) =>
-      current.map((automation) =>
-        automation.id === id ? { ...automation, isActive: !automation.isActive } : automation
-      )
-    );
-  };
 
   const showMarkdownResponse = messages.length > 0 || isPending;
 
@@ -217,9 +203,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             >
               <ProjectDashboard
                 chats={chats}
-                automations={automations}
                 onToggleChatSave={handleToggleSave}
-                onToggleAutomationActive={handleToggleAutomationActive}
               />
             </motion.div>
           )}

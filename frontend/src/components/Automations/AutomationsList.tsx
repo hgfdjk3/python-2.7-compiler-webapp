@@ -1,21 +1,33 @@
-import React from 'react';
-import { Box, Text } from '@mantine/core';
+import React, { useState } from 'react';
+import { Box, Text, Loader, Center } from '@mantine/core';
 import { motion, Variants } from 'motion/react';
 import { AutomationItem, AutomationData } from './AutomationItem';
+import { ScheduleConfiguratorModal } from './ScheduleConfiguratorModal';
+import { ScheduleConfig } from './ScheduleConfigurator';
+import { useAutomations, useDeleteAutomation, Automation } from '../../api/automations';
 import './Automations.css';
 
+/**
+ * Maps a backend Automation to the AutomationData shape used by AutomationsList.
+ */
+const toAutomationData = (automation: Automation): AutomationData => ({
+  id: automation.id,
+  name: automation.name,
+  description: `${automation.nodes?.length ?? 0} nodes • ${automation.automation_type}`,
+  isScheduled: automation.automation_type === 'scheduled',
+  schedule: automation.schedule_config?.description,
+  isActive: automation.automation_type === 'scheduled',
+  isRunning: false,
+});
+
 interface AutomationsListProps {
-  automations: AutomationData[];
-  onToggleActive?: (id: string) => void;
-  onRun?: (id: string) => void;
-  onAutomationClick?: (id: string) => void;
-  onAdd?: () => void;
-  onScheduleClick?: (id: string) => void;
+  onAutomationClick?: (id: string, automation: Automation) => void;
+  onRunAutomation?: (id: string, automation: Automation) => void;
+  limit?: number;
 }
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
-
   show: {
     opacity: 1,
     transition: {
@@ -35,13 +47,51 @@ const itemVariants: Variants = {
 };
 
 export const AutomationsList: React.FC<AutomationsListProps> = ({
-  automations,
-  onToggleActive,
-  onRun,
   onAutomationClick,
-  onAdd,
-  onScheduleClick,
+  onRunAutomation,
+  limit,
 }) => {
+  const { data: backendAutomations = [], isLoading } = useAutomations();
+  const deleteAutomation = useDeleteAutomation();
+  const automations = backendAutomations.map(toAutomationData);
+  const displayedAutomations = limit ? automations.slice(0, limit) : automations;
+
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [schedulingAutomationId, setSchedulingAutomationId] = useState<string | null>(null);
+
+  const handleScheduleClick = (id: string) => {
+    setSchedulingAutomationId(id);
+    setScheduleModalOpen(true);
+  };
+
+  const handleSaveSchedule = (config: ScheduleConfig) => {
+    console.log('Saved schedule for', schedulingAutomationId, config);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteAutomation.mutate(id);
+  };
+
+  const handleEdit = (id: string) => {
+    const automation = backendAutomations.find((a) => a.id === id);
+    if (automation) onAutomationClick?.(id, automation);
+  };
+
+  const handleRun = (id: string) => {
+    const automation = backendAutomations.find((a) => a.id === id);
+    if (automation) onRunAutomation?.(id, automation);
+  };
+
+  const selectedAutomation = automations.find(a => a.id === schedulingAutomationId);
+
+  if (isLoading) {
+    return (
+      <Center py="lg">
+        <Loader size="sm" />
+      </Center>
+    );
+  }
+
   return (
     <Box className="automations-section">
       {automations.length > 0 ? (
@@ -51,14 +101,16 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
           initial="hidden"
           animate="show"
         >
-          {automations.map((automation) => (
+          {displayedAutomations.map((automation) => (
             <motion.div key={automation.id} variants={itemVariants}>
               <AutomationItem
                 automation={automation}
-                onToggleActive={onToggleActive}
-                onRun={onRun}
-                onClick={onAutomationClick}
-                onScheduleClick={onScheduleClick}
+                onToggleActive={() => {}} // TODO: implement toggle
+                onRun={() => handleRun(automation.id)}
+                onClick={() => handleEdit(automation.id)}
+                onScheduleClick={() => handleScheduleClick(automation.id)}
+                onEdit={() => handleEdit(automation.id)}
+                onDelete={() => handleDelete(automation.id)}
               />
             </motion.div>
           ))}
@@ -79,6 +131,16 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
           </Box>
         </motion.div>
       )}
+
+      <ScheduleConfiguratorModal
+        opened={scheduleModalOpen}
+        onClose={() => {
+          setScheduleModalOpen(false);
+          setSchedulingAutomationId(null);
+        }}
+        onSave={handleSaveSchedule}
+        automationName={selectedAutomation?.name}
+      />
     </Box>
   );
 };

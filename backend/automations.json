@@ -1369,5 +1369,117 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "330fd773-eb63-466c-b82f-334a6b124339"
+  },
+  "54523e65-4408-4db8-9de0-7c858752bb96": {
+    "name": "Daily Summary Automation",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Trigger: Schedule Daily Run",
+          "description": "The workflow is triggered automatically each morning at a specified time.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Gather Weather Data",
+          "description": "Fetch the current weather for the primary city using the weather service.",
+          "tools": [
+            "get_weather_in_city"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Collect Recent News",
+          "description": "Retrieve the top headlines from the news service.",
+          "tools": [
+            "recent_news"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Compile Summary Report",
+          "description": "Combine weather information and news headlines into a concise text summary.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      },
+      {
+        "id": "5",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Deliver Report",
+          "description": "Send the compiled summary via email or messaging platform (placeholder for future integration).",
+          "tools": [],
+          "color": "#228be6"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e4-5",
+        "source": "4",
+        "target": "5",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "54523e65-4408-4db8-9de0-7c858752bb96"
   }
 }
