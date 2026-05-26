@@ -42,10 +42,9 @@ export const SidebarWorkspace: React.FC<SidebarWorkspaceProps> = ({
   return (
     <NavLink
       label={<Text size="sm" fw={500} truncate>{name}</Text>}
-      leftSection={<FolderIcon size={16} stroke={1.5} color="light-dark(var(--mantine-color-zinc-6), var(--mantine-color-zinc-7))" />}
+      leftSection={<FolderIcon size={16} stroke={1.5} color="light-dark(var(--mantine-color-zinc-6), var(--mantine-color-zinc-3))" />}
       opened={isOpened}
       onChange={onToggle}
-
       variant="subtle"
       childrenOffset={28}
       p="5"

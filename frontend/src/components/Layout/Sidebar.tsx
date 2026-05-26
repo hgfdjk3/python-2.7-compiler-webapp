@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActionIcon, Avatar, Box, Group, NavLink, Stack, Text, ScrollArea } from '@mantine/core';
+import { ActionIcon, Avatar, Box, Group, NavLink, Stack, Text, ScrollArea, Modal, TextInput, Button } from '@mantine/core';
 import {
   IconLayoutSidebar,
   IconSettings,
@@ -7,12 +7,14 @@ import {
   IconFolders,
   IconPlug,
   IconCode,
+  IconPlus,
 } from '@tabler/icons-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SidebarWorkspace } from './SidebarWorkspace';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import { AtomLogo } from '../AtomLogo/AtomLogo';
+import { useProjects } from '../../api/projects';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 
 
 const navItems = [
@@ -22,32 +24,7 @@ const navItems = [
   { label: 'Developers', icon: IconCode, link: '/developers' },
 ];
 
-const mockProjects = [
-  {
-    id: 'p1',
-    name: 'Acme Corp Integration',
-    chats: [
-      { id: 'c1', name: 'API Design Notes' },
-      { id: 'c2', name: 'Database Schema' }
-    ]
-  },
-  {
-    id: 'p2',
-    name: 'Website Redesign',
-    chats: [
-      { id: 'c3', name: 'Landing Page Copy' },
-      { id: 'c4', name: 'Color Palette Ideas' },
-      { id: 'c5', name: 'Competitor Analysis' }
-    ]
-  },
-  {
-    id: 'p3',
-    name: 'Q3 Marketing Campaign',
-    chats: [
-      { id: 'c6', name: 'Ad Copy Drafts' }
-    ]
-  }
-];
+
 
 interface SidebarProps {
   opened: boolean;
@@ -56,7 +33,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
   const location = useLocation();
-  const [openedProjects, setOpenedProjects] = useState<string[]>(['p1']);
+  const [openedProjects, setOpenedProjects] = useState<string[]>([]);
+  const { data: projects = [] } = useProjects();
 
   const toggleProject = (projectId: string) => {
     setOpenedProjects((prev) =>
@@ -140,14 +118,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
             style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}
           >
             <Box px={8} mb="xs">
-              <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.5px' }}>
-                Workspaces
-              </Text>
+              <Group justify="space-between">
+                <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.5px' }}>
+                  Workspaces
+                </Text>
+                <ActionIcon variant="subtle" size="sm" color="gray" onClick={() => navigate('/new_project')}>
+                  <IconPlus size={14} />
+                </ActionIcon>
+              </Group>
             </Box>
 
             <ScrollArea flex={1} pr="0" >
               <Stack gap={0}>
-                {mockProjects.map((project) => (
+                {projects.map((project) => (
                   <SidebarWorkspace
                     key={project.id}
                     id={project.id}

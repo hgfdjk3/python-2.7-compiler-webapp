@@ -6,6 +6,7 @@ import { ChatView } from './Chat/ChatView';
 import { ProjectConfigPanel } from '../Layout/ProjectConfigPanel';
 import { Source, SourceGroup } from './Sources/types';
 import { SourceCard } from './Sources/SourceCard/SourceCard';
+import { Project } from '../../api/projects';
 
 const MOCK_GROUPS: SourceGroup[] = [
   {
@@ -31,7 +32,11 @@ const MOCK_GLOBAL_SOURCES: Source[] = [
   { id: 'g4', title: 'Onboarding.doc', description: 'New hire onboarding', type: 'doc', color: 'green' },
 ];
 
-export const ProjectPanel: React.FC = () => {
+interface ProjectPanelProps {
+  project: Project;
+}
+
+export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
   const [groups, setGroups] = React.useState<SourceGroup[]>(MOCK_GROUPS);
   const [sources, setSources] = React.useState<Source[]>(MOCK_STANDALONE);
   const [globalSources, setGlobalSources] = React.useState<Source[]>(MOCK_GLOBAL_SOURCES);
@@ -163,6 +168,7 @@ export const ProjectPanel: React.FC = () => {
       <Group h="100%" align="stretch" wrap="nowrap" gap="xs" p="0">
         <Box style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <ChatView
+            project={project}
             sources={allSources}
             standaloneSources={sources}
             globalSources={globalSources}

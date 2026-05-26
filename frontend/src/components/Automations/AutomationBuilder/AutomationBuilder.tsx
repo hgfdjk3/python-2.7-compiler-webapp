@@ -12,6 +12,7 @@ import { ScheduleConfig } from '../ScheduleConfigurator';
 import { AutomationBoard } from './AutomationBoard';
 import { AutomationExecutionPanel } from './AutomationExecutionPanel';
 import { useAutomationRun } from '../../../hooks/useAutomationRun';
+import { EditableTitle } from '../../Common/EditableTitle';
 
 const getScheduleString = (config: ScheduleConfig): string => {
   const { frequency, interval, time } = config;
@@ -103,6 +104,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   height = '100%'
 }) => {
   const [currentAutomationId, setCurrentAutomationId] = useState<string | undefined>(automationId);
+  const [automationName, setAutomationName] = useState(initialName || 'New Automation');
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
   const [panelOpened, setPanelOpened] = useState(false);
 
@@ -141,6 +143,22 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
           position: 'absolute',
           zIndex: 10,
           top: '10px',
+          left: '10px',
+        }}
+      >
+        <EditableTitle
+          value={automationName}
+          onChange={setAutomationName}
+          size="md"
+          placeholder="Automation Name"
+        />
+      </Box>
+
+      <Box
+        style={{
+          position: 'absolute',
+          zIndex: 10,
+          top: '10px',
           right: '10px',
         }}
       >
@@ -155,7 +173,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
             isSaving={createAutomation.isPending}
             onSave={() => {
               createAutomation.mutate({
-                name: 'New Automation',
+                name: automationName,
                 nodes: historyState.nodes,
                 edges: historyState.edges,
                 automation_type: isScheduled ? 'scheduled' : 'manual',
@@ -177,7 +195,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
               if (!currentAutomationId) {
                 // If not saved, auto-save first
                 createAutomation.mutate({
-                  name: 'New Automation',
+                  name: automationName,
                   nodes: historyState.nodes,
                   edges: historyState.edges,
                   automation_type: isScheduled ? 'scheduled' : 'manual',

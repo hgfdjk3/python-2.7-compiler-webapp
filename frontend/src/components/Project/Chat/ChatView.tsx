@@ -14,6 +14,7 @@ import '../ProjectDashboard.css';
 import { AutomationBuilder } from '@/components/Automations/AutomationBuilder/AutomationBuilder';
 import { ResizeDivider } from './ResizeDivider';
 import { PromptClarification, ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
+import { Project } from '../../../api/projects';
 
 const MOCK_CHATS: ChatItemData[] = [
   { id: 'c1', title: 'Optimizing vector embeddings', preview: 'We discussed chunking strategies and how to improve retrieval accuracy with hybrid search...', timestamp: '2h ago', isSaved: true },
@@ -31,6 +32,7 @@ const MOCK_AUTOMATIONS: AutomationData[] = [
 ];
 
 interface ChatViewProps {
+  project: Project;
   sources: Source[];
   standaloneSources: Source[];
   globalSources: Source[];
@@ -42,6 +44,7 @@ interface ChatViewProps {
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({
+  project,
   sources,
   standaloneSources,
   globalSources,
@@ -76,7 +79,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       content: value,
       timestamp
     }]);
-
+    setShowClarification(false);
     mutate({ prompt: value, isAutomation }, {
       onSuccess: (finalContent) => {
         setMessages((prev) => [...prev, {
@@ -148,7 +151,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   return (
     <Box p="0" pr="0" pt="0" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }}>
-      <ProjectHeader title="Operation Grandma" />
+      <ProjectHeader title={project.name} />
 
       <AnimatePresence initial={false}>
         {showMarkdownResponse && isAutomationMode && automationBuilderData && (

@@ -1275,5 +1275,99 @@
     "automation_type": "manual",
     "schedule_config": null,
     "id": "187ab797-17ad-4b20-9e86-964dbdadfe14"
+  },
+  "330fd773-eb63-466c-b82f-334a6b124339": {
+    "name": "Randomized Daily Digest",
+    "nodes": [
+      {
+        "id": "1",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Select Random Cities and Files",
+          "description": "Pick a random subset of cities from a predefined list and a random file from a target directory to serve as sources for the digest.",
+          "tools": [
+            "list_directory",
+            "read_files_content1"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "2",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Fetch Weather for Chosen Cities",
+          "description": "Retrieve current weather data for each randomly selected city using the weather service.",
+          "tools": [
+            "get_multi_city_weather"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "3",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Gather Random News Articles",
+          "description": "Pull the latest news headlines and select a random article from each category to include in the digest.",
+          "tools": [
+            "recent_news"
+          ],
+          "color": "#3abd3a"
+        }
+      },
+      {
+        "id": "4",
+        "type": "automation",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "data": {
+          "title": "Compile and Output Digest",
+          "description": "Combine the weather information, news snippets, and file content into a formatted summary and display it or write it to a log file.",
+          "tools": [],
+          "color": "#228be6"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1-2",
+        "source": "1",
+        "target": "2",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e2-3",
+        "source": "2",
+        "target": "3",
+        "type": "automation",
+        "animated": true
+      },
+      {
+        "id": "e3-4",
+        "source": "3",
+        "target": "4",
+        "type": "automation",
+        "animated": true
+      }
+    ],
+    "automation_type": "manual",
+    "schedule_config": null,
+    "id": "330fd773-eb63-466c-b82f-334a6b124339"
   }
 }

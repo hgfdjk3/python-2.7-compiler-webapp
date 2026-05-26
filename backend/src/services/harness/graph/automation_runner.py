@@ -24,7 +24,7 @@ def create_automation_graph(
     automation_data: Dict[str, Any], 
     all_tools: List[BaseTool],
     model_name: str = "gpt-4o-mini",
-    temperature: float = 0.1
+    temperature: float = 0.0
 ) -> StateGraph:
     """
     Dynamically compiles a LangGraph StateGraph from an automation JSON definition.

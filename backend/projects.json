@@ -1,0 +1,29 @@
+[
+  {
+    "id": "p1",
+    "name": "Acme Corp Integration",
+    "chats": [
+      { "id": "c1", "name": "API Design Notes" },
+      { "id": "c2", "name": "Database Schema" }
+    ],
+    "automation_ids": []
+  },
+  {
+    "id": "p2",
+    "name": "Website Redesign",
+    "chats": [
+      { "id": "c3", "name": "Landing Page Copy" },
+      { "id": "c4", "name": "Color Palette Ideas" },
+      { "id": "c5", "name": "Competitor Analysis" }
+    ],
+    "automation_ids": []
+  },
+  {
+    "id": "p3",
+    "name": "Q3 Marketing Campaign",
+    "chats": [
+      { "id": "c6", "name": "Ad Copy Drafts" }
+    ],
+    "automation_ids": []
+  }
+]

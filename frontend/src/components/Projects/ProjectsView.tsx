@@ -5,32 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { ProjectsHeader } from './ProjectsHeader/ProjectsHeader';
 import { ProjectCard } from './ProjectCard/ProjectCard';
 
-const MOCK_PROJECTS = [
-  {
-    id: '1',
-    title: 'test',
-    description: 'A sandbox project for experimenting with new agent configurations and prompt templates.',
-    updatedAt: '2 days ago',
-    sourcesCount: 4,
-    agentsCount: 2,
-  },
-  {
-    id: '2',
-    title: 'ty',
-    description: 'if i want to make it run, how to do it? ',
-    updatedAt: 'last week',
-    sourcesCount: 1,
-    agentsCount: 0,
-  },
-];
+import { useProjects } from '../../api/projects';
 
 export const ProjectsView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const { data: projects = [] } = useProjects();
 
-  const filteredProjects = MOCK_PROJECTS.filter(project =>
-    project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProjects = projects.filter(project =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -70,12 +53,12 @@ export const ProjectsView: React.FC = () => {
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
                 <ProjectCard
-                  title={project.title}
-                  description={project.description}
-                  updatedAt={project.updatedAt}
-                  sourcesCount={project.sourcesCount}
-                  agentsCount={project.agentsCount}
-                  onClick={() => navigate(`/project/${encodeURIComponent(project.title)}`)}
+                  title={project.name}
+                  description={project.chats.length > 0 ? `Contains ${project.chats.length} chats` : 'New Workspace'}
+                  updatedAt="Recently"
+                  sourcesCount={0}
+                  agentsCount={project.automation_ids?.length || 0}
+                  onClick={() => navigate(`/project/${project.id}`)}
                 />
               </motion.div>
             ))}
