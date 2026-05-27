@@ -3,6 +3,7 @@ import { Modal, Text, Group, Button, Badge, ThemeIcon, Stack, Box, Title, Simple
 import { motion, AnimatePresence } from 'motion/react';
 import { IconDatabase, IconTool, IconExternalLink } from '@tabler/icons-react';
 import { AgentInfo } from '../../utils/agentUtils';
+import { AgentConfigurationForm } from '../AgentConfiguration/AgentConfigurationForm';
 import './AgentModal.css';
 
 interface AgentModalProps {
@@ -194,24 +195,13 @@ export const AgentModal: React.FC<AgentModalProps> = ({
                 exit={{ opacity: 0, height: 0 }}
                 style={{ overflow: 'hidden' }}
               >
-                <Stack gap="sm" mt="md" p="md" bg="var(--mantine-color-zinc-9)" style={{ borderRadius: 'var(--mantine-radius-md)' }}>
-                  <Text fw={700} size="sm">Configuration Required</Text>
-                  <Text size="xs" c="dimmed">This connector requires some credentials to be enabled.</Text>
-
-                  {Object.entries(agent.headers_schema || {}).map(([key, placeholder]) => (
-                    <TextInput
-                      key={key}
-                      label={key}
-                      placeholder={placeholder}
-                      value={headerValues[key] || ''}
-                      onChange={(e) => {
-                        const val = e.currentTarget.value;
-                        setHeaderValues(prev => ({ ...prev, [key]: val }));
-                      }}
-                      size="xs"
-                    />
-                  ))}
-                </Stack>
+                <AgentConfigurationForm
+                  schema={agent.headers_schema || {}}
+                  values={headerValues}
+                  onChange={(key, value) => setHeaderValues(prev => ({ ...prev, [key]: value }))}
+                  brandColor={agent.brandColor}
+                  isEditing={isEnabled}
+                />
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -222,59 +212,91 @@ export const AgentModal: React.FC<AgentModalProps> = ({
             transition={{ delay: 0.4 }}
           >
             <Group grow justify="flex-end" mt="md" gap="sm">
-              <Button
-                variant="subtle"
-                color="zinc.5"
-                size="sm"
-                onClick={() => {
-                  if (showConfig) {
-                    setShowConfig(false);
-                  } else {
-                    onClose();
-                  }
-                }}
-                fw={500}
-                px="md"
-              >
-                {showConfig ? "Back" : "Cancel"}
-              </Button>
-              <Button
-                variant={isEnabled ? "outline" : "filled"}
-                className="agent-modal-button"
-                radius="md"
-                size="sm"
-                px="md"
-                loading={isUpdating}
-                style={!isEnabled ? {
-                  background: `linear-gradient(135deg, ${agent.brandColor}, color-mix(in srgb, ${agent.brandColor}, black 30%))`,
-                  border: 0,
-                  height: 40
-                } : { height: 40 }}
-                onClick={async () => {
-                  if (isEnabled) {
-                    onToggleStatus(agent.id);
-                    onClose();
-                  } else {
-                    if (hasSchema && !showConfig) {
-                      setShowConfig(true);
-                    } else {
-                      if (showConfig && onUpdateConfig) {
+              {isEnabled && !showConfig ? (
+                <>
+                  <Button variant="subtle" color="zinc.5" onClick={onClose} size="sm">Close</Button>
+                  <Button variant="outline" onClick={() => { onToggleStatus(agent.id); onClose(); }} size="sm">Disable Connector</Button>
+                  {hasSchema && (
+                    <Button
+                      variant="filled"
+                      onClick={() => setShowConfig(true)}
+                      size="sm"
+                      color={agent.brandColor}
+                    >
+                      Edit Configuration
+                    </Button>
+                  )}
+                </>
+              ) : isEnabled && showConfig ? (
+                <>
+                  <Button variant="subtle" color="zinc.5" onClick={() => setShowConfig(false)} size="sm">Cancel</Button>
+                  <Button
+                    variant="filled"
+                    loading={isUpdating}
+                    size="sm"
+                    color={agent.brandColor}
+                    onClick={async () => {
+                      if (onUpdateConfig) {
                         setIsUpdating(true);
                         try {
                           await onUpdateConfig(agent.id, headerValues);
+                          setShowConfig(false);
+                        } finally {
+                          setIsUpdating(false);
+                        }
+                      }
+                    }}
+                  >
+                    Save Changes
+                  </Button>
+                </>
+              ) : !isEnabled && showConfig ? (
+                <>
+                  <Button variant="subtle" color="zinc.5" onClick={() => setShowConfig(false)} size="sm">Back</Button>
+                  <Button
+                    variant="filled"
+                    loading={isUpdating}
+                    size="sm"
+                    color={agent.brandColor}
+                    onClick={async () => {
+                      if (onUpdateConfig) {
+                        setIsUpdating(true);
+                        try {
+                          await onUpdateConfig(agent.id, headerValues);
+                          onToggleStatus(agent.id);
+                          onClose();
                         } finally {
                           setIsUpdating(false);
                         }
                       } else {
                         onToggleStatus(agent.id);
+                        onClose();
                       }
-                      onClose();
-                    }
-                  }
-                }}
-              >
-                {isEnabled ? "Disable Connector" : (showConfig ? "Save & Enable" : "Enable Connector")}
-              </Button>
+                    }}
+                  >
+                    Save & Enable
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="subtle" color="zinc.5" onClick={onClose} size="sm">Cancel</Button>
+                  <Button
+                    variant="filled"
+                    size="sm"
+                    color={agent.brandColor}
+                    onClick={() => {
+                      if (hasSchema) {
+                        setShowConfig(true);
+                      } else {
+                        onToggleStatus(agent.id);
+                        onClose();
+                      }
+                    }}
+                  >
+                    Enable Connector
+                  </Button>
+                </>
+              )}
             </Group>
           </motion.div>
         </Stack>
