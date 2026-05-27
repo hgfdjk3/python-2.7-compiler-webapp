@@ -14,6 +14,8 @@ export interface AgentInfo {
   icon: React.ReactNode;
   sourcesAdded: string[];
   toolsEnabled: string[];
+  headers_schema?: Record<string, string>;
+  header_values?: Record<string, string>;
 }
 
 export const useAgentInfo = () => {
@@ -29,7 +31,9 @@ export const useAgentInfo = () => {
       brandColor: c.color || '#228be6',
       icon: <IconTool size={24} stroke={1.5} />,
       sourcesAdded: [],
-      toolsEnabled: c.tools || []
+      toolsEnabled: c.tools || [],
+      headers_schema: c.headers_schema || c.headers, // fallback to old headers
+      header_values: c.header_values
     }));
   }, [connectors]);
 

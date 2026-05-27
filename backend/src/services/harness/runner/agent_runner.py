@@ -68,12 +68,14 @@ class AgentRunner:
         message: str,
         system_instruction: Optional[str] = None,
         automation: bool = False,
+        mcp_configs: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Executes the agent workflow and returns the final state.
         Dynamically manages the connection to MCP servers for the duration of this run.
         """
-        mcp_manager = MCPClientManager(self.mcp_configs)
+        configs_to_use = mcp_configs if mcp_configs is not None else self.mcp_configs
+        mcp_manager = MCPClientManager(configs_to_use)
         tools = await mcp_manager.connect_all()
         try:
             model = self.model or ChatOpenAI(
@@ -95,12 +97,14 @@ class AgentRunner:
         message: str,
         system_instruction: Optional[str] = None,
         automation: bool = False,
+        mcp_configs: Optional[Dict[str, Any]] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streams real-time events from the execution graph.
         Dynamically manages the connection to MCP servers for the duration of this run.
         """
-        mcp_manager = MCPClientManager(self.mcp_configs)
+        configs_to_use = mcp_configs if mcp_configs is not None else self.mcp_configs
+        mcp_manager = MCPClientManager(configs_to_use)
         tools = await mcp_manager.connect_all()
         try:
             model = self.model or ChatOpenAI(

@@ -5,25 +5,27 @@ import { IconSearch } from '@tabler/icons-react';
 import { AgentCard } from './AgentCard';
 import { AgentModal } from './AgentModal';
 import { useAgentInfo, AgentInfo } from '../../utils/agentUtils';
+import { useConnectors } from '../../api/connectors';
+import { useUserConfig, useUpdateUserConfig } from '../../api/user';
 
 export const AgentMarketplace: React.FC = () => {
   const { agents } = useAgentInfo();
+  const { data: dynamicConnectors = [] } = useConnectors();
+  const { data: userConfig, isLoading: isConfigLoading } = useUserConfig();
+  const updateUserConfigMutation = useUpdateUserConfig();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
-  // Track status separately from the agent metadata
-  const [agentStatuses, setAgentStatuses] = useState<Record<string, 'enabled' | 'disabled'>>({
-    github: 'enabled',
-    gitlab: 'disabled',
-    jira: 'disabled',
-    slack: 'disabled',
-    discord: 'disabled',
-    notion: 'disabled',
-    gdrive: 'disabled',
-    trello: 'disabled',
-    figma: 'disabled'
-  });
+  const agentStatuses = React.useMemo(() => {
+    const statuses: Record<string, 'enabled' | 'disabled'> = {};
+    if (userConfig?.enabled_connectors) {
+      agents.forEach(a => {
+        statuses[a.id] = userConfig.enabled_connectors.includes(a.id) ? 'enabled' : 'disabled';
+      });
+    }
+    return statuses;
+  }, [userConfig, agents]);
 
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
@@ -45,11 +47,17 @@ export const AgentMarketplace: React.FC = () => {
     ? categories
     : [activeFilter];
 
-  const handleToggleStatus = (id: string) => {
-    setAgentStatuses(prev => ({
-      ...prev,
-      [id]: prev[id] === 'enabled' ? 'disabled' : 'enabled'
-    }));
+  const handleToggleStatus = async (id: string) => {
+    if (!userConfig) return;
+    const isEnabled = agentStatuses[id] === 'enabled';
+    const newEnabled = isEnabled
+      ? userConfig.enabled_connectors.filter(c => c !== id)
+      : [...userConfig.enabled_connectors, id];
+    
+    await updateUserConfigMutation.mutateAsync({
+      enabled_connectors: newEnabled,
+      header_values: userConfig.header_values || {},
+    });
   };
 
   const toggleCategory = (category: string) => {
@@ -59,7 +67,29 @@ export const AgentMarketplace: React.FC = () => {
     }));
   };
 
-  const selectedAgent = selectedAgentId ? agents.find(a => a.id === selectedAgentId) || null : null;
+  const handleUpdateConfig = async (id: string, header_values: Record<string, string>) => {
+    if (!userConfig) return;
+    
+    const newHeaders = { ...userConfig.header_values, [id]: header_values };
+    const newEnabled = userConfig.enabled_connectors.includes(id) 
+      ? userConfig.enabled_connectors 
+      : [...userConfig.enabled_connectors, id];
+    
+    await updateUserConfigMutation.mutateAsync({
+      enabled_connectors: newEnabled,
+      header_values: newHeaders,
+    });
+  };
+
+  const selectedAgent = React.useMemo(() => {
+    if (!selectedAgentId) return null;
+    const agent = agents.find(a => a.id === selectedAgentId);
+    if (!agent) return null;
+    return {
+      ...agent,
+      header_values: userConfig?.header_values?.[selectedAgentId] || {},
+    };
+  }, [selectedAgentId, agents, userConfig]);
 
   return (
     <Box>
@@ -184,6 +214,7 @@ export const AgentMarketplace: React.FC = () => {
         opened={!!selectedAgent}
         onClose={() => setSelectedAgentId(null)}
         onToggleStatus={handleToggleStatus}
+        onUpdateConfig={handleUpdateConfig}
       />
     </Box>
   );

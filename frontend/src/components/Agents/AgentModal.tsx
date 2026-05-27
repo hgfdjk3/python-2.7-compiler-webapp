@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Text, Group, Button, Badge, ThemeIcon, Stack, Box, Title, SimpleGrid, Divider, Spoiler } from '@mantine/core';
+import { Modal, Text, Group, Button, Badge, ThemeIcon, Stack, Box, Title, SimpleGrid, Divider, Spoiler, TextInput } from '@mantine/core';
 import { motion, AnimatePresence } from 'motion/react';
 import { IconDatabase, IconTool, IconExternalLink } from '@tabler/icons-react';
 import { AgentInfo } from '../../utils/agentUtils';
@@ -11,6 +11,7 @@ interface AgentModalProps {
   opened: boolean;
   onClose: () => void;
   onToggleStatus: (id: string) => void;
+  onUpdateConfig?: (id: string, header_values: Record<string, string>) => Promise<void>;
 }
 
 export const AgentModal: React.FC<AgentModalProps> = ({
@@ -18,11 +19,24 @@ export const AgentModal: React.FC<AgentModalProps> = ({
   status,
   opened,
   onClose,
-  onToggleStatus
+  onToggleStatus,
+  onUpdateConfig
 }) => {
+  const [showConfig, setShowConfig] = React.useState(false);
+  const [headerValues, setHeaderValues] = React.useState<Record<string, string>>({});
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  React.useEffect(() => {
+    if (opened && agent) {
+      setShowConfig(false);
+      setHeaderValues(agent.header_values || {});
+    }
+  }, [opened, agent]);
+
   if (!agent) return null;
 
   const isEnabled = status === 'enabled';
+  const hasSchema = agent.headers_schema && Object.keys(agent.headers_schema).length > 0;
 
   return (
     <Modal
@@ -171,6 +185,37 @@ export const AgentModal: React.FC<AgentModalProps> = ({
             </motion.div>
           </Stack>
 
+          <AnimatePresence mode="wait">
+            {showConfig && hasSchema ? (
+              <motion.div
+                key="config"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <Stack gap="sm" mt="md" p="md" bg="var(--mantine-color-zinc-9)" style={{ borderRadius: 'var(--mantine-radius-md)' }}>
+                  <Text fw={700} size="sm">Configuration Required</Text>
+                  <Text size="xs" c="dimmed">This connector requires some credentials to be enabled.</Text>
+
+                  {Object.entries(agent.headers_schema || {}).map(([key, placeholder]) => (
+                    <TextInput
+                      key={key}
+                      label={key}
+                      placeholder={placeholder}
+                      value={headerValues[key] || ''}
+                      onChange={(e) => {
+                        const val = e.currentTarget.value;
+                        setHeaderValues(prev => ({ ...prev, [key]: val }));
+                      }}
+                      size="xs"
+                    />
+                  ))}
+                </Stack>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -181,11 +226,17 @@ export const AgentModal: React.FC<AgentModalProps> = ({
                 variant="subtle"
                 color="zinc.5"
                 size="sm"
-                onClick={onClose}
+                onClick={() => {
+                  if (showConfig) {
+                    setShowConfig(false);
+                  } else {
+                    onClose();
+                  }
+                }}
                 fw={500}
                 px="md"
               >
-                Cancel
+                {showConfig ? "Back" : "Cancel"}
               </Button>
               <Button
                 variant={isEnabled ? "outline" : "filled"}
@@ -193,17 +244,36 @@ export const AgentModal: React.FC<AgentModalProps> = ({
                 radius="md"
                 size="sm"
                 px="md"
+                loading={isUpdating}
                 style={!isEnabled ? {
                   background: `linear-gradient(135deg, ${agent.brandColor}, color-mix(in srgb, ${agent.brandColor}, black 30%))`,
                   border: 0,
                   height: 40
                 } : { height: 40 }}
-                onClick={() => {
-                  onToggleStatus(agent.id);
-                  onClose();
+                onClick={async () => {
+                  if (isEnabled) {
+                    onToggleStatus(agent.id);
+                    onClose();
+                  } else {
+                    if (hasSchema && !showConfig) {
+                      setShowConfig(true);
+                    } else {
+                      if (showConfig && onUpdateConfig) {
+                        setIsUpdating(true);
+                        try {
+                          await onUpdateConfig(agent.id, headerValues);
+                        } finally {
+                          setIsUpdating(false);
+                        }
+                      } else {
+                        onToggleStatus(agent.id);
+                      }
+                      onClose();
+                    }
+                  }
                 }}
               >
-                {isEnabled ? "Disable Connector" : "Enable Connector"}
+                {isEnabled ? "Disable Connector" : (showConfig ? "Save & Enable" : "Enable Connector")}
               </Button>
             </Group>
           </motion.div>

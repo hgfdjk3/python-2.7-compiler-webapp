@@ -3,6 +3,7 @@ import { Modal, TextInput, Button, Group, Stack, Text, Box, Textarea, Title, Col
 import { IconPlugConnected, IconEdit } from '@tabler/icons-react';
 import './ConnectorModal.css';
 import { ConnectorFormData } from '../../../api/connectors';
+import { ConnectorHeaderSlots, HeaderSlot } from './ConnectorHeaderSlots';
 
 interface ConnectorModalProps {
   opened: boolean;
@@ -22,17 +23,24 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
     icon: 'server',
     description: ''
   });
-  const [headersText, setHeadersText] = useState('');
+  const [headerSlots, setHeaderSlots] = useState<HeaderSlot[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (opened) {
       if (initialData) {
         setFormData(initialData);
-        setHeadersText(initialData.headers ? JSON.stringify(initialData.headers, null, 2) : '');
+        if (initialData.headers_schema) {
+          setHeaderSlots(Object.entries(initialData.headers_schema).map(([key, placeholder]) => ({ key, placeholder })));
+        } else if (initialData.headers) {
+          // Fallback to older format
+          setHeaderSlots(Object.entries(initialData.headers).map(([key, placeholder]) => ({ key, placeholder })));
+        } else {
+          setHeaderSlots([]);
+        }
       } else {
         setFormData({ id: '', name: '', url: '', color: '#3b82f6', icon: 'server', description: '' });
-        setHeadersText('');
+        setHeaderSlots([]);
       }
       setLoading(false);
     }
@@ -48,17 +56,18 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
       submissionData.id = submissionData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') || `conn-${Date.now()}`;
     }
 
-    if (headersText.trim()) {
-      try {
-        submissionData.headers = JSON.parse(headersText);
-      } catch (err) {
-        alert('Invalid JSON in Headers field. Please format as:\n{\n  "Authorization": "Bearer token"\n}');
-        setLoading(false);
-        return;
-      }
+    const validSlots = headerSlots.filter(s => s.key.trim() !== '');
+    if (validSlots.length > 0) {
+      submissionData.headers_schema = validSlots.reduce((acc, slot) => {
+        acc[slot.key.trim()] = slot.placeholder.trim();
+        return acc;
+      }, {} as Record<string, string>);
     } else {
-      submissionData.headers = undefined;
+      submissionData.headers_schema = undefined;
     }
+    
+    // Clear out old headers format if it existed
+    submissionData.headers = undefined;
 
     try {
       await onSubmit(submissionData);
@@ -146,15 +155,9 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.currentTarget.value })}
               />
-              <Textarea
-                label="Headers (JSON)"
-                placeholder='{
-  "Authorization": "Bearer your-token"
-}'
-                value={headersText}
-                onChange={(e) => setHeadersText(e.currentTarget.value)}
-                rows={4}
-                styles={{ input: { fontFamily: 'monospace', fontSize: '13px' } }}
+              <ConnectorHeaderSlots
+                slots={headerSlots}
+                onChange={setHeaderSlots}
               />
             </Stack>
           </Box>

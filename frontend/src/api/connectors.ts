@@ -9,6 +9,8 @@ export interface ConnectorFormData {
   icon?: string;
   description: string;
   headers?: Record<string, string>;
+  headers_schema?: Record<string, string>;
+  header_values?: Record<string, string>;
   tools?: string[];
 }
 

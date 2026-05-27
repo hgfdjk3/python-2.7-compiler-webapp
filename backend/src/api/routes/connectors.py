@@ -13,20 +13,30 @@ routes_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.abspath(os.path.join(routes_dir, "..", "..", ".."))
 CONNECTORS_FILE = os.path.join(backend_dir, "connectors.json")
 
+
 def load_connectors() -> Dict[str, Any]:
+    connectors = {}
     if os.path.exists(CONNECTORS_FILE):
         try:
             with open(CONNECTORS_FILE, "r") as f:
-                return json.load(f)
+                connectors = json.load(f)
         except Exception as e:
             # Fallback or log error
             pass
-    return {}
+    return connectors
 
 def save_connectors(connectors: Dict[str, Any]):
     try:
+        # Strip header_values before saving to connectors.json
+        connectors_to_save = {}
+        for k, v in connectors.items():
+            v_copy = v.copy()
+            if "header_values" in v_copy:
+                del v_copy["header_values"]
+            connectors_to_save[k] = v_copy
+            
         with open(CONNECTORS_FILE, "w") as f:
-            json.dump(connectors, f, indent=2)
+            json.dump(connectors_to_save, f, indent=2)
     except Exception as e:
         pass
 
@@ -51,6 +61,8 @@ class ConnectorCreate(BaseModel):
     icon: Optional[str] = None
     description: str
     headers: Optional[Dict[str, str]] = None
+    headers_schema: Optional[Dict[str, str]] = None
+    header_values: Optional[Dict[str, str]] = None
 
 class ConnectorResponse(BaseModel):
     id: str
@@ -60,6 +72,8 @@ class ConnectorResponse(BaseModel):
     icon: Optional[str] = None
     description: str
     headers: Optional[Dict[str, str]] = None
+    headers_schema: Optional[Dict[str, str]] = None
+    header_values: Optional[Dict[str, str]] = None
     tools: Optional[List[str]] = None
 
 @router.get("/connectors", response_model=List[ConnectorResponse])
@@ -87,8 +101,10 @@ async def add_connector(connector: ConnectorCreate, request: Request):
     if connector.id in CONNECTORS_DB:
         raise HTTPException(status_code=400, detail="Connector with this ID already exists")
     
+    conn_dict = connector.model_dump()
+        
     # Save in memory and to file
-    CONNECTORS_DB[connector.id] = connector.model_dump()
+    CONNECTORS_DB[connector.id] = conn_dict
     save_connectors(CONNECTORS_DB)
     
     # Update AgentRunner connectors configuration
@@ -112,7 +128,9 @@ async def update_connector(connector_id: str, connector: ConnectorCreate, reques
     if connector.id != connector_id:
         del CONNECTORS_DB[connector_id]
         
-    CONNECTORS_DB[connector.id] = connector.model_dump()
+    conn_dict = connector.model_dump()
+        
+    CONNECTORS_DB[connector.id] = conn_dict
     save_connectors(CONNECTORS_DB)
     
     # Update AgentRunner connectors configuration

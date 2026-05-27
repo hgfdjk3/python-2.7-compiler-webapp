@@ -1,0 +1,13 @@
+{
+  "test_user": {
+    "enabled_connectors": [
+      "sdf",
+      "t"
+    ],
+    "header_values": {
+      "t": {
+        "test": "555555555"
+      }
+    }
+  }
+}

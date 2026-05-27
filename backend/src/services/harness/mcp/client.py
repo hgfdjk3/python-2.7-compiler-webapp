@@ -34,13 +34,15 @@ class MCPClientManager:
         Connects to a single MCP server via SSE transport and fetches its tools.
         """
         url = config.get("url")
-        headers = config.get("headers")
+        # Use header_values (actual user input) if available, otherwise fallback to legacy headers
+        headers = config.get("header_values") or config.get("headers")
         
         if not url:
             logger.error(f"No url specified for MCP server {server_name}")
             return []
             
-        logger.info(f"Connecting to MCP server '{server_name}' at {url}")
+        logger.info(f"Connecting to MCP server '{server_name}' at {url} with headers {headers}")
+        print(f"DEBUG: MCP client connecting to {server_name} with headers: {headers}")
         
         exit_stack = AsyncExitStack()
         try:

@@ -1,11 +1,14 @@
 {
-  "weather-and-filesystem": {
-    "id": "weather-and-filesystem",
-    "name": "weather and filesystem",
+  "t": {
+    "id": "t",
+    "name": "t",
     "url": "http://127.0.0.1:8012/sse",
-    "color": "#3abd3a",
+    "color": "#3b82f6",
     "icon": "server",
     "description": "",
-    "headers": null
+    "headers": null,
+    "headers_schema": {
+      "test": "123"
+    }
   }
 }

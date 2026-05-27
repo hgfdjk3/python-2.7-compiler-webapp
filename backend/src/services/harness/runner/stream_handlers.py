@@ -127,7 +127,7 @@ def handle_tool_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     except Exception:
         payload_str = json.dumps({"name": name, "output": str(output_content)})
         
-    return wrap_message(AIMessage(content=f"  </toolcall>"))
+    return wrap_message(AIMessage(content=f" {payload_str} </toolcall>"))
 
 
 def handle_automation_builder_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:

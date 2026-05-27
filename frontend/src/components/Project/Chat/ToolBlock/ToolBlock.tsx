@@ -47,7 +47,7 @@ export const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ name, children }) 
   const ToolIcon = getToolIcon(name ?? "");
 
   return (
-    <Divider label={name}></Divider>
+    <Divider label={name}>{JSON.stringify(children)}</Divider>
   );
 };
 
