@@ -83,7 +83,13 @@ class MCPClientManager:
                     original_run = getattr(tool, "_run", None)
                     
                     if original_arun:
-                        async def safe_arun(*args, orig=original_arun, t=tool, **kwargs):
+                        async def safe_arun(*args, config=None, run_manager=None, orig=original_arun, t=tool, **kwargs):
+                            if config is not None:
+                                kwargs["config"] = config
+                            elif getattr(orig, "__code__", None) and "config" in orig.__code__.co_varnames:
+                                kwargs["config"] = {}
+                            if run_manager is not None:
+                                kwargs["run_manager"] = run_manager
                             try:
                                 return await orig(*args, **kwargs)
                             except Exception as e:
@@ -92,7 +98,13 @@ class MCPClientManager:
                         tool._arun = safe_arun
                         
                     if original_run:
-                        def safe_run(*args, orig=original_run, t=tool, **kwargs):
+                        def safe_run(*args, config=None, run_manager=None, orig=original_run, t=tool, **kwargs):
+                            if config is not None:
+                                kwargs["config"] = config
+                            elif getattr(orig, "__code__", None) and "config" in orig.__code__.co_varnames:
+                                kwargs["config"] = {}
+                            if run_manager is not None:
+                                kwargs["run_manager"] = run_manager
                             try:
                                 return orig(*args, **kwargs)
                             except Exception as e:
