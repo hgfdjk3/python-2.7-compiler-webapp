@@ -21,8 +21,11 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
     url: '',
     color: '#3b82f6',
     icon: 'server',
-    description: ''
+    description: '',
+    publisher_name: '',
+    developers: []
   });
+  const [developersStr, setDevelopersStr] = useState('');
   const [headerSlots, setHeaderSlots] = useState<HeaderSlot[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -38,9 +41,11 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
         } else {
           setHeaderSlots([]);
         }
+        setDevelopersStr(initialData.developers?.join(', ') || '');
       } else {
-        setFormData({ id: '', name: '', url: '', color: '#3b82f6', icon: 'server', description: '' });
+        setFormData({ id: '', name: '', url: '', color: '#3b82f6', icon: 'server', description: '', publisher_name: '', developers: [] });
         setHeaderSlots([]);
+        setDevelopersStr('');
       }
       setLoading(false);
     }
@@ -141,6 +146,23 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.currentTarget.value })}
               />
+              <Group grow align="flex-start">
+                <TextInput
+                  label="Publisher Name"
+                  placeholder="e.g., Acme Corp"
+                  value={formData.publisher_name || ''}
+                  onChange={(e) => setFormData({ ...formData, publisher_name: e.currentTarget.value })}
+                />
+                <TextInput
+                  label="Developers"
+                  placeholder="Comma-separated usernames"
+                  value={developersStr}
+                  onChange={(e) => {
+                    setDevelopersStr(e.currentTarget.value);
+                    setFormData({ ...formData, developers: e.currentTarget.value.split(',').map(s => s.trim()).filter(Boolean) });
+                  }}
+                />
+              </Group>
             </Stack>
           </Box>
 

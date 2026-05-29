@@ -9,6 +9,7 @@ from src.services.harness.graph.nodes.orchestrator import orchestrator_node
 from src.services.harness.graph.nodes.worker import worker_node
 from src.services.harness.graph.nodes.clarifier import clarifier_node
 from src.services.harness.graph.nodes.automation_builder import automation_builder_node
+from src.services.harness.graph.checkpointer import get_checkpointer
 
 def route_start(state: AgentState):
     """
@@ -100,7 +101,7 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
 
     # 4. Compile with checkpointer
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        checkpointer = get_checkpointer()
         
     return workflow.compile(checkpointer=checkpointer)
 

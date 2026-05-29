@@ -4,10 +4,10 @@ from src.api.utils.db import get_collection
 
 class ProjectsService:
     @staticmethod
-    def get_all_projects() -> List[Dict[str, Any]]:
+    def get_all_projects(username: str) -> List[Dict[str, Any]]:
         coll = get_collection("projects")
         result = []
-        for doc in coll.find():
+        for doc in coll.find({"members": username}):
             if "_id" in doc:
                 doc["id"] = doc.pop("_id")
             result.append(doc)

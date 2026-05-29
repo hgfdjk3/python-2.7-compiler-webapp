@@ -7,15 +7,10 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from src.services.harness.mcp.client import MCPClientManager
 from src.services.harness.graph.automation_runner import create_automation_graph
+from src.services.harness.graph.checkpointer import get_checkpointer
 from src.api.services.automations_service import get_automation_by_id
 from src.api.utils.serialization import serialize_state
 from src.api.schemas.automations import AutomationRunRequest
-from src.services.harness.runner.stream_handlers import (
-    handle_token_stream,
-    handle_model_end,
-    handle_tool_start,
-    handle_tool_end,
-)
 from src.config import OPENAI_API_KEY
 
 def get_default_model():
@@ -46,22 +41,23 @@ class AutomationRunnerService:
         tools = await mcp_manager.connect_all()
         try:
             model_name = get_default_model()
-            graph = create_automation_graph(automation_data, all_tools=tools, model_name=model_name)
-            
-            inputs = {"messages": []}
-            if input_text:
-                inputs["messages"].append(HumanMessage(content=input_text))
-            else:
-                inputs["messages"].append(HumanMessage(content="Begin the automation workflow. Follow your system instructions to complete your specific stage, then pass control to the next stage."))
+            async with get_checkpointer() as checkpointer:
+                graph = create_automation_graph(automation_data, all_tools=tools, checkpointer=checkpointer, model_name=model_name)
                 
-            config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-            
-            final_state = await graph.ainvoke(inputs, config=config)
-            
-            return {
-                "status": "success",
-                "messages": serialize_state(final_state).get("messages", [])
-            }
+                inputs = {"messages": []}
+                if input_text:
+                    inputs["messages"].append(HumanMessage(content=input_text))
+                else:
+                    inputs["messages"].append(HumanMessage(content="Begin the automation workflow. Follow your system instructions to complete your specific stage, then pass control to the next stage."))
+                    
+                config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+                
+                final_state = await graph.ainvoke(inputs, config=config)
+                
+                return {
+                    "status": "success",
+                    "messages": serialize_state(final_state).get("messages", [])
+                }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         finally:
@@ -72,53 +68,54 @@ class AutomationRunnerService:
         tools = await mcp_manager.connect_all()
         try:
             model_name = get_default_model()
-            graph = create_automation_graph(automation_data, all_tools=tools, model_name=model_name)
-            
-            # Map node IDs to their titles for nice headers
-            node_titles = {str(n["id"]): n.get("data", {}).get("title", f"Stage {n['id']}") for n in automation_data.get("nodes", [])}
-            
-            inputs = {"messages": []}
-            if input_text:
-                inputs["messages"].append(HumanMessage(content=input_text))
-            else:
-                inputs["messages"].append(HumanMessage(content="Begin the automation workflow. Follow your system instructions to complete your specific stage, then pass control to the next stage."))
+            async with get_checkpointer() as checkpointer:
+                graph = create_automation_graph(automation_data, all_tools=tools, checkpointer=checkpointer, model_name=model_name)
                 
-            config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-            
-            tokens_streamed = False
-            current_node_id = None
-            async for event in graph.astream_events(inputs, config=config, version="v2"):
-                event_type = event["event"]
-                name = event.get("name")
+                # Map node IDs to their titles for nice headers
+                node_titles = {str(n["id"]): n.get("data", {}).get("title", f"Stage {n['id']}") for n in automation_data.get("nodes", [])}
                 
-                # Check for stage starts
-                if event_type == "on_chain_start" and name in node_titles:
-                    current_node_id = name
-                    yield f"data: {json.dumps({'type': 'node_start', 'node_id': current_node_id})}\n\n"
+                inputs = {"messages": []}
+                if input_text:
+                    inputs["messages"].append(HumanMessage(content=input_text))
+                else:
+                    inputs["messages"].append(HumanMessage(content="Begin the automation workflow. Follow your system instructions to complete your specific stage, then pass control to the next stage."))
+                    
+                config = {"configurable": {"thread_id": str(uuid.uuid4())}}
                 
-                if not current_node_id:
-                    continue
-
-                if event_type == "on_chat_model_stream":
-                    chunk = event.get("data", {}).get("chunk")
-                    if chunk and hasattr(chunk, "content") and chunk.content:
-                        yield f"data: {json.dumps({'type': 'node_chunk', 'node_id': current_node_id, 'content': chunk.content})}\n\n"
-
-                elif event_type == "on_tool_start":
-                    # name is the tool name
-                    input_data = event.get("data", {}).get("input")
-                    yield f"data: {json.dumps({'type': 'node_tool_start', 'node_id': current_node_id, 'tool_name': name, 'input': input_data})}\n\n"
-
-                elif event_type == "on_tool_end":
-                    # output is the tool output
-                    output_data = event.get("data", {}).get("output")
-                    if hasattr(output_data, "content"):
-                        output_data = output_data.content
-                    yield f"data: {json.dumps({'type': 'node_tool_end', 'node_id': current_node_id, 'tool_name': name, 'output': str(output_data)})}\n\n"
-
-                elif event_type == "on_chain_end" and name == current_node_id:
-                    yield f"data: {json.dumps({'type': 'node_end', 'node_id': current_node_id})}\n\n"
-                    current_node_id = None
+                tokens_streamed = False
+                current_node_id = None
+                async for event in graph.astream_events(inputs, config=config, version="v2"):
+                    event_type = event["event"]
+                    name = event.get("name")
+                    
+                    # Check for stage starts
+                    if event_type == "on_chain_start" and name in node_titles:
+                        current_node_id = name
+                        yield f"data: {json.dumps({'type': 'node_start', 'node_id': current_node_id})}\n\n"
+                    
+                    if not current_node_id:
+                        continue
+    
+                    if event_type == "on_chat_model_stream":
+                        chunk = event.get("data", {}).get("chunk")
+                        if chunk and hasattr(chunk, "content") and chunk.content:
+                            yield f"data: {json.dumps({'type': 'node_chunk', 'node_id': current_node_id, 'content': chunk.content})}\n\n"
+    
+                    elif event_type == "on_tool_start":
+                        # name is the tool name
+                        input_data = event.get("data", {}).get("input")
+                        yield f"data: {json.dumps({'type': 'node_tool_start', 'node_id': current_node_id, 'tool_name': name, 'input': input_data})}\n\n"
+    
+                    elif event_type == "on_tool_end":
+                        # output is the tool output
+                        output_data = event.get("data", {}).get("output")
+                        if hasattr(output_data, "content"):
+                            output_data = output_data.content
+                        yield f"data: {json.dumps({'type': 'node_tool_end', 'node_id': current_node_id, 'tool_name': name, 'output': str(output_data)})}\n\n"
+    
+                    elif event_type == "on_chain_end" and name == current_node_id:
+                        yield f"data: {json.dumps({'type': 'node_end', 'node_id': current_node_id})}\n\n"
+                        current_node_id = None
 
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

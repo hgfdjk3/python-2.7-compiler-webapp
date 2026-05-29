@@ -16,3 +16,5 @@ if OPENAI_API_KEY and OPENAI_API_KEY.startswith("nvapi-"):
     if not OPENAI_API_BASE:
         OPENAI_API_BASE = "https://integrate.api.nvidia.com/v1"
         os.environ["OPENAI_API_BASE"] = OPENAI_API_BASE
+
+LANGGRAPH_POSTGRES_URI = os.getenv("LANGGRAPH_POSTGRES_URI")

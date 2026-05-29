@@ -8,6 +8,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from src.config import OPENAI_API_KEY
 from src.services.harness.graph.builder import create_graph
 from src.services.harness.mcp.client import MCPClientManager
+from src.services.harness.graph.checkpointer import get_checkpointer
 from src.services.harness.runner.stream_handlers import (
     handle_token_stream,
     handle_model_end,
@@ -37,7 +38,6 @@ class AgentRunner:
         self.model_name = model_name
         self.temperature = temperature
         self.model = model
-        self.checkpointer = MemorySaver()
 
     def _prepare_config(self, thread_id: str, model: Any, tools: list) -> RunnableConfig:
         """Creates standard LangGraph execution config with context injection."""
@@ -84,10 +84,11 @@ class AgentRunner:
                 api_key=OPENAI_API_KEY or "mock-key-for-testing",
                 streaming=True,
             )
-            graph = create_graph(tools=tools, checkpointer=self.checkpointer)
-            inputs = self._build_inputs(message, system_instruction, automation=automation)
-            config = self._prepare_config(thread_id, model, tools)
-            return await graph.ainvoke(inputs, config=config)
+            async with get_checkpointer() as checkpointer:
+                graph = create_graph(tools=tools, checkpointer=checkpointer)
+                inputs = self._build_inputs(message, system_instruction, automation=automation)
+                config = self._prepare_config(thread_id, model, tools)
+                return await graph.ainvoke(inputs, config=config)
         finally:
             await mcp_manager.disconnect_all()
 
@@ -113,56 +114,57 @@ class AgentRunner:
                 api_key=OPENAI_API_KEY or "mock-key-for-testing",
                 streaming=True,
             )
-            graph = create_graph(tools=tools, checkpointer=self.checkpointer)
-            inputs = self._build_inputs(message, system_instruction, automation=automation)
-            config = self._prepare_config(thread_id, model, tools)
-
-            tokens_streamed = False
-            async for event in graph.astream_events(inputs, config=config, version="v2"):
-                event_type = event.get("event")
-                event_node = event.get("metadata", {}).get("langgraph_node")
-
-                # ── Worker token stream (real-time chunks) ───────────
-                if event_type == "on_chat_model_stream":
-                    result = handle_token_stream(event)
-                    if result:
-                        tokens_streamed = True
-                        yield result
-
-                # ── Non-streamed model completion (fallback) ─────────
-                elif event_type == "on_chat_model_end" and event_node not in ("orchestrator", "clarifier", "automation_builder") and not tokens_streamed:
-                    result = handle_model_end(event)
-                    if result:
-                        yield result
-
-                # ── Tool execution start ─────────────────────────────
-                elif event_type == "on_tool_start":
-                    result = handle_tool_start(event)
-                    if result:
-                        yield result
-
-                # ── Tool execution end ───────────────────────────────
-                elif event_type == "on_tool_end":
-                    result = handle_tool_end(event)
-                    if result:
-                        yield result
-
-                # ── Orchestrator routing metadata (frontend only) ────
-                elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "orchestrator":
-                    result = handle_orchestrator_end(event)
-                    if result:
-                        yield result
-
-                # ── Clarifier output (yield clarifying questions) ────
-                elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "clarifier":
-                    result = handle_clarifier_end(event)
-                    if result:
-                        yield result
-
-                # ── Automation builder output (yield generated workflow) ────
-                elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "automation_builder":
-                    result = handle_automation_builder_end(event)
-                    if result:
-                        yield result
+            async with get_checkpointer() as checkpointer:
+                graph = create_graph(tools=tools, checkpointer=checkpointer)
+                inputs = self._build_inputs(message, system_instruction, automation=automation)
+                config = self._prepare_config(thread_id, model, tools)
+    
+                tokens_streamed = False
+                async for event in graph.astream_events(inputs, config=config, version="v2"):
+                    event_type = event.get("event")
+                    event_node = event.get("metadata", {}).get("langgraph_node")
+    
+                    # ── Worker token stream (real-time chunks) ───────────
+                    if event_type == "on_chat_model_stream":
+                        result = handle_token_stream(event)
+                        if result:
+                            tokens_streamed = True
+                            yield result
+    
+                    # ── Non-streamed model completion (fallback) ─────────
+                    elif event_type == "on_chat_model_end" and event_node not in ("orchestrator", "clarifier", "automation_builder") and not tokens_streamed:
+                        result = handle_model_end(event)
+                        if result:
+                            yield result
+    
+                    # ── Tool execution start ─────────────────────────────
+                    elif event_type == "on_tool_start":
+                        result = handle_tool_start(event)
+                        if result:
+                            yield result
+    
+                    # ── Tool execution end ───────────────────────────────
+                    elif event_type == "on_tool_end":
+                        result = handle_tool_end(event)
+                        if result:
+                            yield result
+    
+                    # ── Orchestrator routing metadata (frontend only) ────
+                    elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "orchestrator":
+                        result = handle_orchestrator_end(event)
+                        if result:
+                            yield result
+    
+                    # ── Clarifier output (yield clarifying questions) ────
+                    elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "clarifier":
+                        result = handle_clarifier_end(event)
+                        if result:
+                            yield result
+    
+                    # ── Automation builder output (yield generated workflow) ────
+                    elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "automation_builder":
+                        result = handle_automation_builder_end(event)
+                        if result:
+                            yield result
         finally:
             await mcp_manager.disconnect_all()

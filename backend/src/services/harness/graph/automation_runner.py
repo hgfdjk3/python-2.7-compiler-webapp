@@ -6,7 +6,6 @@ from langchain_core.tools import BaseTool, tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import create_react_agent, ToolNode
-from langgraph.checkpoint.memory import MemorySaver
 
 from src.config import OPENAI_API_KEY
 
@@ -23,6 +22,7 @@ def stop_execution(reason: str):
 def create_automation_graph(
     automation_data: Dict[str, Any], 
     all_tools: List[BaseTool],
+    checkpointer: Any,
     model_name: str = "gpt-4o-mini",
     temperature: float = 0.0
 ) -> StateGraph:
@@ -178,4 +178,4 @@ def create_automation_graph(
                 target_map
             )
 
-    return workflow.compile(checkpointer=MemorySaver())
+    return workflow.compile(checkpointer=checkpointer)

@@ -88,6 +88,11 @@ export const ConnectorRow: React.FC<ConnectorRowProps> = ({ connector, onEdit, o
             <Stack gap={0} style={{ minWidth: 0 }}>
               <Text size="sm" fw={600} truncate>
                 {connector.name}
+                {connector.publisher_name && (
+                  <Text component="span" c="dimmed" size="xs" fw={400} ml={4}>
+                    by {connector.publisher_name}
+                  </Text>
+                )}
               </Text>
               <Text size="xs" c="dimmed" truncate>
                 {connector.description || 'Dynamic MCP Connection'}

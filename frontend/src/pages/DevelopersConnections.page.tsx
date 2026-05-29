@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Text, Group, Button, Loader } from '@mantine/core';
+import { Box, Text, Group, Button, Loader, ScrollArea } from '@mantine/core';
 import { IconPlus, IconPlugConnected } from '@tabler/icons-react';
 import { DevSubHeader } from '../components/Developers/DevSubHeader/DevSubHeader';
-import { useConnectors, useAddConnector, useUpdateConnector, useDeleteConnector, ConnectorFormData } from '../api/connectors';
+import { useDeveloperConnectors, useAddConnector, useUpdateConnector, useDeleteConnector, ConnectorFormData } from '../api/connectors';
 import { ConnectorModal } from '../components/Developers/ConnectorModal/ConnectorModal';
 import { ConnectorRow } from '../components/Developers/ConnectorRow/ConnectorRow';
 import './DevelopersConnections.css';
@@ -11,7 +11,7 @@ export const DevelopersConnectionsPage: React.FC = () => {
   const [modalOpened, setModalOpened] = useState(false);
   const [editingConnector, setEditingConnector] = useState<ConnectorFormData | null>(null);
 
-  const { data: dynamicConnectors = [], isLoading } = useConnectors();
+  const { data: dynamicConnectors = [], isLoading } = useDeveloperConnectors();
   const addConnectorMutation = useAddConnector();
   const updateConnectorMutation = useUpdateConnector();
   const deleteConnectorMutation = useDeleteConnector();
@@ -70,14 +70,15 @@ export const DevelopersConnectionsPage: React.FC = () => {
               </Button>
             </Box>
           ) : (
-            <Box mb={40}>
+            <Box>
               <Group justify="space-between" mb="md">
                 <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.6px' }}>
                   Added by you · {dynamicConnectors.length}
                 </Text>
               </Group>
 
-              <Box>
+              <ScrollArea.Autosize mah={600} scrollbarSize={4} offsetScrollbars>
+
                 {dynamicConnectors.map((connector) => (
                   <ConnectorRow
                     key={connector.id}
@@ -86,7 +87,7 @@ export const DevelopersConnectionsPage: React.FC = () => {
                     onDelete={handleDelete}
                   />
                 ))}
-              </Box>
+              </ScrollArea.Autosize>
             </Box>
           )}
         </Box>

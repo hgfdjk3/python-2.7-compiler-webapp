@@ -16,10 +16,10 @@ async def populate_automation_colors(automation_data: Dict[str, Any]):
         data["color"] = color
         node["data"] = data
 
-def get_all_automations() -> List[Dict[str, Any]]:
+def get_all_automations(username: str) -> List[Dict[str, Any]]:
     coll = get_collection("automations")
     result = []
-    for doc in coll.find():
+    for doc in coll.find({"creator": username}):
         if "_id" in doc:
             doc["id"] = doc.pop("_id")
         result.append(doc)

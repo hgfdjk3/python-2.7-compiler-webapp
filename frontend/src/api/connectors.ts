@@ -12,10 +12,17 @@ export interface ConnectorFormData {
   headers_schema?: Record<string, string>;
   header_values?: Record<string, string>;
   tools?: string[];
+  publisher_name?: string;
+  developers?: string[];
 }
 
 export const getConnectors = async (): Promise<ConnectorFormData[]> => {
   const response = await apiClient.get<ConnectorFormData[]>('/connectors');
+  return response.data;
+};
+
+export const getDeveloperConnectors = async (): Promise<ConnectorFormData[]> => {
+  const response = await apiClient.get<ConnectorFormData[]>('/developers/connectors');
   return response.data;
 };
 
@@ -42,12 +49,20 @@ export const useConnectors = () => {
   });
 };
 
+export const useDeveloperConnectors = () => {
+  return useQuery<ConnectorFormData[]>({
+    queryKey: ['developerConnectors'],
+    queryFn: getDeveloperConnectors,
+  });
+};
+
 export const useAddConnector = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: addConnector,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connectors'] });
+      queryClient.invalidateQueries({ queryKey: ['developerConnectors'] });
     },
     onError: (err: any) => {
       console.error('Failed to add connector:', err);
@@ -63,6 +78,7 @@ export const useUpdateConnector = () => {
     mutationFn: updateConnector,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connectors'] });
+      queryClient.invalidateQueries({ queryKey: ['developerConnectors'] });
     },
     onError: (err: any) => {
       console.error('Failed to update connector:', err);
@@ -78,6 +94,7 @@ export const useDeleteConnector = () => {
     mutationFn: deleteConnector,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connectors'] });
+      queryClient.invalidateQueries({ queryKey: ['developerConnectors'] });
     },
     onError: (err: any) => {
       console.error('Failed to delete connector:', err);
