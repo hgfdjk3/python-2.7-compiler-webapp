@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, Group, Button, Loader } from '@mantine/core';
 import { IconPlus, IconPlugConnected } from '@tabler/icons-react';
-import { ProjectLayout } from '../components/Layout/ProjectLayout';
 import { DevSubHeader } from '../components/Developers/DevSubHeader/DevSubHeader';
 import { useConnectors, useAddConnector, useUpdateConnector, useDeleteConnector, ConnectorFormData } from '../api/connectors';
 import { ConnectorModal } from '../components/Developers/ConnectorModal/ConnectorModal';
@@ -42,7 +41,7 @@ export const DevelopersConnectionsPage: React.FC = () => {
   };
 
   return (
-    <ProjectLayout>
+    <>
       <Box className="dev-sub-root">
         <Box className="dev-sub-content">
           <Group justify="space-between" align="flex-start" mb="xl">
@@ -99,6 +98,6 @@ export const DevelopersConnectionsPage: React.FC = () => {
         onSubmit={handleSubmit}
         initialData={editingConnector}
       />
-    </ProjectLayout>
+    </>
   );
 };

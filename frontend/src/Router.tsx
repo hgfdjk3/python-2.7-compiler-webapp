@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { KnowledgeGraphPage } from './pages/KnowledgeGraph.page';
 import { HomePage } from './pages/Home.page';
 import { ProjectPage } from './pages/Project.page';
@@ -9,51 +9,64 @@ import { DevelopersPage } from './pages/Developers.page';
 import { DevelopersDocsPage } from './pages/DevelopersDocs.page';
 import { DevelopersConnectionsPage } from './pages/DevelopersConnections.page';
 import { AutomationsPage } from './pages/Automations.page';
+import { ProjectLayout } from './components/Layout/ProjectLayout';
+
+const LayoutWrapper = () => (
+  <ProjectLayout>
+    <Outlet />
+  </ProjectLayout>
+);
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <HomePage />,
-  },
-  {
-    path: '/automations',
-    element: <AutomationsPage />,
-  },
-  {
-    path: '/automations/:automationId',
-    element: <AutomationsPage />,
-  },
-  {
-    path: '/projects',
-    element: <HomePage />,
-  },
-  {
-    path: '/project/:projectId',
-    element: <ProjectPage />,
-  },
-  {
-    path: '/new_project',
-    element: <NewProjectPage />,
-  },
-  {
-    path: '/knowledge-graph',
-    element: <KnowledgeGraphPage />,
-  },
-  {
-    path: '/agents',
-    element: <AgentsPage />,
-  },
-  {
-    path: '/developers',
-    element: <DevelopersPage />,
-  },
-  {
-    path: '/developers/docs',
-    element: <DevelopersDocsPage />,
-  },
-  {
-    path: '/developers/connections',
-    element: <DevelopersConnectionsPage />,
+    element: <LayoutWrapper />,
+    children: [
+      {
+        path: '/',
+        element: <HomePage />,
+      },
+      {
+        path: '/automations',
+        element: <AutomationsPage />,
+      },
+      {
+        path: '/automations/:automationId',
+        element: <AutomationsPage />,
+      },
+      {
+        path: '/projects',
+        element: <HomePage />,
+      },
+      {
+        path: '/project/:projectId',
+        element: <ProjectPage />,
+      },
+      {
+        path: '/new_project',
+        element: <NewProjectPage />,
+      },
+      {
+        path: '/knowledge-graph',
+        element: <KnowledgeGraphPage />,
+      },
+      {
+        path: '/agents',
+        element: <AgentsPage />,
+      },
+      {
+        path: '/developers',
+        element: <DevelopersPage />,
+      },
+      {
+        path: '/developers/docs',
+        element: <DevelopersDocsPage />,
+      },
+      {
+        path: '/developers/connections',
+        element: <DevelopersConnectionsPage />,
+      },
+    ],
   },
 ]);
 

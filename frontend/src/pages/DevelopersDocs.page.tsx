@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Text, Group, Code, Badge, Anchor, Stack } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { ProjectLayout } from '../components/Layout/ProjectLayout';
 import { DevSubHeader } from '../components/Developers/DevSubHeader/DevSubHeader';
 import { motion } from 'motion/react';
 import './DevelopersDocs.css';
@@ -105,41 +104,39 @@ export const DevelopersDocsPage: React.FC = () => {
   ];
 
   return (
-    <ProjectLayout>
-      <Box className="dev-sub-root">
-        <Box className="dev-sub-content">
-          <DevSubHeader title="Documentation" backTo="/developers" />
+    <Box className="dev-sub-root">
+      <Box className="dev-sub-content">
+        <DevSubHeader title="Documentation" backTo="/developers" />
 
-          {/* Guides */}
-          <Box mb={40}>
-            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="md" style={{ letterSpacing: '0.6px' }}>
-              Guides
-            </Text>
-            <Box className="row-list">
-              {guides.map((g) => (
-                <GuideRow key={g.title} {...g} />
-              ))}
-            </Box>
+        {/* Guides */}
+        <Box mb={40}>
+          <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="md" style={{ letterSpacing: '0.6px' }}>
+            Guides
+          </Text>
+          <Box className="row-list">
+            {guides.map((g) => (
+              <GuideRow key={g.title} {...g} />
+            ))}
           </Box>
+        </Box>
 
-          {/* Endpoints */}
-          <Box>
-            <Group justify="space-between" mb="md">
-              <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.6px' }}>
-                Popular Endpoints
-              </Text>
-              <Code fz={10} c="dimmed">
-                api.atom.inc
-              </Code>
-            </Group>
-            <Box className="row-list">
-              {endpoints.map((e) => (
-                <EndpointRow key={`${e.method}-${e.path}`} {...e} />
-              ))}
-            </Box>
+        {/* Endpoints */}
+        <Box>
+          <Group justify="space-between" mb="md">
+            <Text size="xs" fw={700} tt="uppercase" c="dimmed" style={{ letterSpacing: '0.6px' }}>
+              Popular Endpoints
+            </Text>
+            <Code fz={10} c="dimmed">
+              api.atom.inc
+            </Code>
+          </Group>
+          <Box className="row-list">
+            {endpoints.map((e) => (
+              <EndpointRow key={`${e.method}-${e.path}`} {...e} />
+            ))}
           </Box>
         </Box>
       </Box>
-    </ProjectLayout>
+    </Box>
   );
 };

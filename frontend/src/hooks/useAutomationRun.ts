@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { notifications } from '@mantine/notifications';
 import { streamRunAutomation, NodeExecutionState } from '../api/automations';
+import { notify } from '@/utils/notifications';
 
 export const useAutomationRun = (automationId: string) => {
   const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, NodeExecutionState>>({});
@@ -19,10 +19,9 @@ export const useAutomationRun = (automationId: string) => {
         );
       } catch (err: any) {
         console.error('Automation run error:', err);
-        notifications.show({
+        notify.error({
           title: 'Automation Error',
           message: err.message || 'Failed to run automation',
-          color: 'red',
         });
       }
     },
