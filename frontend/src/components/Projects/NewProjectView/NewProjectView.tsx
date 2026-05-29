@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Stack, 
-  Title, 
-  TextInput, 
-  Textarea, 
-  Button, 
-  Group, 
-  Container, 
+import {
+  Stack,
+  Title,
+  TextInput,
+  Textarea,
+  Button,
+  Group,
+  Container,
   Text,
   ActionIcon,
   rem
@@ -15,18 +15,22 @@ import { IconArrowLeft, IconCheck } from '@tabler/icons-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import './NewProjectView.css';
+import { useCreateProject } from '@/api/projects';
 
-interface NewProjectViewProps {}
+interface NewProjectViewProps { }
 
-export const NewProjectView: React.FC<NewProjectViewProps> = ({}) => {
+export const NewProjectView: React.FC<NewProjectViewProps> = ({ }) => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const createProjectMutation = useCreateProject();
 
   const handleCreate = () => {
-    console.log('Creating project:', { name, description });
-    // In a real app, this would be an API call
-    navigate('/projects');
+    createProjectMutation.mutate(name, {
+      onSuccess: () => {
+        navigate('/projects');
+      }
+    });
   };
 
   return (
@@ -40,9 +44,9 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({}) => {
         <Stack gap="xl">
           <Group justify="space-between" align="center">
             <Group gap="md">
-              <ActionIcon 
-                variant="subtle" 
-                color="gray" 
+              <ActionIcon
+                variant="subtle"
+                color="gray"
                 onClick={() => navigate('/projects')}
                 size="lg"
                 radius="md"
@@ -106,9 +110,9 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({}) => {
               transition={{ delay: 0.3 }}
             >
               <Group justify="flex-end" mt="xl">
-                <Button 
-                  variant="subtle" 
-                  color="gray" 
+                <Button
+                  variant="subtle"
+                  color="gray"
                   onClick={() => navigate('/projects')}
                   radius="md"
                   size="md"
@@ -118,7 +122,8 @@ export const NewProjectView: React.FC<NewProjectViewProps> = ({}) => {
                 <Button
                   leftSection={<IconCheck size={18} />}
                   onClick={handleCreate}
-                  disabled={!name.trim()}
+                  disabled={!name.trim() || createProjectMutation.isPending}
+                  loading={createProjectMutation.isPending}
                   radius="md"
                   size="md"
                   className="create-button"

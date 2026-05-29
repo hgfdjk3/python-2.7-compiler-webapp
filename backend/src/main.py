@@ -18,7 +18,7 @@ while src_dir in sys.path:
 
 from src.services.harness.runner import AgentRunner
 from src.config import OPENAI_API_KEY
-from src.api.routes.connectors import CONNECTORS_DB
+from src.api.routes.connectors import get_connectors_dict
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 # Configure logging
@@ -138,7 +138,7 @@ async def main():
     
     # Instantiate the agent runner
     runner = AgentRunner(
-        mcp_configs=CONNECTORS_DB,
+        mcp_configs=get_connectors_dict(),
         model_name=args.model,
         temperature=args.temperature
     )

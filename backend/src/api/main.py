@@ -18,7 +18,7 @@ from src.services.harness.runner import AgentRunner
 from src.config import OPENAI_API_KEY
 from src.api.routes import router as api_router
 from src.api.routes.connectors import router as connectors_router
-from src.api.routes.connectors import CONNECTORS_DB
+from src.api.routes.connectors import get_connectors_dict
 from src.api.routes.projects import router as projects_router
 from src.api.routes.user import router as user_router
 
@@ -32,7 +32,7 @@ if api_key.startswith("nvapi-"):
 async def lifespan(app: FastAPI):
     # Setup AgentRunner (connections are dynamically managed per request)
     app.state.agent_runner = AgentRunner(
-        mcp_configs=CONNECTORS_DB,
+        mcp_configs=get_connectors_dict(),
         model_name=default_model,
         temperature=0.7
     )

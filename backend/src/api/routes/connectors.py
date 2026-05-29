@@ -1,54 +1,26 @@
-import json
-import os
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import asyncio
 from typing import Dict, Any, List, Optional
 from src.api.services.connector_tools_service import clear_connector_tools_cache
+from src.api.utils.db import get_collection
 
 router = APIRouter()
 
-# Resolve path to connectors.json in the backend directory
-routes_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.abspath(os.path.join(routes_dir, "..", "..", ".."))
-CONNECTORS_FILE = os.path.join(backend_dir, "connectors.json")
-
-
-def load_connectors() -> Dict[str, Any]:
+def get_connectors_dict() -> Dict[str, Any]:
+    connectors_coll = get_collection("connectors")
     connectors = {}
-    if os.path.exists(CONNECTORS_FILE):
-        try:
-            with open(CONNECTORS_FILE, "r") as f:
-                connectors = json.load(f)
-        except Exception as e:
-            # Fallback or log error
-            pass
+    for doc in connectors_coll.find():
+        if "_id" in doc:
+            doc["id"] = doc.pop("_id")
+        connectors[doc["id"]] = doc
     return connectors
-
-def save_connectors(connectors: Dict[str, Any]):
-    try:
-        # Strip header_values before saving to connectors.json
-        connectors_to_save = {}
-        for k, v in connectors.items():
-            v_copy = v.copy()
-            if "header_values" in v_copy:
-                del v_copy["header_values"]
-            connectors_to_save[k] = v_copy
-            
-        with open(CONNECTORS_FILE, "w") as f:
-            json.dump(connectors_to_save, f, indent=2)
-    except Exception as e:
-        pass
-
-# In-memory python dictionary for MCP connectors, loaded from file
-# Format: { "connector_id": { "id": "connector_id", "name": "...", "url": "...", "color": "...", "description": "..." } }
-CONNECTORS_DB: Dict[str, Any] = load_connectors()
 
 def trigger_background_discovery():
     """Triggers background discovery of tools across all active connectors."""
     try:
         from src.services.harness.mcp.client import MCPClientManager
-        mcp_manager = MCPClientManager(CONNECTORS_DB)
+        mcp_manager = MCPClientManager(get_connectors_dict())
         asyncio.create_task(mcp_manager.connect_all())
     except Exception:
         pass
@@ -90,7 +62,8 @@ async def list_connectors():
         conn_to_tools[conn_id].append(tool_name)
         
     result = []
-    for conn_id, conn in CONNECTORS_DB.items():
+    connectors_db = get_connectors_dict()
+    for conn_id, conn in connectors_db.items():
         conn_copy = conn.copy()
         conn_copy["tools"] = conn_to_tools.get(conn_id, [])
         result.append(conn_copy)
@@ -98,63 +71,82 @@ async def list_connectors():
 
 @router.post("/connectors", response_model=ConnectorResponse)
 async def add_connector(connector: ConnectorCreate, request: Request):
-    if connector.id in CONNECTORS_DB:
+    connectors_coll = get_collection("connectors")
+    
+    if connectors_coll.find_one({"_id": connector.id}):
         raise HTTPException(status_code=400, detail="Connector with this ID already exists")
     
     conn_dict = connector.model_dump()
+    conn_dict["_id"] = conn_dict["id"]
+    
+    # Strip header_values before saving to DB, if necessary. 
+    # Actually, previous code said: "Strip header_values before saving to connectors.json"
+    # I should do that if it is a requirement. Let's do it in the DB document.
+    db_dict = conn_dict.copy()
+    if "header_values" in db_dict:
+        del db_dict["header_values"]
         
-    # Save in memory and to file
-    CONNECTORS_DB[connector.id] = conn_dict
-    save_connectors(CONNECTORS_DB)
+    connectors_coll.insert_one(db_dict)
     
     # Update AgentRunner connectors configuration
+    connectors_db = get_connectors_dict()
     agent_runner = getattr(request.app.state, "agent_runner", None)
     if agent_runner:
-        agent_runner.mcp_configs = CONNECTORS_DB
+        agent_runner.mcp_configs = connectors_db
         
     clear_connector_tools_cache()
     trigger_background_discovery()
-    return CONNECTORS_DB[connector.id]
+    return conn_dict
 
 @router.put("/connectors/{connector_id}", response_model=ConnectorResponse)
 async def update_connector(connector_id: str, connector: ConnectorCreate, request: Request):
-    if connector_id not in CONNECTORS_DB:
+    connectors_coll = get_collection("connectors")
+    
+    existing = connectors_coll.find_one({"_id": connector_id})
+    if not existing:
         raise HTTPException(status_code=404, detail="Connector not found")
     
-    if connector.id != connector_id and connector.id in CONNECTORS_DB:
+    if connector.id != connector_id and connectors_coll.find_one({"_id": connector.id}):
         raise HTTPException(status_code=400, detail="New Connector ID already exists")
     
     # If ID changed, delete the old one
     if connector.id != connector_id:
-        del CONNECTORS_DB[connector_id]
+        connectors_coll.delete_one({"_id": connector_id})
         
     conn_dict = connector.model_dump()
-        
-    CONNECTORS_DB[connector.id] = conn_dict
-    save_connectors(CONNECTORS_DB)
+    conn_dict["_id"] = conn_dict["id"]
     
+    db_dict = conn_dict.copy()
+    if "header_values" in db_dict:
+        del db_dict["header_values"]
+        
+    connectors_coll.replace_one({"_id": connector.id}, db_dict, upsert=True)
+    
+    connectors_db = get_connectors_dict()
     # Update AgentRunner connectors configuration
     agent_runner = getattr(request.app.state, "agent_runner", None)
     if agent_runner:
-        agent_runner.mcp_configs = CONNECTORS_DB
+        agent_runner.mcp_configs = connectors_db
         
     clear_connector_tools_cache()
     trigger_background_discovery()
-    return CONNECTORS_DB[connector.id]
+    return conn_dict
 
 @router.delete("/connectors/{connector_id}")
 async def delete_connector(connector_id: str, request: Request):
-    if connector_id not in CONNECTORS_DB:
+    connectors_coll = get_collection("connectors")
+    
+    result = connectors_coll.delete_one({"_id": connector_id})
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Connector not found")
     
-    del CONNECTORS_DB[connector_id]
-    save_connectors(CONNECTORS_DB)
-    
+    connectors_db = get_connectors_dict()
     # Update AgentRunner connectors configuration
     agent_runner = getattr(request.app.state, "agent_runner", None)
     if agent_runner:
-        agent_runner.mcp_configs = CONNECTORS_DB
+        agent_runner.mcp_configs = connectors_db
         
     clear_connector_tools_cache()
     trigger_background_discovery()
     return {"message": "Connector deleted"}
+

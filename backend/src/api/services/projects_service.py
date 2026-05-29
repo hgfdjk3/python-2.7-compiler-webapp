@@ -1,73 +1,62 @@
-import json
-import os
 from typing import Dict, Any, List, Optional
 import uuid
-
-# Resolve path to projects.json in the backend directory
-routes_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.abspath(os.path.join(routes_dir, "..", "..", ".."))
-PROJECTS_FILE = os.path.join(backend_dir, "projects.json")
-
-def load_projects() -> List[Dict[str, Any]]:
-    if os.path.exists(PROJECTS_FILE):
-        try:
-            with open(PROJECTS_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-def save_projects(projects: List[Dict[str, Any]]):
-    try:
-        with open(PROJECTS_FILE, "w") as f:
-            json.dump(projects, f, indent=2)
-    except Exception:
-        pass
+from src.api.utils.db import get_collection
 
 class ProjectsService:
     @staticmethod
     def get_all_projects() -> List[Dict[str, Any]]:
-        return load_projects()
+        coll = get_collection("projects")
+        result = []
+        for doc in coll.find():
+            if "_id" in doc:
+                doc["id"] = doc.pop("_id")
+            result.append(doc)
+        return result
 
     @staticmethod
     def get_project(project_id: str) -> Optional[Dict[str, Any]]:
-        projects = load_projects()
-        for p in projects:
-            if p.get("id") == project_id:
-                return p
-        return None
+        coll = get_collection("projects")
+        doc = coll.find_one({"_id": project_id})
+        if doc:
+            doc["id"] = doc.pop("_id")
+        return doc
 
     @staticmethod
     def create_project(data: Dict[str, Any]) -> Dict[str, Any]:
-        projects = load_projects()
+        coll = get_collection("projects")
         
-        # ensure id
         if "id" not in data:
             data["id"] = f"p{uuid.uuid4().hex[:8]}"
             
-        projects.append(data)
-        save_projects(projects)
+        db_dict = data.copy()
+        db_dict["_id"] = db_dict.pop("id")
+        
+        coll.insert_one(db_dict)
         return data
 
     @staticmethod
     def update_project(project_id: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        projects = load_projects()
-        for i, p in enumerate(projects):
-            if p.get("id") == project_id:
-                updated = {**p, **data}
-                # Ensure we don't overwrite id
-                updated["id"] = project_id
-                projects[i] = updated
-                save_projects(projects)
-                return updated
-        return None
+        coll = get_collection("projects")
+        
+        existing = coll.find_one({"_id": project_id})
+        if not existing:
+            return None
+            
+        for key, value in data.items():
+            if key not in ["id", "_id"]:
+                existing[key] = value
+                
+        existing["id"] = project_id
+        
+        db_dict = existing.copy()
+        db_dict["_id"] = db_dict.pop("id")
+        
+        coll.replace_one({"_id": project_id}, db_dict)
+        return existing
 
     @staticmethod
     def delete_project(project_id: str) -> bool:
-        projects = load_projects()
-        initial_length = len(projects)
-        projects = [p for p in projects if p.get("id") != project_id]
-        if len(projects) < initial_length:
-            save_projects(projects)
-            return True
-        return False
+        coll = get_collection("projects")
+        result = coll.delete_one({"_id": project_id})
+        return result.deleted_count > 0
+

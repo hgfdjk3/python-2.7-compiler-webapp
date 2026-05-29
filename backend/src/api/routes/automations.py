@@ -15,10 +15,10 @@ from src.api.services.automations_service import (
 )
 from src.api.services.automation_runner_service import AutomationRunnerService
 from src.api.schemas.automations import AutomationRunRequest, AutomationRunResponse
-from src.api.routes.connectors import CONNECTORS_DB
+from src.api.routes.connectors import get_connectors_dict
 
 router = APIRouter()
-automation_runner = AutomationRunnerService(mcp_configs=CONNECTORS_DB)
+automation_runner = AutomationRunnerService(mcp_configs=get_connectors_dict())
 
 @router.get("/automations", response_model=List[AutomationResponse])
 async def list_automations():

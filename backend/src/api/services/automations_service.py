@@ -1,32 +1,8 @@
-import json
 import os
 import uuid
 from typing import Dict, Any, List
 from src.api.services.connector_tools_service import calculate_node_color
-
-# Resolve path to automations.json in the backend directory
-services_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.abspath(os.path.join(services_dir, "..", "..", ".."))
-AUTOMATIONS_FILE = os.path.join(backend_dir, "automations.json")
-
-def load_automations() -> Dict[str, Any]:
-    if os.path.exists(AUTOMATIONS_FILE):
-        try:
-            with open(AUTOMATIONS_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {}
-
-def save_automations_to_file(automations: Dict[str, Any]):
-    try:
-        with open(AUTOMATIONS_FILE, "w") as f:
-            json.dump(automations, f, indent=2)
-    except Exception:
-        pass
-
-# In-memory python dictionary for automations, loaded from file
-AUTOMATIONS_DB: Dict[str, Any] = load_automations()
+from src.api.utils.db import get_collection
 
 async def populate_automation_colors(automation_data: Dict[str, Any]):
     """Iterates through nodes and populates their color based on tools."""
@@ -41,36 +17,56 @@ async def populate_automation_colors(automation_data: Dict[str, Any]):
         node["data"] = data
 
 def get_all_automations() -> List[Dict[str, Any]]:
-    return list(AUTOMATIONS_DB.values())
+    coll = get_collection("automations")
+    result = []
+    for doc in coll.find():
+        if "_id" in doc:
+            doc["id"] = doc.pop("_id")
+        result.append(doc)
+    return result
 
 def get_automation_by_id(automation_id: str) -> Dict[str, Any]:
-    return AUTOMATIONS_DB.get(automation_id)
+    coll = get_collection("automations")
+    doc = coll.find_one({"_id": automation_id})
+    if doc:
+        doc["id"] = doc.pop("_id")
+    return doc
 
 async def create_new_automation(automation_data: Dict[str, Any]) -> Dict[str, Any]:
     new_id = str(uuid.uuid4())
     automation_data["id"] = new_id
     await populate_automation_colors(automation_data)
-    AUTOMATIONS_DB[new_id] = automation_data
-    save_automations_to_file(AUTOMATIONS_DB)
+    
+    db_dict = automation_data.copy()
+    db_dict["_id"] = db_dict.pop("id")
+    
+    coll = get_collection("automations")
+    coll.insert_one(db_dict)
+    
     return automation_data
 
 async def update_existing_automation(automation_id: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
-    if automation_id not in AUTOMATIONS_DB:
+    coll = get_collection("automations")
+    existing = coll.find_one({"_id": automation_id})
+    
+    if not existing:
         return None
     
-    current_data = AUTOMATIONS_DB[automation_id]
     for key, value in update_data.items():
-        current_data[key] = value
-        
-    await populate_automation_colors(current_data)
-    AUTOMATIONS_DB[automation_id] = current_data
-    save_automations_to_file(AUTOMATIONS_DB)
-    return current_data
+        if key != "id" and key != "_id":
+            existing[key] = value
+            
+    existing["id"] = automation_id
+    await populate_automation_colors(existing)
+    
+    db_dict = existing.copy()
+    db_dict["_id"] = db_dict.pop("id")
+    
+    coll.replace_one({"_id": automation_id}, db_dict)
+    return existing
 
 def delete_automation_by_id(automation_id: str) -> bool:
-    if automation_id not in AUTOMATIONS_DB:
-        return False
-    
-    del AUTOMATIONS_DB[automation_id]
-    save_automations_to_file(AUTOMATIONS_DB)
-    return True
+    coll = get_collection("automations")
+    result = coll.delete_one({"_id": automation_id})
+    return result.deleted_count > 0
+

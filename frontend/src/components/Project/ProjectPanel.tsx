@@ -175,15 +175,15 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
             groups={groups}
             attachedSourceIds={attachedSourceIds}
             onDetachSource={(sourceId) => setAttachedSourceIds((current) => current.filter((id) => id !== sourceId))}
-            onToggleSource={(sourceId) => setAttachedSourceIds((current) => 
-              current.includes(sourceId) 
-                ? current.filter((id) => id !== sourceId) 
+            onToggleSource={(sourceId) => setAttachedSourceIds((current) =>
+              current.includes(sourceId)
+                ? current.filter((id) => id !== sourceId)
                 : [...current, sourceId]
             )}
             onAddGlobalToProject={handleAddGlobalToProject}
           />
         </Box>
-        <Box w={{ base: 10, xs: 10, sm: 10, md: 360, lg: 380 }} >
+        <Box w={{ base: 100, xs: 100, sm: 0, md: 260, lg: 380 }} >
           <ProjectConfigPanel
             groups={groups}
             standaloneSources={sources}
@@ -195,9 +195,9 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
       <Portal>
         <DragOverlay dropAnimation={null} style={{ zIndex: 9999 }}>
           {activeSource ? (
-            <SourceCard 
-              source={activeSource} 
-              isOverlay 
+            <SourceCard
+              source={activeSource}
+              isOverlay
             />
           ) : null}
         </DragOverlay>

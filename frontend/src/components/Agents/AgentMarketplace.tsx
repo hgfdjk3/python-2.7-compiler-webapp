@@ -53,7 +53,7 @@ export const AgentMarketplace: React.FC = () => {
     const newEnabled = isEnabled
       ? userConfig.enabled_connectors.filter(c => c !== id)
       : [...userConfig.enabled_connectors, id];
-    
+
     await updateUserConfigMutation.mutateAsync({
       enabled_connectors: newEnabled,
       header_values: userConfig.header_values || {},
@@ -69,12 +69,12 @@ export const AgentMarketplace: React.FC = () => {
 
   const handleUpdateConfig = async (id: string, header_values: Record<string, string>) => {
     if (!userConfig) return;
-    
+
     const newHeaders = { ...userConfig.header_values, [id]: header_values };
-    const newEnabled = userConfig.enabled_connectors.includes(id) 
-      ? userConfig.enabled_connectors 
+    const newEnabled = userConfig.enabled_connectors.includes(id)
+      ? userConfig.enabled_connectors
       : [...userConfig.enabled_connectors, id];
-    
+
     await updateUserConfigMutation.mutateAsync({
       enabled_connectors: newEnabled,
       header_values: newHeaders,

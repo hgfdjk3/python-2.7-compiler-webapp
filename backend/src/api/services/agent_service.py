@@ -8,7 +8,7 @@ from src.services.harness.runner import AgentRunner
 from src.api.schemas.ask import AskRequest
 from src.api.utils.serialization import serialize_state
 from src.api.routes.user import get_user_config_dict
-from src.api.routes.connectors import CONNECTORS_DB
+from src.api.routes.connectors import get_connectors_dict
 
 class AgentService:
     """
@@ -29,10 +29,11 @@ class AgentService:
         enabled_connectors = user_config.get("enabled_connectors", [])
         user_headers = user_config.get("header_values", {})
         
+        connectors_db = get_connectors_dict()
         user_scoped_configs = {}
         for conn_id in enabled_connectors:
-            if conn_id in CONNECTORS_DB:
-                conn_copy = CONNECTORS_DB[conn_id].copy()
+            if conn_id in connectors_db:
+                conn_copy = connectors_db[conn_id].copy()
                 if conn_id in user_headers:
                     conn_copy["header_values"] = user_headers[conn_id]
                 user_scoped_configs[conn_id] = conn_copy
