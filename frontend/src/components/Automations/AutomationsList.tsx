@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Text, Loader, Center } from '@mantine/core';
 import { motion, Variants } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AutomationItem, AutomationData } from './AutomationItem';
 import { ScheduleConfiguratorModal } from './ScheduleConfiguratorModal';
 import { ToggleAutomationModal } from './ToggleAutomationModal/ToggleAutomationModal';
 import { RunAutomationModal } from './RunAutomationModal/RunAutomationModal';
 import { ScheduleConfig } from './ScheduleConfigurator';
-import { useAutomations, useDeleteAutomation, useUpdateAutomation, Automation } from '../../api/automations';
+import { useDeleteAutomation, useUpdateAutomation, Automation, useProjectAutomations } from '../../api/automations';
 import { useAutomationRun } from '../../hooks/useAutomationRun';
 import { getScheduleString } from './utils';
 import './Automations.css';
@@ -57,7 +57,8 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
   limit,
 }) => {
   const navigate = useNavigate();
-  const { data: backendAutomations = [], isLoading } = useAutomations();
+  const { projectId } = useParams<{ projectId: string }>();
+  const { data: backendAutomations = [], isLoading } = useProjectAutomations(projectId);
   const deleteAutomation = useDeleteAutomation();
   const updateAutomation = useUpdateAutomation();
   const automations = backendAutomations.map(toAutomationData);

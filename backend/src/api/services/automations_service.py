@@ -25,6 +25,17 @@ def get_all_automations() -> List[Dict[str, Any]]:
         result.append(doc)
     return result
 
+def get_automations_by_ids(automation_ids: List[str]) -> List[Dict[str, Any]]:
+    if not automation_ids:
+        return []
+    coll = get_collection("automations")
+    result = []
+    for doc in coll.find({"_id": {"$in": automation_ids}}):
+        if "_id" in doc:
+            doc["id"] = doc.pop("_id")
+        result.append(doc)
+    return result
+
 def get_automation_by_id(automation_id: str) -> Dict[str, Any]:
     coll = get_collection("automations")
     doc = coll.find_one({"_id": automation_id})

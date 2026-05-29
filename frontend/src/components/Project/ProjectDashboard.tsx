@@ -4,7 +4,6 @@ import { ContentSection } from './Chat/ContentSection';
 import { RecentChats } from './Chat/RecentChats';
 import { AutomationsList } from '../Automations/AutomationsList';
 import { ChatItemData } from './Chat/ChatItem';
-import { useAutomations } from '../../api/automations';
 import './ProjectDashboard.css';
 
 interface ProjectDashboardProps {
@@ -21,7 +20,6 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
   onRunAutomation,
 }) => {
   // We only fetch here to get the counts for the header, AutomationsList handles its own fetching and logic
-  const { data: automations = [], isLoading } = useAutomations();
   const [expandedSection, setExpandedSection] = useState<'chats' | 'automations' | null>(null);
 
   return (
@@ -51,7 +49,7 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
             actionLabel={
               expandedSection === 'automations'
                 ? "Go back"
-                : automations.length > 4 ? "View all" : undefined
+                : "View all"
             }
             onAction={() => setExpandedSection(expandedSection === 'automations' ? null : 'automations')}
           >

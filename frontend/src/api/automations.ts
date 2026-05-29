@@ -10,6 +10,7 @@ export interface Automation {
   edges: any[];
   automation_type: string;
   schedule_config?: any;
+  creator?: string;
 }
 
 export interface AutomationCreate {
@@ -18,6 +19,7 @@ export interface AutomationCreate {
   edges: any[];
   automation_type: string;
   schedule_config?: any;
+  project_id?: string;
 }
 
 export interface AutomationUpdate {
@@ -26,14 +28,14 @@ export interface AutomationUpdate {
   edges?: any[];
   automation_type?: string;
   schedule_config?: any;
+  creator?: string;
 }
 
-const api = axios.create({
-  baseURL: API_URL,
-});
+import { apiClient as api } from './client';
 
-export const getAutomations = async (): Promise<Automation[]> => {
-  const { data } = await api.get('/automations');
+export const getAutomations = async (projectId?: string): Promise<Automation[]> => {
+  const url = projectId ? `/projects/${projectId}/automations` : '/automations';
+  const { data } = await api.get(url);
   return data;
 };
 
@@ -160,10 +162,11 @@ export const streamRunAutomation = async (
   }
 };
 
-export const useAutomations = () => {
+export const useProjectAutomations = (projectId?: string) => {
   return useQuery({
-    queryKey: ['automations'],
-    queryFn: getAutomations,
+    queryKey: ['project-automations', projectId],
+    queryFn: () => getAutomations(projectId),
+    enabled: !!projectId,
   });
 };
 

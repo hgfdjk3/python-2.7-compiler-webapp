@@ -10,6 +10,7 @@ class ProjectBase(BaseModel):
     name: str
     chats: List[ChatMeta] = Field(default_factory=list)
     automation_ids: List[str] = Field(default_factory=list)
+    members: List[str] = Field(default_factory=list)
 
 class ProjectCreate(ProjectBase):
     pass

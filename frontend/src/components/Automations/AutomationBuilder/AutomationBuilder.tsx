@@ -23,6 +23,7 @@ export interface AutomationBuilderProps {
   initialNodes?: AppNode[];
   initialEdges?: Edge[];
   height?: string | number;
+  projectId?: string;
 }
 
 const defaultNodes: AppNode[] = [
@@ -90,7 +91,8 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
   initialName,
   initialNodes = defaultNodes,
   initialEdges = defaultEdges,
-  height = '100%'
+  height = '100%',
+  projectId
 }) => {
   const [currentAutomationId, setCurrentAutomationId] = useState<string | undefined>(automationId);
   const [automationName, setAutomationName] = useState(initialName || 'New Automation');
@@ -126,6 +128,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
       edges: historyState.edges,
       automation_type: isScheduled ? 'scheduled' : 'manual',
       schedule_config: scheduleConfig,
+      project_id: projectId,
     };
     if (currentAutomationId) {
       updateAutomation.mutate({

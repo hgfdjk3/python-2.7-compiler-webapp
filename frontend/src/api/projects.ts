@@ -11,6 +11,7 @@ export interface Project {
   name: string;
   chats: ChatMeta[];
   automation_ids: string[];
+  members?: string[];
 }
 
 export const getProjects = async (): Promise<Project[]> => {

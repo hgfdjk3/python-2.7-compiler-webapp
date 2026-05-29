@@ -161,6 +161,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 initialName={automationBuilderData?.name}
                 initialNodes={automationBuilderData?.nodes}
                 initialEdges={automationBuilderData?.edges}
+                projectId={project.id}
               />
             </motion.div>
             <ResizeDivider

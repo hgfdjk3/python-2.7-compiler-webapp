@@ -7,6 +7,7 @@ class AutomationCreate(BaseModel):
     edges: List[Dict[str, Any]]
     automation_type: str
     schedule_config: Optional[Dict[str, Any]] = None
+    project_id: Optional[str] = None
 
 class AutomationUpdate(BaseModel):
     name: Optional[str] = None
@@ -14,6 +15,7 @@ class AutomationUpdate(BaseModel):
     edges: Optional[List[Dict[str, Any]]] = None
     automation_type: Optional[str] = None
     schedule_config: Optional[Dict[str, Any]] = None
+    project_id: Optional[str] = None
 
 class AutomationResponse(BaseModel):
     id: str
@@ -22,6 +24,7 @@ class AutomationResponse(BaseModel):
     edges: List[Dict[str, Any]]
     automation_type: str
     schedule_config: Optional[Dict[str, Any]] = None
+    creator: Optional[str] = None
 
 class AutomationRunRequest(BaseModel):
     input_text: Optional[str] = None
