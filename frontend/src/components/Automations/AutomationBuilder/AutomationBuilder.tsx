@@ -15,20 +15,7 @@ import { useAutomationRun } from '../../../hooks/useAutomationRun';
 import { EditableTitle } from '../../Common/EditableTitle';
 import { SaveAutomationModal } from '../SaveAutomationModal/SaveAutomationModal';
 import { RunAutomationModal } from '../RunAutomationModal/RunAutomationModal';
-
-const getScheduleString = (config: ScheduleConfig): string => {
-  const { frequency, interval, time } = config;
-  const plural = interval > 1 ? 's' : '';
-  const timeStr = time ? ` at ${time}` : '';
-
-  if (frequency === 'weeks' && config.byDays && config.byDays.length > 0) {
-    const daysStr = config.byDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
-    return `Every ${interval} week${plural} on ${daysStr}${timeStr}`;
-  }
-
-  const freqSingle = frequency.endsWith('s') ? frequency.slice(0, -1) : frequency;
-  return `Every ${interval} ${freqSingle}${plural}${timeStr}`;
-};
+import { getScheduleString } from '../utils';
 
 export interface AutomationBuilderProps {
   automationId?: string;

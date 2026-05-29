@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
+import { notifications } from '@mantine/notifications';
 import { streamRunAutomation, NodeExecutionState } from '../api/automations';
 
 export const useAutomationRun = (automationId: string) => {

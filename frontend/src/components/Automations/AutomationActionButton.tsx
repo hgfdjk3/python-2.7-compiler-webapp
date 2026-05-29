@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActionIcon, Button, Menu, Tooltip } from '@mantine/core';
-import { IconClock, IconPlayerPlay, IconChevronDown, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconClock, IconPlayerPlay, IconChevronDown, IconEdit, IconTrash, IconCalendarOff, IconClockCancel } from '@tabler/icons-react';
 
 export interface AutomationActionButtonProps {
   isScheduled: boolean;
@@ -10,6 +10,7 @@ export interface AutomationActionButtonProps {
   onToggle: () => void;
   onRun: () => void;
   onScheduleClick?: () => void;
+  onRemoveSchedule?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -22,6 +23,7 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
   onToggle,
   onRun,
   onScheduleClick,
+  onRemoveSchedule,
   onEdit,
   onDelete,
 }) => {
@@ -41,7 +43,7 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
           size="compact-sm"
           loading={isRunning}
           loaderProps={{ type: 'dots' }}
-          leftSection={!isRunning && (isScheduled ? <IconClock size={12} stroke={2} /> : <IconPlayerPlay size={12} />)}
+          leftSection={!isRunning && (isScheduled ? (isActive ? <IconClock size={16} stroke={2} /> : <IconClockCancel size={16} />) : <IconPlayerPlay size={16} />)}
           onClick={(e) => {
             e.stopPropagation();
             if (isRunning) return;
@@ -69,7 +71,7 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
         </Menu.Target>
         <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
           {!isActive && isScheduled && (
-            <Menu.Item 
+            <Menu.Item
               leftSection={<IconPlayerPlay size={14} stroke={1.5} />}
               onClick={onToggle}
               style={{ padding: '6px 12px', fontSize: 13, height: 32 }}
@@ -86,13 +88,22 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
               Force Run
             </Menu.Item>
           )}
-          <Menu.Item 
-            leftSection={<IconClock size={14} stroke={1.5} />} 
+          <Menu.Item
+            leftSection={<IconClock size={14} stroke={1.5} />}
             onClick={onScheduleClick}
             style={{ padding: '6px 12px', fontSize: 13, height: 32 }}
           >
             {isScheduled ? 'Edit Schedule' : 'Set Schedule'}
           </Menu.Item>
+          {isScheduled && (
+            <Menu.Item
+              leftSection={<IconCalendarOff size={14} stroke={1.5} />}
+              onClick={onRemoveSchedule}
+              style={{ padding: '6px 12px', fontSize: 13, height: 32 }}
+            >
+              Turn to Manual
+            </Menu.Item>
+          )}
           <Menu.Item leftSection={<IconEdit size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onEdit}>
             Edit Details
           </Menu.Item>

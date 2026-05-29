@@ -4,8 +4,12 @@ import { motion, Variants } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { AutomationItem, AutomationData } from './AutomationItem';
 import { ScheduleConfiguratorModal } from './ScheduleConfiguratorModal';
+import { ToggleAutomationModal } from './ToggleAutomationModal/ToggleAutomationModal';
+import { RunAutomationModal } from './RunAutomationModal/RunAutomationModal';
 import { ScheduleConfig } from './ScheduleConfigurator';
-import { useAutomations, useDeleteAutomation, Automation } from '../../api/automations';
+import { useAutomations, useDeleteAutomation, useUpdateAutomation, Automation } from '../../api/automations';
+import { useAutomationRun } from '../../hooks/useAutomationRun';
+import { getScheduleString } from './utils';
 import './Automations.css';
 
 /**
@@ -15,8 +19,8 @@ const toAutomationData = (automation: Automation): AutomationData => ({
   id: automation.id,
   name: automation.name,
   description: `${automation.nodes?.length ?? 0} nodes • ${automation.automation_type}`,
-  isScheduled: automation.automation_type === 'scheduled',
-  schedule: automation.schedule_config?.description,
+  isScheduled: !!automation.schedule_config,
+  schedule: automation.schedule_config ? getScheduleString(automation.schedule_config) : undefined,
   isActive: automation.automation_type === 'scheduled',
   isRunning: false,
 });
@@ -55,11 +59,20 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
   const navigate = useNavigate();
   const { data: backendAutomations = [], isLoading } = useAutomations();
   const deleteAutomation = useDeleteAutomation();
+  const updateAutomation = useUpdateAutomation();
   const automations = backendAutomations.map(toAutomationData);
   const displayedAutomations = limit ? automations.slice(0, limit) : automations;
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [schedulingAutomationId, setSchedulingAutomationId] = useState<string | null>(null);
+
+  const [toggleModalOpen, setToggleModalOpen] = useState(false);
+  const [togglingAutomationId, setTogglingAutomationId] = useState<string | null>(null);
+
+  const [runModalOpen, setRunModalOpen] = useState(false);
+  const [runningAutomationId, setRunningAutomationId] = useState<string | null>(null);
+
+  const { mutate: runAutomation, isPending: isRunning } = useAutomationRun(runningAutomationId || '');
 
   const handleScheduleClick = (id: string) => {
     setSchedulingAutomationId(id);
@@ -67,7 +80,50 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
   };
 
   const handleSaveSchedule = (config: ScheduleConfig) => {
-    console.log('Saved schedule for', schedulingAutomationId, config);
+    if (schedulingAutomationId) {
+      updateAutomation.mutate({
+        id: schedulingAutomationId,
+        automation: {
+          automation_type: 'scheduled',
+          schedule_config: config,
+        }
+      });
+    }
+  };
+
+  const handleRemoveSchedule = (id: string) => {
+    updateAutomation.mutate({
+      id,
+      automation: {
+        automation_type: 'manual',
+        schedule_config: null,
+      }
+    });
+  };
+
+  const handleToggleClick = (id: string) => {
+    setTogglingAutomationId(id);
+    setToggleModalOpen(true);
+  };
+
+  const handleConfirmToggle = () => {
+    if (togglingAutomationId) {
+      const automation = backendAutomations.find(a => a.id === togglingAutomationId);
+      if (automation) {
+        const isActive = automation.automation_type === 'scheduled';
+        updateAutomation.mutate({
+          id: togglingAutomationId,
+          automation: {
+            automation_type: isActive ? 'manual' : 'scheduled',
+          }
+        }, {
+          onSettled: () => {
+            setToggleModalOpen(false);
+            setTogglingAutomationId(null);
+          }
+        });
+      }
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -85,12 +141,25 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
     }
   };
 
-  const handleRun = (id: string) => {
-    const automation = backendAutomations.find((a) => a.id === id);
-    if (automation) onRunAutomation?.(id, automation);
+  const handleRunClick = (id: string) => {
+    setRunningAutomationId(id);
+    setRunModalOpen(true);
   };
 
-  const selectedAutomation = automations.find(a => a.id === schedulingAutomationId);
+  const handleConfirmRun = () => {
+    if (runningAutomationId) {
+      const automation = backendAutomations.find((a) => a.id === runningAutomationId);
+      if (automation) {
+        onRunAutomation?.(runningAutomationId, automation);
+        // We also trigger useAutomationRun directly since onRunAutomation is mostly for ChatView UI state
+        runAutomation({ inputText: 'Run this automation now.' });
+      }
+      setRunModalOpen(false);
+    }
+  };
+
+  const selectedAutomationForSchedule = backendAutomations.find(a => a.id === schedulingAutomationId);
+  const selectedAutomationForToggle = backendAutomations.find(a => a.id === togglingAutomationId);
 
   if (isLoading) {
     return (
@@ -112,11 +181,15 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
           {displayedAutomations.map((automation) => (
             <motion.div key={automation.id} variants={itemVariants}>
               <AutomationItem
-                automation={automation}
-                onToggleActive={() => {}} // TODO: implement toggle
-                onRun={() => handleRun(automation.id)}
+                automation={{
+                  ...automation,
+                  isRunning: runningAutomationId === automation.id && isRunning
+                }}
+                onToggleActive={() => handleToggleClick(automation.id)}
+                onRun={() => handleRunClick(automation.id)}
                 onClick={() => handleEdit(automation.id)}
                 onScheduleClick={() => handleScheduleClick(automation.id)}
+                onRemoveSchedule={() => handleRemoveSchedule(automation.id)}
                 onEdit={() => handleEdit(automation.id)}
                 onDelete={() => handleDelete(automation.id)}
               />
@@ -147,7 +220,29 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
           setSchedulingAutomationId(null);
         }}
         onSave={handleSaveSchedule}
-        automationName={selectedAutomation?.name}
+        automationName={selectedAutomationForSchedule?.name}
+        initialConfig={selectedAutomationForSchedule?.schedule_config}
+      />
+
+      <ToggleAutomationModal
+        opened={toggleModalOpen}
+        onClose={() => {
+          if (!updateAutomation.isPending) {
+            setToggleModalOpen(false);
+            setTogglingAutomationId(null);
+          }
+        }}
+        onConfirm={handleConfirmToggle}
+        isActivating={selectedAutomationForToggle?.automation_type !== 'scheduled'}
+        isLoading={updateAutomation.isPending}
+      />
+
+      <RunAutomationModal
+        opened={runModalOpen}
+        onClose={() => setRunModalOpen(false)}
+        onConfirmRun={handleConfirmRun}
+        isSavedBefore={true}
+        isRunning={isRunning}
       />
     </Box>
   );
