@@ -16,6 +16,7 @@ export interface AutomationNodeProps extends NodeProps<AppNode> { }
 export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnectable, id }) => {
   const { setNodes } = useReactFlow<AppNode, AppEdge>();
   const [prompt, setPrompt] = React.useState('');
+  const [isEditing, setIsEditing] = React.useState(false);
 
   const setIsRewriting = (val: boolean) => {
     setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, isRewriting: val } } : n));
@@ -79,15 +80,22 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
             title={data.title}
             isRewriting={!!isRewriting}
             onToggleRewrite={() => setIsRewriting(!isRewriting)}
+            onEdit={() => setIsEditing(true)}
             color={nodeColor}
           />
 
           {!isRewriting ? (
             <AutomationNodeContent
+              color={nodeColor}
               description={data.description}
               tools={data.tools}
               toolsExpanded={!!data.toolsExpanded}
               onToggleTools={() => setToolsExpanded(!data.toolsExpanded)}
+              isEditing={isEditing}
+              onDescriptionChange={(newDescription) => {
+                setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, description: newDescription } } : n));
+              }}
+              onFinishEditing={() => setIsEditing(false)}
             />
           ) : (
             <AutomationNodeRewrite

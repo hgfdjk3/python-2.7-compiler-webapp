@@ -22,8 +22,8 @@ export const AutomationNodeHeader: React.FC<AutomationNodeHeaderProps> = ({
   color,
 }) => {
   return (
-    <Group justify="space-between" align="center" wrap="nowrap" gap="xs">
-      <Group gap="xs" style={{ flex: 1 }}>
+    <Group justify="space-between" align="center" wrap="nowrap" gap="xs" w="100%">
+      <Group gap="xs" style={{ flex: 1, minWidth: 0 }} wrap='nowrap'>
         <ThemeIcon variant="light" color={color} size="md" radius="md">
           <IconRobot size={18} stroke={1.5} />
         </ThemeIcon>
@@ -41,7 +41,7 @@ export const AutomationNodeHeader: React.FC<AutomationNodeHeaderProps> = ({
           <IconSparkles size={18} />
         </ActionIcon>
 
-        <Menu shadow="md" width={160} position="bottom-end" withinPortal>
+        <Menu shadow="md" width={160} position="bottom-end" withinPortal >
           <Menu.Target>
             <ActionIcon variant="subtle" color="gray" size="md" radius="md">
               <IconDotsVertical size={18} />
