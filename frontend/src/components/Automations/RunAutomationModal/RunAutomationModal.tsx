@@ -1,11 +1,11 @@
 import React from 'react';
 import { Modal, Button, Group, Text, Stack, ThemeIcon } from '@mantine/core';
-import { IconAlertCircle, IconPlayerPlay } from '@tabler/icons-react';
+import { IconAlertCircle, IconPlayerPlay, IconDeviceFloppy } from '@tabler/icons-react';
 
 interface RunAutomationModalProps {
   opened: boolean;
   onClose: () => void;
-  onConfirmRun: () => void;
+  onConfirmRun: (saveFirst: boolean) => void;
   isSavedBefore: boolean;
   isRunning: boolean;
 }
@@ -24,7 +24,7 @@ export const RunAutomationModal: React.FC<RunAutomationModalProps> = ({
       onClose={onClose}
       title={
         <Text fw={600} size="lg">
-          {isSavedBefore ? 'Run Automation' : 'Action Required'}
+          Run Automation
         </Text>
       }
       size="sm"
@@ -37,17 +37,19 @@ export const RunAutomationModal: React.FC<RunAutomationModalProps> = ({
       <Stack gap="md">
         {!isSavedBefore ? (
           <>
-            <Group wrap="nowrap" align="flex-start">
-              <ThemeIcon color="orange" variant="light" size="xl" radius="md">
-                <IconAlertCircle size={24} />
-              </ThemeIcon>
-              <Text size="sm">
-                You must save this automation before you can run it. Please save your changes first to ensure the latest workflow is executed.
-              </Text>
-            </Group>
-            <Group justify="flex-end" mt="sm">
-              <Button onClick={onClose} variant="default">
-                Close
+            <Text size="sm">
+              You have unsaved changes in this automation. You can run it temporarily without saving, or save it first.
+            </Text>
+            <Group justify="flex-end" mt="md" >
+              <Button flex={4} variant="default" onClick={() => onConfirmRun(false)} disabled={isRunning} leftSection={<IconPlayerPlay size={16} />}>
+                Run Without Saving
+              </Button>
+              <Button flex={2}
+                onClick={() => onConfirmRun(true)}
+                loading={isRunning}
+                leftSection={<IconDeviceFloppy size={16} />}
+              >
+                Save
               </Button>
             </Group>
           </>
@@ -61,7 +63,7 @@ export const RunAutomationModal: React.FC<RunAutomationModalProps> = ({
                 Cancel
               </Button>
               <Button
-                onClick={onConfirmRun}
+                onClick={() => onConfirmRun(false)}
                 loading={isRunning}
                 leftSection={<IconPlayerPlay size={16} />}
               >

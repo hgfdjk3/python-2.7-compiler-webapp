@@ -11,7 +11,7 @@ import { ScheduleConfiguratorModal } from '../ScheduleConfiguratorModal';
 import { ScheduleConfig } from '../ScheduleConfigurator';
 import { AutomationBoard } from './AutomationBoard';
 import { AutomationExecutionPanel } from './AutomationExecutionPanel';
-import { useAutomationRun } from '../../../hooks/useAutomationRun';
+import { useAutomationRun, useUnsavedAutomationRun } from '../../../hooks/useAutomationRun';
 import { EditableTitle } from '../../Common/EditableTitle';
 import { SaveAutomationModal } from '../SaveAutomationModal/SaveAutomationModal';
 import { RunAutomationModal } from '../RunAutomationModal/RunAutomationModal';
@@ -151,7 +151,11 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
     }
   }, [historyValue.current, scheduleConfig, initialScheduleConfig, onStateChange]);
 
-  const { mutate: runAutomation, nodeExecutionStates: liveNodeExecutionStates, isPending: isRunningAutomation } = useAutomationRun(currentAutomationId || '');
+  const { mutate: runAutomation, nodeExecutionStates: savedExecutionStates, isPending: isRunningSaved } = useAutomationRun(currentAutomationId || '');
+  const { mutate: runUnsavedAutomation, nodeExecutionStates: unsavedExecutionStates, isPending: isRunningUnsaved } = useUnsavedAutomationRun();
+
+  const isRunningAutomation = isRunningSaved || isRunningUnsaved;
+  const liveNodeExecutionStates = currentAutomationId ? savedExecutionStates : unsavedExecutionStates;
 
   const [localHistoricalRun, setLocalHistoricalRun] = useState<any>(historicalRun);
 
@@ -196,12 +200,28 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
     }
   };
 
-  const handleConfirmRun = () => {
-    if (!currentAutomationId) return;
+  const handleConfirmRun = (saveFirst: boolean) => {
     setIsRunModalOpen(false);
-    setPanelOpened(true);
-    setLocalHistoricalRun(null); // Clear historical view
-    runAutomation({ inputText: 'Run this automation now.' });
+    if (saveFirst) {
+      setIsSaveModalOpen(true);
+    } else {
+      setPanelOpened(true);
+      setLocalHistoricalRun(null); // Clear historical view
+      
+      const hasUnsavedChanges = historyValue.current > 0 || !currentAutomationId;
+      
+      if (hasUnsavedChanges) {
+        runUnsavedAutomation({ 
+          inputText: 'Run this automation now.',
+          automationData: {
+            nodes: historyState.nodes,
+            edges: historyState.edges
+          }
+        });
+      } else {
+        runAutomation({ inputText: 'Run this automation now.' });
+      }
+    }
   };
 
   const calculateToolsUsed = () => {
@@ -339,8 +359,8 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
       <RunAutomationModal
         opened={isRunModalOpen}
         onClose={() => setIsRunModalOpen(false)}
-        onConfirmRun={handleConfirmRun}
-        isSavedBefore={!!currentAutomationId}
+        onConfirmRun={(saveFirst) => handleConfirmRun(saveFirst)}
+        isSavedBefore={!!currentAutomationId && historyValue.current === 0}
         isRunning={isRunningAutomation}
       />
 

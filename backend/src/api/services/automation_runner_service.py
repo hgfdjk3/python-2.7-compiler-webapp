@@ -37,6 +37,19 @@ class AutomationRunnerService:
         else:
             return await self._run_sync(automation_data, request.input_text)
 
+    async def run_unsaved_automation(self, request: AutomationRunRequest):
+        automation_data = request.automation_data
+        if not automation_data:
+            raise HTTPException(status_code=400, detail="Automation data is required")
+
+        if request.stream:
+            return StreamingResponse(
+                self._stream_generator(automation_data, request.input_text, save_run=False),
+                media_type="text/event-stream"
+            )
+        else:
+            return await self._run_sync(automation_data, request.input_text)
+
     async def _run_sync(self, automation_data: Dict[str, Any], input_text: Optional[str]) -> Dict[str, Any]:
         mcp_manager = MCPClientManager(self.mcp_configs)
         tools = await mcp_manager.connect_all()
@@ -64,7 +77,7 @@ class AutomationRunnerService:
         finally:
             await mcp_manager.disconnect_all()
 
-    async def _stream_generator(self, automation_data: Dict[str, Any], input_text: Optional[str]) -> AsyncGenerator[str, None]:
+    async def _stream_generator(self, automation_data: Dict[str, Any], input_text: Optional[str], save_run: bool = True) -> AsyncGenerator[str, None]:
         mcp_manager = MCPClientManager(self.mcp_configs)
         tools = await mcp_manager.connect_all()
         node_states = {}
@@ -142,13 +155,14 @@ class AutomationRunnerService:
             end_time = datetime.utcnow()
             duration_ms = int((end_time - start_time).total_seconds() * 1000)
             
-            # Save the run
-            save_automation_run({
-                "automation_id": automation_data["id"],
-                "status": run_status,
-                "timestamp": start_time.isoformat() + "Z",
-                "duration": f"{duration_ms}ms",
-                "nodeExecutionStates": node_states
-            })
+            # Save the run only if save_run is True
+            if save_run:
+                save_automation_run({
+                    "automation_id": automation_data.get("id", "unsaved"),
+                    "status": run_status,
+                    "timestamp": start_time.isoformat() + "Z",
+                    "duration": f"{duration_ms}ms",
+                    "nodeExecutionStates": node_states
+                })
             
             await mcp_manager.disconnect_all()

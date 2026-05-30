@@ -29,6 +29,7 @@ class AutomationResponse(BaseModel):
 class AutomationRunRequest(BaseModel):
     input_text: Optional[str] = None
     stream: Optional[bool] = False
+    automation_data: Optional[Dict[str, Any]] = None
 
 class AutomationRunResponse(BaseModel):
     status: str

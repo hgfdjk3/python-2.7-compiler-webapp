@@ -92,6 +92,12 @@ async def delete_automation(automation_id: str, username: str = Depends(get_curr
     success = delete_automation_by_id(automation_id)
     return {"message": "Automation deleted"}
 
+@router.post("/automations/run")
+async def run_unsaved_automation(request: AutomationRunRequest, username: str = Depends(get_current_user)):
+    if not request.automation_data:
+        raise HTTPException(status_code=400, detail="Automation data is required for unsaved runs")
+    return await automation_runner.run_unsaved_automation(request)
+
 @router.post("/automations/{automation_id}/run")
 async def run_automation(automation_id: str, request: AutomationRunRequest, username: str = Depends(get_current_user)):
     existing = get_automation_by_id(automation_id)

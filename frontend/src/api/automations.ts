@@ -168,6 +168,74 @@ export const streamRunAutomation = async (
   }
 };
 
+export const runUnsavedAutomation = async (automationData: any, inputText?: string) => {
+  const { data } = await api.post('/automations/run', {
+    input_text: inputText,
+    stream: false,
+    automation_data: automationData
+  });
+  return data;
+};
+
+export const streamRunUnsavedAutomation = async (
+  automationData: any,
+  inputText: string | undefined,
+  onUpdate: (states: Record<string, NodeExecutionState>) => void
+): Promise<void> => {
+  const response = await api.post<ReadableStream>(
+    '/automations/run',
+    {
+      input_text: inputText,
+      stream: true,
+      automation_data: automationData
+    },
+    {
+      responseType: 'stream',
+      adapter: 'fetch',
+    }
+  );
+
+  const stream = response.data;
+  if (!stream) {
+    throw new Error('No stream data received from backend');
+  }
+
+  const nodeStates: Record<string, NodeExecutionState> = {};
+
+  for await (const chunk of parseSSEStream<any>(stream)) {
+    if (chunk.error) {
+      const runningNodeId = Object.keys(nodeStates).find(id => nodeStates[id].status === 'running');
+      if (runningNodeId) {
+        nodeStates[runningNodeId].status = 'error';
+        nodeStates[runningNodeId].content += `\n\n> [!ERROR]\n> **Execution Error**\n> \n> ${chunk.error}`;
+        onUpdate({ ...nodeStates });
+      }
+      throw new Error(chunk.error);
+    }
+
+    if (chunk.type === 'node_start') {
+      nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+    } else if (chunk.type === 'node_chunk') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+      nodeStates[chunk.node_id].content += chunk.content;
+    } else if (chunk.type === 'node_tool_start') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+      nodeStates[chunk.node_id].tools.push({ name: chunk.tool_name, input: chunk.input, output: null });
+    } else if (chunk.type === 'node_tool_end') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'running', content: '', tools: [] };
+      const tool = nodeStates[chunk.node_id].tools.find(t => t.name === chunk.tool_name && t.output === null);
+      if (tool) {
+        tool.output = chunk.output;
+      }
+    } else if (chunk.type === 'node_end') {
+      if (!nodeStates[chunk.node_id]) nodeStates[chunk.node_id] = { status: 'completed', content: '', tools: [] };
+      nodeStates[chunk.node_id].status = 'completed';
+    }
+
+    onUpdate({ ...nodeStates });
+  }
+};
+
 export const useProjectAutomations = (projectId?: string) => {
   return useQuery({
     queryKey: ['project-automations', projectId],
