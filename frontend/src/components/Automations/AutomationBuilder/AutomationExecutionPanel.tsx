@@ -24,20 +24,18 @@ export const AutomationExecutionPanel: React.FC<AutomationExecutionPanelProps> =
       left={0}
       w={340}
       h="100%"
-      radius={0}
-      shadow="xl"
       bg="var(--mantine-color-body)"
     >
-      <Box p="xs" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-        <Group justify="space-between">
-          <Group gap="xs">
+      <Box p="xs" h="50" style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
+        {/* <Group justify="space-between"> */}
+        {/* <Group gap="xs">
             <ThemeIcon variant="light" color="zinc" size="sm" radius="md">
               <IconTerminal2 size={14} />
             </ThemeIcon>
             <Title order={6} fw={600} style={{ letterSpacing: '-0.01em' }}>Execution Logs</Title>
           </Group>
           <CloseButton onClick={onClose} size="sm" variant="subtle" radius="md" />
-        </Group>
+        </Group> */}
       </Box>
 
       <ScrollArea.Autosize mah="100%" scrollbarSize={3} offsetScrollbars>
