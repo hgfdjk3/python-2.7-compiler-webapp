@@ -9,6 +9,7 @@ export interface UseAutomationBoardProps {
   initialEdges?: Edge[];
   onStructureChange?: (nodes: AppNode[], edges: Edge[]) => void;
   nodeExecutionStates?: Record<string, NodeExecutionState>;
+  activeNodeId?: string | null;
 }
 
 export function useAutomationBoard({
@@ -16,6 +17,7 @@ export function useAutomationBoard({
   initialEdges = [],
   onStructureChange,
   nodeExecutionStates,
+  activeNodeId,
 }: UseAutomationBoardProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(getLayoutedElements(initialNodes, initialEdges));
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -59,12 +61,25 @@ export function useAutomationBoard({
 
   // Automatically fit view when nodes change (e.g. after layout)
   useEffect(() => {
-    if (nodes.length > 0) {
+    if (nodes.length > 0 && !activeNodeId) {
       window.requestAnimationFrame(() => {
         fitView({ duration: 400, padding: 0.15 });
       });
     }
-  }, [nodes.length, fitView]);
+  }, [nodes.length, fitView, activeNodeId]);
+
+  // Focus on active node from panel
+  useEffect(() => {
+    if (activeNodeId) {
+      window.requestAnimationFrame(() => {
+        fitView({
+          nodes: [{ id: activeNodeId }],
+          duration: 600,
+          padding: 0.6,
+        });
+      });
+    }
+  }, [activeNodeId, fitView]);
 
   // Handle structural changes (deletions/healing) by recalculating layout
   useEffect(() => {

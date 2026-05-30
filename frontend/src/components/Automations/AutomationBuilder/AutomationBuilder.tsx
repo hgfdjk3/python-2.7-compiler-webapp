@@ -113,6 +113,7 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
   const [automationName, setAutomationName] = useState(initialName || 'New Automation');
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
   const [panelOpened, setPanelOpened] = useState(false);
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
@@ -288,13 +289,25 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
           </Box>
         )}
       </>
-
-      <AutomationBoard
-        initialNodes={historyState.nodes}
-        initialEdges={historyState.edges}
-        onStructureChange={(nodes, edges) => handlers.set({ nodes, edges })}
-        nodeExecutionStates={displayNodeExecutionStates}
-      />
+      <Group gap="0" w="100%" h="100%" wrap="nowrap" align="stretch">
+        <AutomationExecutionPanel
+          opened={panelOpened}
+          onClose={() => setPanelOpened(false)}
+          nodes={historyState.nodes}
+          nodeExecutionStates={displayNodeExecutionStates}
+          activePanel={activeNodeId}
+          onActivePanelChange={setActiveNodeId}
+        />
+        <Box style={{ flex: 1, height: '100%', position: 'relative' }}>
+          <AutomationBoard
+            initialNodes={historyState.nodes}
+            initialEdges={historyState.edges}
+            onStructureChange={(nodes, edges) => handlers.set({ nodes, edges })}
+            nodeExecutionStates={displayNodeExecutionStates}
+            activeNodeId={activeNodeId}
+          />
+        </Box>
+      </Group>
 
       <ScheduleConfiguratorModal
         opened={scheduleModalOpened}
@@ -331,12 +344,6 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
         isRunning={isRunningAutomation}
       />
 
-      <AutomationExecutionPanel
-        opened={panelOpened}
-        onClose={() => setPanelOpened(false)}
-        nodes={historyState.nodes}
-        nodeExecutionStates={displayNodeExecutionStates}
-      />
     </Paper>
   );
 });

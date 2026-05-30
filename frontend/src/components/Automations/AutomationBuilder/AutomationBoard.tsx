@@ -24,7 +24,9 @@ const defaultEdgeOptions = {
   animated: true,
 };
 
-export interface AutomationBoardProps extends UseAutomationBoardProps {}
+export interface AutomationBoardProps extends UseAutomationBoardProps {
+  activeNodeId?: string | null;
+}
 
 const AutomationBoardInternal: React.FC<AutomationBoardProps> = (props) => {
   const {
