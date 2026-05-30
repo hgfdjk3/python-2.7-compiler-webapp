@@ -97,22 +97,22 @@ export const AutomationSelectHeader: React.FC<AutomationSelectHeaderProps> = ({
         )}
 
         <Group gap="xs">
-        <Tooltip label="Schedule Automation">
-          <ActionIcon variant="subtle" color="gray" size="sm" radius="md" onClick={onSchedule} disabled={!automationId}>
-            <IconCalendarEvent size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Save Automation">
-          <ActionIcon variant="subtle" color="gray" size="sm" radius="md" onClick={onSave} disabled={!automationId || !hasChanges}>
-            <IconDeviceFloppy size={16} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Run Automation">
-          <ActionIcon variant="light" color="primary" size="sm" radius="md" onClick={onRun} disabled={!automationId}>
-            <IconPlayerPlay size={16} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+          <Tooltip label="Schedule Automation">
+            <ActionIcon variant="subtle" color="gray" size="sm" radius="md" onClick={onSchedule} disabled={!automationId}>
+              <IconCalendarEvent size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Save Automation">
+            <ActionIcon variant="subtle" color="gray" size="sm" radius="md" onClick={onSave} disabled={!automationId || !hasChanges}>
+              <IconDeviceFloppy size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Run Automation">
+            <ActionIcon variant="light" color="primary" size="sm" radius="md" onClick={onRun} disabled={!automationId}>
+              <IconPlayerPlay size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
     </Flex>
   );

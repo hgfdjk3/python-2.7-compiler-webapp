@@ -114,6 +114,7 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
   const [panelOpened, setPanelOpened] = useState(false);
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const [savedHistoryIndex, setSavedHistoryIndex] = useState(0);
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
@@ -122,7 +123,12 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
 
   // Sync with incoming props (e.g., from LLM generation)
   React.useEffect(() => {
-    handlers.set({ nodes: initialNodes, edges: initialEdges });
+    if (
+      JSON.stringify(initialNodes) !== JSON.stringify(historyState.nodes) ||
+      JSON.stringify(initialEdges) !== JSON.stringify(historyState.edges)
+    ) {
+      handlers.set({ nodes: initialNodes, edges: initialEdges });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialNodes, initialEdges]);
 
@@ -143,13 +149,13 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
 
   React.useEffect(() => {
     if (onStateChange) {
-      const hasChanges = historyValue.current > 0 || JSON.stringify(scheduleConfig) !== JSON.stringify(initialScheduleConfig);
+      const hasChanges = historyValue.current !== savedHistoryIndex || JSON.stringify(scheduleConfig) !== JSON.stringify(initialScheduleConfig) || automationName !== (initialName || 'New Automation');
       onStateChange({
         hasChanges,
         scheduleString: scheduleConfig ? getScheduleString(scheduleConfig) : undefined
       });
     }
-  }, [historyValue.current, scheduleConfig, initialScheduleConfig, onStateChange]);
+  }, [historyValue.current, savedHistoryIndex, scheduleConfig, initialScheduleConfig, onStateChange, automationName, initialName]);
 
   const { mutate: runAutomation, nodeExecutionStates: savedExecutionStates, isPending: isRunningSaved } = useAutomationRun(currentAutomationId || '');
   const { mutate: runUnsavedAutomation, nodeExecutionStates: unsavedExecutionStates, isPending: isRunningUnsaved } = useUnsavedAutomationRun();
@@ -187,6 +193,7 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
         automation: payload,
       }, {
         onSuccess: () => {
+          setSavedHistoryIndex(historyValue.current);
           setIsSaveModalOpen(false);
         }
       });
@@ -194,6 +201,7 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
       createAutomation.mutate(payload, {
         onSuccess: (data) => {
           setCurrentAutomationId(data.id);
+          setSavedHistoryIndex(historyValue.current);
           setIsSaveModalOpen(false);
         }
       });
@@ -207,11 +215,11 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
     } else {
       setPanelOpened(true);
       setLocalHistoricalRun(null); // Clear historical view
-      
-      const hasUnsavedChanges = historyValue.current > 0 || !currentAutomationId;
-      
+
+      const hasUnsavedChanges = historyValue.current !== savedHistoryIndex || !currentAutomationId;
+
       if (hasUnsavedChanges) {
-        runUnsavedAutomation({ 
+        runUnsavedAutomation({
           inputText: 'Run this automation now.',
           automationData: {
             nodes: historyState.nodes,
@@ -360,7 +368,7 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
         opened={isRunModalOpen}
         onClose={() => setIsRunModalOpen(false)}
         onConfirmRun={(saveFirst) => handleConfirmRun(saveFirst)}
-        isSavedBefore={!!currentAutomationId && historyValue.current === 0}
+        isSavedBefore={!!currentAutomationId && historyValue.current === savedHistoryIndex && automationName === (initialName || 'New Automation')}
         isRunning={isRunningAutomation}
       />
 
