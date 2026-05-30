@@ -11,7 +11,8 @@ from src.api.services.automations_service import (
     get_automation_by_id,
     create_new_automation,
     update_existing_automation,
-    delete_automation_by_id
+    delete_automation_by_id,
+    get_automation_runs
 )
 from src.api.services.projects_service import ProjectsService
 from src.api.services.automation_runner_service import AutomationRunnerService
@@ -104,3 +105,16 @@ async def run_automation(automation_id: str, request: AutomationRunRequest, user
             raise HTTPException(status_code=403, detail="Not authorized to run this automation")
 
     return await automation_runner.run_automation(automation_id, request)
+
+@router.get("/automations/{automation_id}/runs")
+async def list_automation_runs(automation_id: str, username: str = Depends(get_current_user)):
+    existing = get_automation_by_id(automation_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Automation not found")
+    if existing.get("creator") != username:
+        projects = ProjectsService.get_all_projects(username)
+        has_access = any(automation_id in p.get("automation_ids", []) for p in projects)
+        if not has_access:
+            raise HTTPException(status_code=403, detail="Not authorized to access runs for this automation")
+
+    return get_automation_runs(automation_id)

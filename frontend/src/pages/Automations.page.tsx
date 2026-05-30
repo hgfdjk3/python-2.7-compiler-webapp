@@ -1,68 +1,73 @@
 import React, { useState } from 'react';
-import { Box, Title, Text, Stack, Center, Flex, SegmentedControl, Group, Loader } from '@mantine/core';
+import { Box, Title, Text, Stack, Center, Flex, Group, Loader } from '@mantine/core';
 import { useParams } from 'react-router-dom';
-import { AutomationBuilder } from '../components/Automations/AutomationBuilder/AutomationBuilder';
+import { AutomationBuilder, AutomationBuilderRef } from '../components/Automations/AutomationBuilder/AutomationBuilder';
 import { useAutomation } from '../api/automations';
 import { AutomationRunsHistory } from '../components/Automations/AutomationRunsHistory';
+import { AutomationSelectHeader } from '../components/Automations/AutomationSelectHeader';
 
 export const AutomationsPage: React.FC = () => {
   const { automationId } = useParams<{ automationId: string }>();
   const { data: automation, isLoading } = useAutomation(automationId || '');
-  const [activeTab, setActiveTab] = useState('Editor');
+  const [selectedRun, setSelectedRun] = useState<any>(null);
+  const [builderState, setBuilderState] = useState<{ hasChanges: boolean; scheduleString?: string }>({ hasChanges: false });
+  const builderRef = React.useRef<AutomationBuilderRef>(null);
 
   const isEditing = !!automationId;
 
-  if (isEditing && isLoading) {
-    return (
-      <Center h="100%">
-        <Loader />
-      </Center>
-    );
-  }
-
   return (
-    <Flex w="100%" h="100%" p="md" gap="md" style={{ overflow: 'hidden' }}>
-      {/* Left Sidebar: Runs History */}
-      <AutomationRunsHistory />
+    <Flex direction="column" h="100%" style={{ overflow: 'hidden' }}>
+      <AutomationSelectHeader 
+        automationId={automationId}
+        projectId={automation?.project_id}
+        hasChanges={builderState.hasChanges}
+        scheduleString={builderState.scheduleString}
+        onRun={() => builderRef.current?.triggerRun()}
+        onSave={() => builderRef.current?.triggerSave()}
+        onSchedule={() => builderRef.current?.triggerSchedule()}
+      />
+      <Flex flex={1} w="100%" p="0" gap="0" style={{ minHeight: 0, overflow: 'hidden' }}>
+        {/* Left Sidebar: Runs History */}
+        <AutomationRunsHistory
+          automationId={automationId}
+          onSelectRun={setSelectedRun}
+          selectedRunId={selectedRun?.id}
+        />
 
-      {/* Right Main Area: Automation Builder & Header */}
-      <Box flex={1} style={{ display: 'flex', flexDirection: 'column', minWidth: 0, height: '100%' }}>
-        <Stack gap="xs" mb="sm">
-          <Group justify="space-between" align="flex-start">
-            <Box>
-              <Title order={2} fw={800} style={{ letterSpacing: '-0.5px' }}>
-                {isEditing ? 'Edit Automation' : 'Automation Builder'}
-              </Title>
-              <Text c="dimmed" size="sm">
-                {isEditing
-                  ? `Editing "${automation?.name || 'Automation'}". Modify nodes and connections, then save.`
-                  : 'Design and orchestrate your AI workflows by connecting triggers to tools.'}
-              </Text>
-            </Box>
-            <SegmentedControl 
-              data={['Editor', 'Executions', 'Evaluations']} 
-              value={activeTab}
-              onChange={setActiveTab}
-              size="sm"
-            />
-          </Group>
-        </Stack>
+        {/* Right Main Area: Automation Builder & Header */}
+        <Box flex={1} style={{ display: 'flex', flexDirection: 'column', minWidth: 0, height: '100%' }}>
 
-        <Box style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-          {isEditing && automation ? (
-            <AutomationBuilder
-              key={automation.id}
-              automationId={automation.id}
-              initialName={automation.name}
-              initialNodes={automation.nodes}
-              initialEdges={automation.edges}
-              height="100%"
-            />
-          ) : (
-            <AutomationBuilder height="100%" />
-          )}
+          <Box style={{ flex: 1, minHeight: 0, position: 'relative' }} h="100%">
+            {isEditing && isLoading ? (
+              <Center h="100%">
+                <Loader />
+              </Center>
+            ) : isEditing && automation ? (
+              <AutomationBuilder
+                ref={builderRef}
+                key={automation.id}
+                automationId={automation.id}
+                initialName={automation.name}
+                initialNodes={automation.nodes}
+                initialEdges={automation.edges}
+                projectId={automation.project_id}
+                historicalRun={selectedRun}
+                showHeader={false}
+                initialScheduleConfig={automation.schedule_config}
+                onStateChange={setBuilderState}
+                height="100%"
+              />
+            ) : (
+              <AutomationBuilder 
+                ref={builderRef} 
+                height="100%" 
+                showHeader={false} 
+                onStateChange={setBuilderState}
+              />
+            )}
+          </Box>
         </Box>
-      </Box>
+      </Flex>
     </Flex>
   );
 };

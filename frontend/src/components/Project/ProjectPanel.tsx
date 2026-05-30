@@ -183,7 +183,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
             onAddGlobalToProject={handleAddGlobalToProject}
           />
         </Box>
-        <Box w={{ base: 100, xs: 100, sm: 0, md: 260, lg: 380 }} >
+        <Box w={{ base: 100, xs: 100, sm: 0, md: 260, lg: 380 }} pb="xs">
           <ProjectConfigPanel
             groups={groups}
             standaloneSources={sources}

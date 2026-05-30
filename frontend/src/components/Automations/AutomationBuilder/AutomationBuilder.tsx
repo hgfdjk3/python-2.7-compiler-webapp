@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Edge } from '@xyflow/react';
 import { AppNode } from './types';
-import { Box, Paper, Group } from '@mantine/core';
+import { Box, Paper, Group, Button } from '@mantine/core';
 import { useStateHistory } from '@mantine/hooks';
 import { useCreateAutomation, useUpdateAutomation } from '../../../api/automations';
 import { AutomationSaveButton } from '../AutomationSaveButton';
@@ -16,6 +16,7 @@ import { EditableTitle } from '../../Common/EditableTitle';
 import { SaveAutomationModal } from '../SaveAutomationModal/SaveAutomationModal';
 import { RunAutomationModal } from '../RunAutomationModal/RunAutomationModal';
 import { getScheduleString } from '../utils';
+import { IconHistory, IconX } from '@tabler/icons-react';
 
 export interface AutomationBuilderProps {
   automationId?: string;
@@ -24,6 +25,16 @@ export interface AutomationBuilderProps {
   initialEdges?: Edge[];
   height?: string | number;
   projectId?: string;
+  historicalRun?: any;
+  showHeader?: boolean;
+  initialScheduleConfig?: any;
+  onStateChange?: (state: { hasChanges: boolean; scheduleString?: string }) => void;
+}
+
+export interface AutomationBuilderRef {
+  triggerRun: () => void;
+  triggerSave: () => void;
+  triggerSchedule: () => void;
 }
 
 const defaultNodes: AppNode[] = [
@@ -86,14 +97,18 @@ const defaultEdges: Edge[] = [
   { id: 'e4-5', source: '4', target: '5', type: 'automation', animated: true }
 ];
 
-export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
+export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuilderProps>(({
   automationId,
   initialName,
   initialNodes = defaultNodes,
   initialEdges = defaultEdges,
   height = '100%',
-  projectId
-}) => {
+  projectId,
+  historicalRun,
+  showHeader = true,
+  initialScheduleConfig,
+  onStateChange
+}, ref) => {
   const [currentAutomationId, setCurrentAutomationId] = useState<string | undefined>(automationId);
   const [automationName, setAutomationName] = useState(initialName || 'New Automation');
   const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
@@ -110,15 +125,46 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialNodes, initialEdges]);
 
+  // Open panel when historical run is selected
+  React.useEffect(() => {
+    if (historicalRun) {
+      setPanelOpened(true);
+    }
+  }, [historicalRun]);
+
   const createAutomation = useCreateAutomation();
   const updateAutomation = useUpdateAutomation();
 
   // Automation State
-  const [isScheduled, setIsScheduled] = useState(false);
-  const [isActive, setIsActive] = useState(false);
-  const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig | undefined>(undefined);
+  const [isScheduled, setIsScheduled] = useState(!!initialScheduleConfig);
+  const [isActive, setIsActive] = useState(!!initialScheduleConfig);
+  const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig | undefined>(initialScheduleConfig);
 
-  const { mutate: runAutomation, nodeExecutionStates, isPending: isRunningAutomation } = useAutomationRun(currentAutomationId || '');
+  React.useEffect(() => {
+    if (onStateChange) {
+      const hasChanges = historyValue.current > 0 || JSON.stringify(scheduleConfig) !== JSON.stringify(initialScheduleConfig);
+      onStateChange({
+        hasChanges,
+        scheduleString: scheduleConfig ? getScheduleString(scheduleConfig) : undefined
+      });
+    }
+  }, [historyValue.current, scheduleConfig, initialScheduleConfig, onStateChange]);
+
+  const { mutate: runAutomation, nodeExecutionStates: liveNodeExecutionStates, isPending: isRunningAutomation } = useAutomationRun(currentAutomationId || '');
+
+  const [localHistoricalRun, setLocalHistoricalRun] = useState<any>(historicalRun);
+
+  React.useEffect(() => {
+    setLocalHistoricalRun(historicalRun);
+  }, [historicalRun]);
+
+  const displayNodeExecutionStates = localHistoricalRun?.nodeExecutionStates || liveNodeExecutionStates;
+
+  useImperativeHandle(ref, () => ({
+    triggerRun: () => setIsRunModalOpen(true),
+    triggerSave: () => setIsSaveModalOpen(true),
+    triggerSchedule: () => setScheduleModalOpened(true)
+  }));
 
   const handleSaveAutomation = (name: string) => {
     setAutomationName(name);
@@ -153,6 +199,7 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
     if (!currentAutomationId) return;
     setIsRunModalOpen(false);
     setPanelOpened(true);
+    setLocalHistoricalRun(null); // Clear historical view
     runAutomation({ inputText: 'Run this automation now.' });
   };
 
@@ -178,58 +225,75 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
       }}
       pos={'relative'}
     >
-      <Box
-        style={{
-          position: 'absolute',
-          zIndex: 10,
-          top: '10px',
-          left: '10px',
-        }}
-      >
-        <EditableTitle
-          value={automationName}
-          onChange={setAutomationName}
-          size="md"
-          placeholder="Automation Name"
-        />
-      </Box>
-
-      <Box
-        style={{
-          position: 'absolute',
-          zIndex: 10,
-          top: '10px',
-          right: '10px',
-        }}
-      >
-        <Group gap="sm">
-          <AutomationHistoryButtons
-            canUndo={historyValue.current > 0}
-            canRedo={historyValue.current < historyValue.history.length - 1}
-            onUndo={() => handlers.back()}
-            onRedo={() => handlers.forward()}
+      <>
+        <Group
+          gap="5"
+          style={{
+            position: 'absolute',
+            zIndex: 10,
+            top: '10px',
+            left: '10px',
+          }}
+        >
+          <EditableTitle
+            value={automationName}
+            onChange={setAutomationName}
+            size="md"
+            placeholder="Automation Name"
           />
-          <AutomationSaveButton
-            isSaving={createAutomation.isPending || updateAutomation.isPending}
-            onSave={() => setIsSaveModalOpen(true)}
-          />
-          <AutomationActionButton
-            isActive={isActive}
-            isScheduled={isScheduled}
-            isRunning={isRunningAutomation}
-            schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
-            onToggle={() => setIsActive(!isActive)}
-            onRun={() => setIsRunModalOpen(true)}
-            onScheduleClick={() => setScheduleModalOpened(true)}
-          />
+          <Button
+            size='compact-sm'
+            variant='filled'
+            style={{
+              backgroundColor: 'light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9))',
+              color: 'light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-0))',
+            }}
+            onClick={() => setPanelOpened(!panelOpened)}
+          >
+            {panelOpened ? <IconX size={14} /> : <IconHistory size={14} />}
+            {/* {panelOpened ? 'Hide' : 'Show'} Logs */}
+          </Button>
         </Group>
-      </Box>
+
+        {showHeader && (
+          <Box
+            style={{
+              position: 'absolute',
+              zIndex: 10,
+              top: '10px',
+              right: '10px',
+            }}
+          >
+            <Group gap="sm">
+              <AutomationHistoryButtons
+                canUndo={historyValue.current > 0}
+                canRedo={historyValue.current < historyValue.history.length - 1}
+                onUndo={() => handlers.back()}
+                onRedo={() => handlers.forward()}
+              />
+              <AutomationSaveButton
+                isSaving={createAutomation.isPending || updateAutomation.isPending}
+                onSave={() => setIsSaveModalOpen(true)}
+              />
+              <AutomationActionButton
+                isActive={isActive}
+                isScheduled={isScheduled}
+                isRunning={isRunningAutomation}
+                schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
+                onToggle={() => setIsActive(!isActive)}
+                onRun={() => setIsRunModalOpen(true)}
+                onScheduleClick={() => setScheduleModalOpened(true)}
+              />
+            </Group>
+          </Box>
+        )}
+      </>
 
       <AutomationBoard
         initialNodes={historyState.nodes}
         initialEdges={historyState.edges}
         onStructureChange={(nodes, edges) => handlers.set({ nodes, edges })}
-        nodeExecutionStates={nodeExecutionStates}
+        nodeExecutionStates={displayNodeExecutionStates}
       />
 
       <ScheduleConfiguratorModal
@@ -271,8 +335,8 @@ export const AutomationBuilder: React.FC<AutomationBuilderProps> = ({
         opened={panelOpened}
         onClose={() => setPanelOpened(false)}
         nodes={historyState.nodes}
-        nodeExecutionStates={nodeExecutionStates}
+        nodeExecutionStates={displayNodeExecutionStates}
       />
     </Paper>
   );
-};
+});

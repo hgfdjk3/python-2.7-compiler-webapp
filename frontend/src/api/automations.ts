@@ -11,6 +11,7 @@ export interface Automation {
   automation_type: string;
   schedule_config?: any;
   creator?: string;
+  project_id?: string;
 }
 
 export interface AutomationCreate {
@@ -56,6 +57,11 @@ export const updateAutomation = async ({ id, automation }: { id: string, automat
 
 export const deleteAutomation = async (id: string): Promise<void> => {
   await api.delete(`/automations/${id}`);
+};
+
+export const getAutomationRuns = async (id: string): Promise<any[]> => {
+  const { data } = await api.get(`/automations/${id}/runs`);
+  return data;
 };
 
 async function* parseSSEStream<T>(stream: ReadableStream<Uint8Array>): AsyncGenerator<T, void, unknown> {
@@ -175,6 +181,15 @@ export const useAutomation = (id: string) => {
     queryKey: ['automations', id],
     queryFn: () => getAutomation(id),
     enabled: !!id,
+  });
+};
+
+export const useAutomationRuns = (id: string) => {
+  return useQuery({
+    queryKey: ['automations', id, 'runs'],
+    queryFn: () => getAutomationRuns(id),
+    enabled: !!id,
+    refetchInterval: 5000, // refresh runs every 5s while looking at the page
   });
 };
 

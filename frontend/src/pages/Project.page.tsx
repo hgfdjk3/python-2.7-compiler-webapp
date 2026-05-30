@@ -26,7 +26,7 @@ export const ProjectPage: React.FC = () => {
   }
 
   return (
-    <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }} pr="xs" >
       <motion.div
         key={`project-panel-${project.id}`}
         initial={{ opacity: 0 }}

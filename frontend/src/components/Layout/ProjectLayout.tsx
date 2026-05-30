@@ -23,7 +23,7 @@ export const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
       <AppShell.Navbar p="8" style={{ overflow: 'hidden', borderColor: 'var(--mantine-color-default-border)' }}>
         <Sidebar opened={opened} onToggle={toggle} />
       </AppShell.Navbar>
-      <AppShell.Main h="100vh" py="xs" pr="xs" style={{ display: 'flex', flexDirection: 'column' }}>
+      <AppShell.Main h="100vh" py="xs" pr="0" pb="0" style={{ display: 'flex', flexDirection: 'column' }}>
         {children}
       </AppShell.Main>
     </AppShell>

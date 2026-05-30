@@ -107,8 +107,8 @@ export const theme: MantineThemeOverride = createTheme({
   primaryShade: { "light": 8, "dark": 0 },
   autoContrast: true,
   luminanceThreshold: 0.3,
-  fontFamily: "Geist",
-  fontFamilyMonospace: "Geist Mono",
+  fontFamily: "Geist, 'Assistant', 'Heebo', 'Segoe UI', Arial, sans-serif",
+  fontFamilyMonospace: "Geist Mono, monospace",
   radius: {
     xs: rem("6px"),
     sm: rem("8px"),
@@ -149,7 +149,7 @@ export const theme: MantineThemeOverride = createTheme({
   },
 
   headings: {
-    fontFamily: "Geist",
+    fontFamily: "Geist, 'Assistant', 'Heebo', 'Segoe UI', Arial, sans-serif",
     sizes: {
       h1: {
         fontSize: rem("36px"),

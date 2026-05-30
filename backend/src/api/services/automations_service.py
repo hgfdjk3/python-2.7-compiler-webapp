@@ -81,3 +81,26 @@ def delete_automation_by_id(automation_id: str) -> bool:
     result = coll.delete_one({"_id": automation_id})
     return result.deleted_count > 0
 
+def save_automation_run(run_data: Dict[str, Any]) -> Dict[str, Any]:
+    if "id" not in run_data:
+        run_data["id"] = str(uuid.uuid4())
+    
+    db_dict = run_data.copy()
+    db_dict["_id"] = db_dict.pop("id")
+    
+    coll = get_collection("automation_runs")
+    coll.insert_one(db_dict)
+    
+    return run_data
+
+def get_automation_runs(automation_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    coll = get_collection("automation_runs")
+    result = []
+    # Sort by timestamp descending
+    for doc in coll.find({"automation_id": automation_id}).sort("timestamp", -1).limit(limit):
+        if "_id" in doc:
+            doc["id"] = doc.pop("_id")
+        result.append(doc)
+    return result
+
+

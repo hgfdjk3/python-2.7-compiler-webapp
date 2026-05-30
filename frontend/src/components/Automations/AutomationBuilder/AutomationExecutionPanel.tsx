@@ -2,8 +2,8 @@ import React from 'react';
 import { Title, Accordion, Stack, Box, Text, ScrollArea, Group, CloseButton, ThemeIcon, Divider, Paper } from '@mantine/core';
 import { IconCheck, IconX, IconTool, IconBrain, IconTerminal2 } from '@tabler/icons-react';
 import { MarkdownResponse } from '../../Project/Chat/MarkdownResponse';
-import { NodeExecutionState } from '../../../../../api/automations';
 import { AppNode } from './types';
+import { NodeExecutionState } from '@/api/automations';
 
 export interface AutomationExecutionPanelProps {
   opened: boolean;

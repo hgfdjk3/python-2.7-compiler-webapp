@@ -8,7 +8,8 @@ from langchain_core.messages import HumanMessage, AIMessage
 from src.services.harness.mcp.client import MCPClientManager
 from src.services.harness.graph.automation_runner import create_automation_graph
 from src.services.harness.graph.checkpointer import get_checkpointer
-from src.api.services.automations_service import get_automation_by_id
+from src.api.services.automations_service import get_automation_by_id, save_automation_run
+from datetime import datetime
 from src.api.utils.serialization import serialize_state
 from src.api.schemas.automations import AutomationRunRequest
 from src.config import OPENAI_API_KEY
@@ -66,6 +67,10 @@ class AutomationRunnerService:
     async def _stream_generator(self, automation_data: Dict[str, Any], input_text: Optional[str]) -> AsyncGenerator[str, None]:
         mcp_manager = MCPClientManager(self.mcp_configs)
         tools = await mcp_manager.connect_all()
+        node_states = {}
+        start_time = datetime.utcnow()
+        run_status = "success"
+        
         try:
             model_name = get_default_model()
             async with get_checkpointer() as checkpointer:
@@ -82,7 +87,6 @@ class AutomationRunnerService:
                     
                 config = {"configurable": {"thread_id": str(uuid.uuid4())}}
                 
-                tokens_streamed = False
                 current_node_id = None
                 async for event in graph.astream_events(inputs, config=config, version="v2"):
                     event_type = event["event"]
@@ -91,6 +95,7 @@ class AutomationRunnerService:
                     # Check for stage starts
                     if event_type == "on_chain_start" and name in node_titles:
                         current_node_id = name
+                        node_states[current_node_id] = {"status": "running", "content": "", "tools": []}
                         yield f"data: {json.dumps({'type': 'node_start', 'node_id': current_node_id})}\n\n"
                     
                     if not current_node_id:
@@ -99,11 +104,15 @@ class AutomationRunnerService:
                     if event_type == "on_chat_model_stream":
                         chunk = event.get("data", {}).get("chunk")
                         if chunk and hasattr(chunk, "content") and chunk.content:
+                            if current_node_id in node_states:
+                                node_states[current_node_id]["content"] += chunk.content
                             yield f"data: {json.dumps({'type': 'node_chunk', 'node_id': current_node_id, 'content': chunk.content})}\n\n"
     
                     elif event_type == "on_tool_start":
                         # name is the tool name
                         input_data = event.get("data", {}).get("input")
+                        if current_node_id in node_states:
+                            node_states[current_node_id]["tools"].append({"name": name, "input": input_data, "output": None})
                         yield f"data: {json.dumps({'type': 'node_tool_start', 'node_id': current_node_id, 'tool_name': name, 'input': input_data})}\n\n"
     
                     elif event_type == "on_tool_end":
@@ -111,13 +120,35 @@ class AutomationRunnerService:
                         output_data = event.get("data", {}).get("output")
                         if hasattr(output_data, "content"):
                             output_data = output_data.content
+                        if current_node_id in node_states:
+                            for t in node_states[current_node_id]["tools"]:
+                                if t["name"] == name and t["output"] is None:
+                                    t["output"] = str(output_data)
+                                    break
                         yield f"data: {json.dumps({'type': 'node_tool_end', 'node_id': current_node_id, 'tool_name': name, 'output': str(output_data)})}\n\n"
     
                     elif event_type == "on_chain_end" and name == current_node_id:
+                        if current_node_id in node_states:
+                            node_states[current_node_id]["status"] = "completed"
                         yield f"data: {json.dumps({'type': 'node_end', 'node_id': current_node_id})}\n\n"
                         current_node_id = None
 
         except Exception as e:
+            run_status = "error"
+            if current_node_id and current_node_id in node_states:
+                node_states[current_node_id]["status"] = "error"
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
         finally:
+            end_time = datetime.utcnow()
+            duration_ms = int((end_time - start_time).total_seconds() * 1000)
+            
+            # Save the run
+            save_automation_run({
+                "automation_id": automation_data["id"],
+                "status": run_status,
+                "timestamp": start_time.isoformat() + "Z",
+                "duration": f"{duration_ms}ms",
+                "nodeExecutionStates": node_states
+            })
+            
             await mcp_manager.disconnect_all()
