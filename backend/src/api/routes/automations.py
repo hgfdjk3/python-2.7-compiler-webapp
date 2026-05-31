@@ -96,7 +96,7 @@ async def delete_automation(automation_id: str, username: str = Depends(get_curr
 async def run_unsaved_automation(request: AutomationRunRequest, username: str = Depends(get_current_user)):
     if not request.automation_data:
         raise HTTPException(status_code=400, detail="Automation data is required for unsaved runs")
-    return await automation_runner.run_unsaved_automation(request)
+    return await automation_runner.run_unsaved_automation(request, username)
 
 @router.post("/automations/{automation_id}/run")
 async def run_automation(automation_id: str, request: AutomationRunRequest, username: str = Depends(get_current_user)):
@@ -110,7 +110,7 @@ async def run_automation(automation_id: str, request: AutomationRunRequest, user
         if not has_access:
             raise HTTPException(status_code=403, detail="Not authorized to run this automation")
 
-    return await automation_runner.run_automation(automation_id, request)
+    return await automation_runner.run_automation(automation_id, request, username)
 
 @router.get("/automations/{automation_id}/runs")
 async def list_automation_runs(automation_id: str, username: str = Depends(get_current_user)):

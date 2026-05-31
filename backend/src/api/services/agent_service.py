@@ -40,7 +40,7 @@ class AgentService:
 
         if body.stream:
             return StreamingResponse(
-                self._stream_generator(body, user_scoped_configs),
+                self._stream_generator(body, user_scoped_configs, username),
                 media_type="text/event-stream"
             )
         else:
@@ -50,13 +50,14 @@ class AgentService:
                     message=body.message,
                     system_instruction=body.system_instruction,
                     automation=body.automation,
-                    mcp_configs=user_scoped_configs
+                    mcp_configs=user_scoped_configs,
+                    username=username
                 )
                 return serialize_state(final_state)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-    async def _stream_generator(self, body: AskRequest, user_scoped_configs: Dict[str, Any]):
+    async def _stream_generator(self, body: AskRequest, user_scoped_configs: Dict[str, Any], username: str):
         queue = asyncio.Queue()
 
         async def worker():
@@ -66,7 +67,8 @@ class AgentService:
                     message=body.message,
                     system_instruction=body.system_instruction,
                     automation=body.automation,
-                    mcp_configs=user_scoped_configs
+                    mcp_configs=user_scoped_configs,
+                    username=username
                 ):
                     await queue.put(("data", event))
             except Exception as e:

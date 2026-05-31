@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Box, Title, Text, Stack, Group, ScrollArea, ActionIcon, Flex, Tooltip, Divider, Loader, Center } from '@mantine/core';
 import { IconRefresh, IconCheck, IconX, IconChevronRight } from '@tabler/icons-react';
+import { useMutationState } from '@tanstack/react-query';
 import { useAutomationRuns } from '../../api/automations';
 import { AutomationRunsFilter } from './AutomationRunsFilter';
+import { AtomLoader } from '../AtomLoader';
 
 export interface AutomationRunsHistoryProps {
   automationId?: string;
@@ -17,12 +19,53 @@ export const AutomationRunsHistory: React.FC<AutomationRunsHistoryProps> = ({
 }) => {
   const { data: runs, isLoading, refetch } = useAutomationRuns(automationId || '');
 
+  const pendingRuns = useMutationState({
+    filters: { mutationKey: ['runAutomation', automationId], status: 'pending' },
+    select: (mutation) => mutation.state.context as { tempId: string, timestamp?: string } | undefined
+  });
+
+  const previousPendingRunsCount = useRef(0);
+
+  useEffect(() => {
+    if (pendingRuns && pendingRuns.length > previousPendingRunsCount.current) {
+      const latestRun = pendingRuns[pendingRuns.length - 1];
+      if (latestRun && latestRun.tempId) {
+        onSelectRun?.({
+          id: latestRun.tempId,
+          automation_id: automationId,
+          status: 'running',
+          timestamp: latestRun.timestamp || new Date().toISOString(),
+          duration: null
+        });
+      }
+    }
+    previousPendingRunsCount.current = pendingRuns ? pendingRuns.length : 0;
+  }, [pendingRuns, automationId, onSelectRun]);
+
   const [statusFilter, setStatusFilter] = useState<string | null>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const filteredAndSortedRuns = useMemo(() => {
-    if (!runs) return [];
-    let result = [...runs];
+    let result = [...(runs || [])];
+
+    if (pendingRuns && pendingRuns.length > 0) {
+      pendingRuns.forEach(pendingRun => {
+        if (pendingRun && pendingRun.tempId) {
+          const exists = result.some((r: any) => r.id === pendingRun.tempId);
+          if (!exists) {
+            result.push({
+              id: pendingRun.tempId,
+              automation_id: automationId,
+              status: 'running',
+              timestamp: pendingRun.timestamp || new Date().toISOString(),
+              duration: null
+            });
+          }
+        }
+      });
+    }
+
+    if (!result.length) return [];
 
     if (statusFilter && statusFilter !== 'all') {
       result = result.filter((run: any) => run.status === statusFilter);
@@ -71,7 +114,7 @@ export const AutomationRunsHistory: React.FC<AutomationRunsHistoryProps> = ({
               <Stack gap={0} pb="md">
                 {filteredAndSortedRuns.map((run, index) => {
                   const date = new Date(run.timestamp);
-                  const isSelected = selectedRunId === run.id || (index === 0 && !selectedRunId);
+                  const isSelected = selectedRunId === run.id;
                   return (
                     <React.Fragment key={run.id}>
                       <Divider />

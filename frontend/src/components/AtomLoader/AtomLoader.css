@@ -1,0 +1,10 @@
+.atom-loader-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.atom-loader-svg {
+  width: 100%;
+  height: 100%;
+}

@@ -24,34 +24,34 @@ class AutomationRunnerService:
     def __init__(self, mcp_configs: Optional[Dict[str, Dict[str, Any]]] = None):
         self.mcp_configs = mcp_configs or {}
 
-    async def run_automation(self, automation_id: str, request: AutomationRunRequest):
+    async def run_automation(self, automation_id: str, request: AutomationRunRequest, username: str):
         automation_data = get_automation_by_id(automation_id)
         if not automation_data:
             raise HTTPException(status_code=404, detail="Automation not found")
 
         if request.stream:
             return StreamingResponse(
-                self._stream_generator(automation_data, request.input_text),
+                self._stream_generator(automation_data, request.input_text, username=username),
                 media_type="text/event-stream"
             )
         else:
-            return await self._run_sync(automation_data, request.input_text)
+            return await self._run_sync(automation_data, request.input_text, username=username)
 
-    async def run_unsaved_automation(self, request: AutomationRunRequest):
+    async def run_unsaved_automation(self, request: AutomationRunRequest, username: str):
         automation_data = request.automation_data
         if not automation_data:
             raise HTTPException(status_code=400, detail="Automation data is required")
 
         if request.stream:
             return StreamingResponse(
-                self._stream_generator(automation_data, request.input_text, save_run=False),
+                self._stream_generator(automation_data, request.input_text, username=username, save_run=False),
                 media_type="text/event-stream"
             )
         else:
-            return await self._run_sync(automation_data, request.input_text)
+            return await self._run_sync(automation_data, request.input_text, username=username)
 
-    async def _run_sync(self, automation_data: Dict[str, Any], input_text: Optional[str]) -> Dict[str, Any]:
-        mcp_manager = MCPClientManager(self.mcp_configs)
+    async def _run_sync(self, automation_data: Dict[str, Any], input_text: Optional[str], username: str) -> Dict[str, Any]:
+        mcp_manager = MCPClientManager(self.mcp_configs, username=username)
         tools = await mcp_manager.connect_all()
         try:
             model_name = get_default_model()
@@ -77,8 +77,8 @@ class AutomationRunnerService:
         finally:
             await mcp_manager.disconnect_all()
 
-    async def _stream_generator(self, automation_data: Dict[str, Any], input_text: Optional[str], save_run: bool = True) -> AsyncGenerator[str, None]:
-        mcp_manager = MCPClientManager(self.mcp_configs)
+    async def _stream_generator(self, automation_data: Dict[str, Any], input_text: Optional[str], username: str, save_run: bool = True) -> AsyncGenerator[str, None]:
+        mcp_manager = MCPClientManager(self.mcp_configs, username=username)
         tools = await mcp_manager.connect_all()
         node_states = {}
         start_time = datetime.utcnow()

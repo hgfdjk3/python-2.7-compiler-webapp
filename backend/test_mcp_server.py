@@ -12,6 +12,8 @@ mcp = FastMCP("Weather app")
 def get_weather_in_city(city: str) -> str:
     """Get the current weather for a given city (Mock data)."""
     headers = get_http_headers(include_all=True)
+    print(headers["x-user"])
+
     print(f"Tool get_weather_in_city called with headers. Type: {type(headers)}, vars: {headers}")
     city_lower = city.lower()
     if "london" in city_lower:
@@ -25,6 +27,7 @@ def get_weather_in_city(city: str) -> str:
 def get_multi_city_weather(cities: list[str]) -> str:
     """Get the current weather for multiple cities."""
     headers = get_http_headers(include_all=True)
+    print(headers["x-user"])
     print(f"Tool get_multi_city_weather called with headers. Type: {type(headers)}, vars: {headers}")
     
     weather_results = []

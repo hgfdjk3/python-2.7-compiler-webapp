@@ -17,13 +17,14 @@ class MCPClientManager:
     Manages connections to multiple MCP servers using SSE transport and exposes their tools
     as LangChain-compatible tools.
     """
-    def __init__(self, server_configs: Dict[str, Dict[str, Any]]):
+    def __init__(self, server_configs: Dict[str, Dict[str, Any]], username: Optional[str] = None):
         """
         Args:
             server_configs: Dictionary mapping server_name -> dict containing:
                 - url: str (SSE endpoint URL)
         """
         self.server_configs = server_configs
+        self.username = username
         self.sessions: Dict[str, ClientSession] = {}
         # Maps server_name -> AsyncExitStack to manage that server's context managers
         self.exit_stacks: Dict[str, AsyncExitStack] = {}
@@ -35,7 +36,11 @@ class MCPClientManager:
         """
         url = config.get("url")
         # Use header_values (actual user input) if available, otherwise fallback to legacy headers
-        headers = config.get("header_values") or config.get("headers")
+        base_headers = config.get("header_values") or config.get("headers") or {}
+        
+        headers = dict(base_headers) if isinstance(base_headers, dict) else {}
+        if self.username:
+            headers["x-user"] = self.username
         
         if not url:
             logger.error(f"No url specified for MCP server {server_name}")

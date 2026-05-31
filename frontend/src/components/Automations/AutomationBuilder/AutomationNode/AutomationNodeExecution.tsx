@@ -3,6 +3,7 @@ import { Box, Text, Group, Loader } from '@mantine/core';
 import { IconCheck, IconX, IconTool, IconBrain } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NodeExecutionState } from '@/api/automations';
+import { AtomLoader } from '@/components/AtomLoader';
 
 export interface AutomationNodeExecutionProps {
   state: NodeExecutionState;
@@ -41,9 +42,10 @@ export const AutomationNodeExecution: React.FC<AutomationNodeExecutionProps> = (
       );
     } else {
       content = (
-        <Group gap="xs" wrap="nowrap" w="100%">
-          <Loader size="xs" color="zinc" type="dots" />
-          <IconBrain size={14} />
+        <Group gap="5" wrap="nowrap" w="100%">
+          {/* <Loader size={14} color="zinc" /> */}
+          {/* <IconBrain size={14} /> */}
+          <AtomLoader size={20} />
           <Text size="xs" fw={500} truncate inline>{state.content || "Thinking..."}</Text>
         </Group>
       );
