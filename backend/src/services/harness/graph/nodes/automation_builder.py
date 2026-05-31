@@ -32,7 +32,7 @@ class AutomationStage(BaseModel):
         description="Short, action-oriented title for this stage (e.g. 'Trigger Event', 'Extract Data')."
     )
     description: str = Field(
-        description="Concise description of what this stage does in the workflow."
+        description="Specific, concise, and direct prompt for this stage. Must clearly state the exact task to perform, the expected input, and the expected output."
     )
     tools: List[str] = Field(
         description="List of tool names/IDs this stage uses. Select from the available tools list."
@@ -65,11 +65,15 @@ Guidelines:
 - If the request asks to build, design, or create any kind of automation, with a general idea set is_vague to False.
 - You can be creative and fill missing parts with your own ideas, using the available tools list.
 - Design the workflow with 3-5 sequential stages.
+- CRITICAL: DO NOT create nodes for triggers or schedules (e.g., "Every day at 9 AM", "On new email"). Only create nodes for actionable tasks that the agent will execute.
 - Each stage should have a clear, action-oriented title.
-- Write concise descriptions explaining what each stage does.
+- For each stage's description, write a specific, concise, and direct prompt for the agent that will execute it. The description MUST explicitly state:
+  1. The exact task to perform.
+  2. The expected input.
+  3. The expected output.
 - Select 1-4 appropriate tools from the available tools list for each stage.
 - Use the exact tool names/IDs from the list above.
-- Stages should flow logically: trigger/input → processing → output/action.
+- Stages should flow logically: initial data retrieval/input → processing → output/action.
 - Think about error handling, data transformation, and notification stages.
 - If no tools are available, tell the user to connect tools to the agent.
 """
