@@ -14,6 +14,7 @@ import { AutomationBuilder } from '@/components/Automations/AutomationBuilder/Au
 import { ResizeDivider } from './ResizeDivider';
 import { PromptClarification, ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 import { Project } from '../../../api/projects';
+import { useChatStore } from '../../../store/chatStore';
 
 const MOCK_CHATS: ChatItemData[] = [
   { id: 'c1', title: 'Optimizing vector embeddings', preview: 'We discussed chunking strategies and how to improve retrieval accuracy with hybrid search...', timestamp: '2h ago', isSaved: true },
@@ -102,13 +103,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setShowClarification(false);
   }, []);
 
-  const [isAutomationMode, setIsAutomationMode] = useState(false);
-  const [automationBuilderData, setAutomationBuilderData] = useState<{ nodes: any[], edges: any[], name?: string } | null>(null);
-
-  const handleAutomationGenerated = useCallback((data: any) => {
-    setAutomationBuilderData(data);
-    setIsAutomationMode(true);
-  }, []);
+  const isAutomationMode = useChatStore((state) => state.isAutomationMode);
+  const setIsAutomationMode = useChatStore((state) => state.setIsAutomationMode);
+  const automationBuilderData = useChatStore((state) => state.automationBuilderData);
+  const setAutomationBuilderData = useChatStore((state) => state.setAutomationBuilderData);
 
   const [boardHeight, setBoardHeight] = useState(150);
   const [isResizing, setIsResizing] = useState(false);
@@ -190,7 +188,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 isStreaming={isPending}
                 onSubmitAnswer={handleSendMessage}
                 onTriggerClarification={handleTriggerClarification}
-                onAutomationGenerated={handleAutomationGenerated}
               />
             </motion.div>
           ) : (

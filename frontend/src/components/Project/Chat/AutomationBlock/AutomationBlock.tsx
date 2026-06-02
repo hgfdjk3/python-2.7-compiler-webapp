@@ -1,28 +1,32 @@
 import React from 'react';
 import { Box, Card, Group, Text, Timeline, ThemeIcon, Collapse, ActionIcon } from '@mantine/core';
 import { IconCheck, IconRobot, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { useChatStore } from '@/store/chatStore';
+
 
 export interface AutomationBlockProps {
   content: string;
-  onAutomationGenerated?: (data: any) => void;
 }
 
-export const AutomationBlock: React.FC<AutomationBlockProps> = ({ content, onAutomationGenerated }) => {
+export const AutomationBlock: React.FC<AutomationBlockProps> = ({ content }) => {
   const [jsonData, setJsonData] = React.useState<any>(null);
   const [opened, setOpened] = React.useState(false);
+  const setAutomationBuilderData = useChatStore((state) => state.setAutomationBuilderData);
+  const setIsAutomationMode = useChatStore((state) => state.setIsAutomationMode);
 
   React.useEffect(() => {
-    if (!onAutomationGenerated || !content) return;
+    if (!content) return;
     try {
       const data = JSON.parse(content);
       if (data && data.nodes && data.edges) {
         setJsonData(data);
-        onAutomationGenerated(data);
+        setAutomationBuilderData(data);
+        setIsAutomationMode(true);
       }
     } catch (e) {
       // ignore parsing error while streaming
     }
-  }, [content, onAutomationGenerated]);
+  }, [content, setAutomationBuilderData, setIsAutomationMode]);
 
   // If streaming but no valid JSON yet, show loading/generating state
   if (!jsonData) {

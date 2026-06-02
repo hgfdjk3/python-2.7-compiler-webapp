@@ -17,7 +17,6 @@ export interface ChatConversationProps {
   isStreaming?: boolean;
   onSubmitAnswer?: (answer: string) => void;
   onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
-  onAutomationGenerated?: (data: any) => void;
 }
 
 export const ChatConversation: React.FC<ChatConversationProps> = ({
@@ -26,7 +25,6 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
   isStreaming,
   onSubmitAnswer,
   onTriggerClarification,
-  onAutomationGenerated,
 }) => {
   return (
     <Box style={{ height: '100%' }}>
@@ -40,7 +38,6 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
                 content={msg.content}
                 onSubmitAnswer={onSubmitAnswer}
                 onTriggerClarification={onTriggerClarification}
-                onAutomationGenerated={onAutomationGenerated}
               />
             )}
           </Box>
@@ -52,7 +49,6 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
               content={streamedContent || ''}
               onSubmitAnswer={onSubmitAnswer}
               onTriggerClarification={() => { }}
-              onAutomationGenerated={onAutomationGenerated}
             />
           </Box>
         )}

@@ -51,14 +51,19 @@ def handle_model_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 def handle_orchestrator_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Emits the orchestrator's routing decision as a synthetic ``AIMessage``
-    so the frontend can render the thought‑process card.
-
-    This data is **not** part of the conversation history seen by the AI —
-    it lives in the separate ``routing_metadata`` state field.
+    so the frontend can render the thought‑process card. Also emits any
+    messages explicitly returned by the orchestrator.
     """
     output = event["data"].get("output")
-    if isinstance(output, dict) and "routing_metadata" in output:
-        return wrap_message(AIMessage(content=output["routing_metadata"]))
+    if isinstance(output, dict):
+        content = ""
+        if "messages" in output and output["messages"]:
+            content += output["messages"][0].content + "\n"
+        if "routing_metadata" in output:
+            content += output["routing_metadata"]
+            
+        if content:
+            return wrap_message(AIMessage(content=content.strip()))
     return None
 
 

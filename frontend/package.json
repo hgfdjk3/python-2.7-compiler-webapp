@@ -24,6 +24,7 @@
     "@dnd-kit/react": "^0.4.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@mantine/carousel": "^9.3.0",
     "@mantine/core": "9.2.2",
     "@mantine/dates": "9.2.2",
     "@mantine/hooks": "9.2.2",

@@ -26,6 +26,7 @@ Analyze the conversation history:
 1. If the user's latest request has already been successfully addressed, answered, or completed by the worker in the message history, route to 'FINISH'. Do NOT route to 'worker' again if the work is already done.
 2. The 'worker' node is responsible for ALL conversation, answering questions, searching, and doing work. If the user's request requires new work, code changes, searching the codebase, or even just chatting/answering a simple question, ALWAYS route to 'worker'. Do not be lazy; let the worker search and try stuff.
 3. Do NOT route to 'clarifier' unless the request is extremely ambiguous and lacks critical details that cannot be discovered by the worker exploring the workspace (e.g. "Deploy the server script for me" without specifying which script or environment).
+4. If the user explicitly asks to create a new automation, workflow, or sequence of actions, print/send to the user the message <AutomationModeBlock>'.
 
 Available Tools:
 {tools_info}

@@ -7,12 +7,12 @@ import { ClarificationBlock } from './ClarificationBlock/ClarificationBlock';
 import { ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 import { ToolCallBlock } from './ToolBlock/ToolBlock';
 import { AutomationBlock } from './AutomationBlock/AutomationBlock';
+import { AutomationModeBlock } from './AutomationModeBlock/AutomationModeBlock';
 
 export interface MarkdownResponseProps {
   content: string;
   onSubmitAnswer?: (answer: string) => void;
   onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
-  onAutomationGenerated?: (data: any) => void;
 }
 
 /**
@@ -31,7 +31,7 @@ const getTextFromChildren = (children: React.ReactNode): string => {
   return '';
 };
 
-export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onSubmitAnswer, onTriggerClarification, onAutomationGenerated }) => {
+export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onSubmitAnswer, onTriggerClarification }) => {
   const components = React.useMemo(() => ({
     'my-component': ({ children }: { children?: React.ReactNode }) => (
       <div className="special-note">
@@ -59,11 +59,14 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
     },
     automation: ({ children }: { children?: React.ReactNode }) => {
       const rawContent = getTextFromChildren(children);
-      return <AutomationBlock content={rawContent} onAutomationGenerated={onAutomationGenerated} />;
+      return <AutomationBlock content={rawContent} />;
+    },
+    AutomationModeBlock: () => {
+      return <AutomationModeBlock />;
     },
     toolcall: ToolCallBlock,
     table: Table.withProps({ variant: 'striped', withRowBorders: true, striped: 'even', })
-  }), [onSubmitAnswer, onTriggerClarification, onAutomationGenerated]);
+  }), [onSubmitAnswer, onTriggerClarification]);
 
   return (
     <Box className="markdown-response-container" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }}>
@@ -75,8 +78,8 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
         isAnimating={false}
         caret="block"
         components={components}
-        allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [], 'automation': [], 'toolcall': ['name'] }}
-        literalTagContent={["toolcall", "automation"]}
+        allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [], 'automation': [], 'AutomationModeBlock': [], 'toolcall': ['name'] }}
+        literalTagContent={["toolcall", "automation", "AutomationModeBlock"]}
       >
         {content}
       </Streamdown>
