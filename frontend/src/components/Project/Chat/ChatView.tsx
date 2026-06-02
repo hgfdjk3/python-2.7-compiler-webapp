@@ -219,6 +219,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   });
 
   const handleChatClick = (id: string) => {
+    setIsAutomationMode(false);
+    setAutomationBuilderData(null);
     loadConversationMutation.mutate(id);
   };
 

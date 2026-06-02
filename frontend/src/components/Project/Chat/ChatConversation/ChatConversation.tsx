@@ -3,7 +3,7 @@ import { Box, Stack } from '@mantine/core';
 import { MarkdownResponse } from '../MarkdownResponse';
 import { UserMessage } from '../UserMessage/UserMessage';
 import { ClarificationQuestionData } from '../PromptInput/PromptClarification/PromptClarification';
-
+import { ThinkingBlock } from '../ThinkingBlock/ThinkingBlock';
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -58,6 +58,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
               onSubmitAnswer={onSubmitAnswer}
               onTriggerClarification={onTriggerClarification}
             />
+            <ThinkingBlock />
           </Box>
         )}
 
