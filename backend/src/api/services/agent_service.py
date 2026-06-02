@@ -9,6 +9,7 @@ from src.api.schemas.ask import AskRequest
 from src.api.utils.serialization import serialize_state
 from src.api.routes.user import get_user_config_dict
 from src.api.routes.connectors import get_connectors_dict
+from src.api.services.conversations_service import ConversationsService
 
 class AgentService:
     """
@@ -23,6 +24,17 @@ class AgentService:
             
         if not self.runner:
             raise HTTPException(status_code=500, detail="Agent runner is not initialized")
+
+        if body.thread_id and body.project_id:
+            title = body.message
+            if len(title) > 50:
+                title = title[:50] + "..."
+            ConversationsService.create_conversation_metadata_if_not_exists(
+                thread_id=body.thread_id,
+                project_id=body.project_id,
+                username=username,
+                title=title
+            )
 
         # Build user-scoped mcp_configs
         user_config = get_user_config_dict(username)

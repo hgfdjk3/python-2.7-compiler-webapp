@@ -21,6 +21,7 @@ from src.api.routes.connectors import router as connectors_router
 from src.api.routes.connectors import get_connectors_dict
 from src.api.routes.projects import router as projects_router
 from src.api.routes.user import router as user_router
+from src.api.routes.conversations import router as conversations_router
 
 # Determine model configuration
 api_key = OPENAI_API_KEY or ""
@@ -59,4 +60,5 @@ app.include_router(api_router, prefix="/api/v1")
 app.include_router(connectors_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
+app.include_router(conversations_router, prefix="/api/v1")
 

@@ -11,10 +11,18 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
+export interface QueuedMessage {
+  id: string;
+  prompt: string;
+  isAutomation: boolean;
+  timestamp: string;
+}
+
 export interface ChatConversationProps {
   messages: ChatMessage[];
   streamedContent?: string;
   isStreaming?: boolean;
+  queuedMessages?: QueuedMessage[];
   onSubmitAnswer?: (answer: string) => void;
   onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
 }
@@ -23,6 +31,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
   messages,
   streamedContent,
   isStreaming,
+  queuedMessages = [],
   onSubmitAnswer,
   onTriggerClarification,
 }) => {
@@ -37,7 +46,6 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
               <MarkdownResponse
                 content={msg.content}
                 onSubmitAnswer={onSubmitAnswer}
-                onTriggerClarification={onTriggerClarification}
               />
             )}
           </Box>
@@ -48,8 +56,18 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
             <MarkdownResponse
               content={streamedContent || ''}
               onSubmitAnswer={onSubmitAnswer}
-              onTriggerClarification={() => { }}
+              onTriggerClarification={onTriggerClarification}
             />
+          </Box>
+        )}
+
+        {queuedMessages.length > 0 && (
+          <Box mt="md">
+            {queuedMessages.map(msg => (
+              <Box key={msg.id} style={{ opacity: 0.5 }}>
+                <UserMessage content={msg.prompt} timestamp={`${msg.timestamp} (Queued)`} />
+              </Box>
+            ))}
           </Box>
         )}
       </Stack>

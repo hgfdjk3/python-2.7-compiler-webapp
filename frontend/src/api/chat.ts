@@ -3,6 +3,7 @@ import { apiClient } from './client';
 export interface AskRequestPayload {
   message: string;
   thread_id?: string;
+  project_id?: string;
   stream?: boolean;
   automation?: boolean;
 }
@@ -48,13 +49,15 @@ export const streamAsk = async (
   prompt: string,
   onUpdate: (content: string) => void,
   threadId: string = 'default_api_session',
-  isAutomation: boolean = false
+  isAutomation: boolean = false,
+  projectId?: string
 ): Promise<string> => {
   const response = await apiClient.post<ReadableStream>(
     '/ask',
     {
       message: prompt,
       thread_id: threadId,
+      project_id: projectId,
       stream: true,
       automation: isAutomation,
     },

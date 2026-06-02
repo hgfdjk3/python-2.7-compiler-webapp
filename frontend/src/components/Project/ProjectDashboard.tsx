@@ -9,6 +9,7 @@ import './ProjectDashboard.css';
 interface ProjectDashboardProps {
   chats: ChatItemData[];
   onToggleChatSave: (id: string) => void;
+  onChatClick?: (id: string) => void;
   onAutomationClick?: (id: string) => void;
   onRunAutomation?: (id: string) => void;
 }
@@ -16,6 +17,7 @@ interface ProjectDashboardProps {
 export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
   chats,
   onToggleChatSave,
+  onChatClick,
   onAutomationClick,
   onRunAutomation,
 }) => {
@@ -37,6 +39,7 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({
           >
             <RecentChats
               chats={chats}
+              onChatClick={onChatClick}
               onToggleSave={onToggleChatSave}
               limit={expandedSection === 'chats' ? undefined : 4}
             />

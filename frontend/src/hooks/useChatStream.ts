@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { streamAsk } from '../api/chat';
 
-export const useChatStream = (threadId?: string) => {
+export const useChatStream = (threadId?: string, projectId?: string) => {
   const [streamedContent, setStreamedContent] = useState('');
 
   const mutation = useMutation({
@@ -15,7 +15,8 @@ export const useChatStream = (threadId?: string) => {
             setStreamedContent(content);
           },
           threadId,
-          isAutomation
+          isAutomation,
+          projectId
         );
       } catch (err: any) {
         console.error('Chat stream error:', err);

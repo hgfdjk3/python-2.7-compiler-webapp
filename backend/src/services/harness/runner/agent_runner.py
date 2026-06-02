@@ -1,6 +1,8 @@
 import logging
 from typing import Any, Dict, AsyncGenerator, Optional
 from langchain_core.messages import HumanMessage
+from src.api.utils.serialization import serialize_message
+from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
@@ -170,3 +172,26 @@ class AgentRunner:
                             yield result
         finally:
             await mcp_manager.disconnect_all()
+
+    async def get_history(self, thread_id: str) -> list:
+        """
+        Retrieves the message history from the checkpointer for a given thread_id.
+        """
+        
+        @tool
+        def dummy_tool() -> str:
+            """Dummy tool to satisfy ToolNode initialization."""
+            return "dummy"
+        
+        async with get_checkpointer() as checkpointer:
+            # Reconstruct empty graph just to use aget_state with checkpointer
+            graph = create_graph(tools=[dummy_tool], checkpointer=checkpointer)
+            config = {"configurable": {"thread_id": thread_id}}
+            snapshot = await graph.aget_state(config)
+            
+            if not snapshot or not snapshot.values:
+                return []
+                
+            messages = snapshot.values.get("messages", [])
+            return [serialize_message(m) for m in messages]
+

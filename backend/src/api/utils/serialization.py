@@ -1,6 +1,8 @@
 from typing import Any, Dict
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
 
+import json
+
 def serialize_message(msg: Any) -> Dict[str, Any]:
     """
     Converts LangChain message classes into clean, JSON-serializable dicts.
@@ -23,12 +25,12 @@ def serialize_message(msg: Any) -> Dict[str, Any]:
     if hasattr(msg, "name") and msg.name:
         res["name"] = msg.name
         
-    if isinstance(msg, AIMessage) and msg.tool_calls:
+    if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
         res["tool_calls"] = [
             {
                 "name": tc["name"],
                 "args": tc["args"],
-                "id": tc["id"]
+                "id": tc.get("id")
             }
             for tc in msg.tool_calls
         ]

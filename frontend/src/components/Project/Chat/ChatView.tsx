@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { AnimatePresence, motion } from 'motion/react';
 import { ProjectHeader } from '../ProjectHeader';
@@ -15,16 +15,15 @@ import { ResizeDivider } from './ResizeDivider';
 import { PromptClarification, ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 import { Project } from '../../../api/projects';
 import { useChatStore } from '../../../store/chatStore';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getProjectConversations, updateConversation, getConversation } from '../../../api/conversations';
 
-const MOCK_CHATS: ChatItemData[] = [
-  { id: 'c1', title: 'Optimizing vector embeddings', preview: 'We discussed chunking strategies and how to improve retrieval accuracy with hybrid search...', timestamp: '2h ago', isSaved: true },
-  { id: 'c2', title: 'API rate-limit architecture', preview: 'Designed a token-bucket approach with Redis for the ingestion pipeline...', timestamp: '5h ago', isSaved: false },
-  { id: 'c3', title: 'Database schema migration', preview: 'Planned the migration from MongoDB to PostgreSQL with zero downtime...', timestamp: 'Yesterday', isSaved: true },
-  { id: 'c4', title: 'React component refactor', preview: 'Broke down the monolithic dashboard into composable widgets...', timestamp: 'Yesterday', isSaved: false },
-  { id: 'c5', title: 'CI/CD pipeline review', preview: 'Reviewed GitHub Actions workflows and added caching for faster builds...', timestamp: '2 days ago', isSaved: false },
-];
-
-
+export interface QueuedMessage {
+  id: string;
+  prompt: string;
+  isAutomation: boolean;
+  timestamp: string;
+}
 
 interface ChatViewProps {
   project: Project;
@@ -49,7 +48,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onToggleSource,
   onAddGlobalToProject,
 }) => {
-  const [chats, setChats] = useState<ChatItemData[]>(MOCK_CHATS);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isManageSourcesModalOpen, setIsManageSourcesModalOpen] = useState(false);
 
@@ -57,24 +55,34 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestionData[]>([]);
   const [showClarification, setShowClarification] = useState(false);
 
-  const threadIdRef = useRef(`chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
-  const { mutate, streamedContent, isPending, data } = useChatStream(threadIdRef.current);
+  const [activeThreadId, setActiveThreadId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
+  const { mutate, streamedContent, isPending } = useChatStream(activeThreadId, project.id);
 
-  const handleSendMessage = useCallback((value: string, isAutomation: boolean = false) => {
-    if (isPending) {
-      return;
-    }
-    const now = new Date();
-    const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const queryClient = useQueryClient();
+  const { data: serverChats = [] } = useQuery({
+    queryKey: ['conversations', project.id],
+    queryFn: () => getProjectConversations(project.id)
+  });
 
+  const chats: ChatItemData[] = serverChats.map(c => ({
+    id: c.id,
+    title: c.title,
+    preview: c.preview || '',
+    timestamp: new Date(c.updated_at).toLocaleDateString(),
+    isSaved: c.isSaved
+  }));
+
+  const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
+
+  const processSend = useCallback((prompt: string, isAutomation: boolean, messageId: string, timestamp: string) => {
     setMessages((prev) => [...prev, {
-      id: Date.now().toString(),
+      id: messageId,
       role: 'user',
-      content: value,
+      content: prompt,
       timestamp
     }]);
     setShowClarification(false);
-    mutate({ prompt: value, isAutomation }, {
+    mutate({ prompt, isAutomation }, {
       onSuccess: (finalContent) => {
         setMessages((prev) => [...prev, {
           id: (Date.now() + 1).toString(),
@@ -85,6 +93,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
     });
   }, [mutate]);
+
+  const handleSendMessage = useCallback((value: string, isAutomation: boolean = false) => {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const messageId = Date.now().toString();
+
+    if (isPending) {
+      setQueuedMessages(prev => [...prev, { id: messageId, prompt: value, isAutomation, timestamp }]);
+      return;
+    }
+
+    processSend(value, isAutomation, messageId, timestamp);
+  }, [isPending, processSend]);
+
+  useEffect(() => {
+    if (!isPending && queuedMessages.length > 0) {
+      const nextMsg = queuedMessages[0];
+      setQueuedMessages(prev => prev.slice(1));
+      processSend(nextMsg.prompt, nextMsg.isAutomation, nextMsg.id, nextMsg.timestamp);
+    }
+  }, [isPending]);
 
   /** Called from MarkdownResponse / ClarificationBlock to show clarification above the prompt */
   const handleTriggerClarification = useCallback((questions: ClarificationQuestionData[]) => {
@@ -122,12 +151,75 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setBoardHeight((prev) => (prev > 150 ? 150 : 600));
   }, []);
 
-  const handleToggleSave = (id: string) => {
-    setChats((current) =>
-      current.map((chat) =>
-        chat.id === id ? { ...chat, isSaved: !chat.isSaved } : chat
-      )
-    );
+  const toggleSaveMutation = useMutation({
+    mutationFn: (id: string) => {
+      const chat = serverChats.find(c => c.id === id);
+      return updateConversation(id, { isSaved: !chat?.isSaved });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['conversations', project.id] })
+  });
+
+  const handleToggleSave = (id: string) => toggleSaveMutation.mutate(id);
+
+  const loadConversationMutation = useMutation({
+    mutationFn: (id: string) => getConversation(id),
+    onSuccess: (data) => {
+      setActiveThreadId(data.metadata.id);
+
+      const collapsedMessages: ChatMessage[] = [];
+      let currentAssistantMessage: ChatMessage | null = null;
+
+      data.history.forEach((msg: any) => {
+        if (msg.type === 'human') {
+          if (currentAssistantMessage) {
+            collapsedMessages.push(currentAssistantMessage);
+            currentAssistantMessage = null;
+          }
+          collapsedMessages.push({
+            id: msg.id || Math.random().toString(),
+            role: 'user',
+            content: msg.content || '',
+            timestamp: ''
+          });
+        } else {
+          // Accumulate 'ai', 'tool', etc. into a single assistant bubble
+          let appendedContent = msg.content || '';
+          
+          if (msg.type === 'ai' && msg.tool_calls && msg.tool_calls.length > 0) {
+            msg.tool_calls.forEach((tc: any) => {
+              const payload = JSON.stringify({ name: tc.name, input: tc.args });
+              appendedContent += `\n<toolcall name="${tc.name}"> ${payload} `;
+            });
+          }
+          
+          if (msg.type === 'tool') {
+             const payload = JSON.stringify({ name: msg.name || 'unknown', output: msg.content });
+             appendedContent = ` ${payload} </toolcall>\n`;
+          }
+
+          if (!currentAssistantMessage) {
+            currentAssistantMessage = {
+              id: msg.id || Math.random().toString(),
+              role: 'assistant',
+              content: appendedContent,
+              timestamp: ''
+            };
+          } else {
+            currentAssistantMessage.content += appendedContent;
+          }
+        }
+      });
+
+      if (currentAssistantMessage) {
+        collapsedMessages.push(currentAssistantMessage);
+      }
+
+      setMessages(collapsedMessages);
+    }
+  });
+
+  const handleChatClick = (id: string) => {
+    loadConversationMutation.mutate(id);
   };
 
 
@@ -186,7 +278,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 messages={messages}
                 streamedContent={streamedContent}
                 isStreaming={isPending}
-                onSubmitAnswer={handleSendMessage}
+                queuedMessages={queuedMessages}
+                onSubmitAnswer={handleClarificationSubmit}
                 onTriggerClarification={handleTriggerClarification}
               />
             </motion.div>
@@ -201,6 +294,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             >
               <ProjectDashboard
                 chats={chats}
+                onChatClick={handleChatClick}
                 onToggleChatSave={handleToggleSave}
               />
             </motion.div>
