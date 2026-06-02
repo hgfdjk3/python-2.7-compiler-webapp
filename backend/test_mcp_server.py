@@ -1,7 +1,5 @@
 import sys
-import uvicorn
-from mcp.server.fastmcp import FastMCP
-from starlette.routing import Route
+from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_headers
 
 # Initialize the FastMCP server
@@ -69,11 +67,7 @@ def list_directory(path: str = ".") -> list[str]:
     
     return os.listdir(full_path)
 
-app = mcp.sse_app()
 
-# Map the root route "/" to the SSE endpoint to handle connections to the root URL
-sse_route = next(r for r in app.routes if getattr(r, "path", None) == "/sse")
-app.routes.insert(0, Route("/", endpoint=sse_route.endpoint, methods=["GET"]))
 
 @mcp.tool(name="read files content1",description="read the file content")
 def read_file(path: str) -> str:
@@ -91,7 +85,7 @@ def read_file(path: str) -> str:
 
 if __name__ == "__main__":
     # Default port is 8012. If a port number is passed as an argument, use it.
-    port = 8012
+    port = 8015
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[-1])
@@ -99,4 +93,4 @@ if __name__ == "__main__":
             pass
 
     print(f"Starting Test MCP Server on http://localhost:{port}")
-    uvicorn.run("test_mcp_server:app", host="127.0.0.1", port=port, reload=True)
+    mcp.run(transport="streamable-http", host="127.0.0.1", port=port, path="/sse")

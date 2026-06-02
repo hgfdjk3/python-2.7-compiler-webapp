@@ -1,7 +1,5 @@
 import sys
-import uvicorn
-from mcp.server.fastmcp import FastMCP
-from starlette.routing import Route
+from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_headers
 
 # Initialize the FastMCP server
@@ -45,11 +43,7 @@ def get_math_constants() -> dict:
         "sqrt2": 1.41421
     }
 
-app = mcp.sse_app()
 
-# Map the root route "/" to the SSE endpoint to handle connections to the root URL
-sse_route = next(r for r in app.routes if getattr(r, "path", None) == "/sse")
-app.routes.insert(0, Route("/", endpoint=sse_route.endpoint, methods=["GET"]))
 
 if __name__ == "__main__":
     # Default port is 8013 for this second test server. If a port number is passed as an argument, use it.
@@ -61,4 +55,4 @@ if __name__ == "__main__":
             pass
 
     print(f"Starting Second Test MCP Server on http://localhost:{port}")
-    uvicorn.run("test_mcp_server_2:app", host="127.0.0.1", port=port, reload=True)
+    mcp.run(transport="streamable-http", host="127.0.0.1", port=port, path="/sse")

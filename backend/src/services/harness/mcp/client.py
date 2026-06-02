@@ -5,8 +5,9 @@ from contextlib import AsyncExitStack
 from langchain_core.tools import BaseTool
 
 import re
+import httpx
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamable_http_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 from src.api.services.connector_tools_service import register_tool_mapping
 
@@ -51,7 +52,20 @@ class MCPClientManager:
         
         exit_stack = AsyncExitStack()
         try:
-            read, write = await exit_stack.enter_async_context(sse_client(url, headers=headers))
+            http_client = httpx.AsyncClient(headers=headers, follow_redirects=True)
+            await exit_stack.enter_async_context(http_client)
+            
+            # Pre-flight HTTP ping to avoid anyio leak without crashing server logs
+            parsed_url = httpx.URL(url)
+            base_url = parsed_url.copy_with(path="/")
+            try:
+                await http_client.get(base_url, timeout=2.0)
+            except Exception as e:
+                raise Exception(f"Server at {url} is offline or unreachable") from e
+            
+            read, write, _ = await exit_stack.enter_async_context(
+                streamable_http_client(url, http_client=http_client)
+            )
             session = await exit_stack.enter_async_context(ClientSession(read, write))
             await session.initialize()
             
@@ -61,7 +75,7 @@ class MCPClientManager:
             return await load_mcp_tools(session)
             
         except Exception as e:
-            logger.exception(f"Failed to connect to MCP server {server_name}: {e}")
+            logger.warning(f"Failed to connect to MCP server {server_name}: {e}")
             await exit_stack.aclose()
             return []
             
