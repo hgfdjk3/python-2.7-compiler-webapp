@@ -3,6 +3,7 @@ import { Modal, Text, Group, Button, Badge, ThemeIcon, Stack, Box, Title, Simple
 import { motion, AnimatePresence } from 'motion/react';
 import { IconDatabase, IconTool, IconExternalLink } from '@tabler/icons-react';
 import { AgentInfo } from '../../utils/agentUtils';
+import { getAgentIcon } from '../../utils/iconUtils';
 import { AgentConfigurationForm } from '../AgentConfiguration/AgentConfigurationForm';
 import './AgentModal.css';
 
@@ -94,7 +95,7 @@ export const AgentModal: React.FC<AgentModalProps> = ({
               }}
             />
             <div className="agent-modal-icon-inner">
-              {React.cloneElement(agent.icon as React.ReactElement<any>, { size: 32, stroke: 1.5 })}
+              {getAgentIcon(agent.iconName || agent.name, { size: 32, stroke: 1.5 })}
             </div>
           </div>
         </Group>

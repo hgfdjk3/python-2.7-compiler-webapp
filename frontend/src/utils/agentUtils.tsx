@@ -1,6 +1,6 @@
 import React from 'react';
 import { useConnectors } from '../api/connectors';
-import { IconTool } from '@tabler/icons-react';
+import { getAgentIcon } from './iconUtils';
 
 export interface AgentInfo {
   id: string;
@@ -11,7 +11,7 @@ export interface AgentInfo {
   developerSupport?: string;
   category: string;
   brandColor: string;
-  icon: React.ReactNode;
+  iconName?: string;
   sourcesAdded: string[];
   toolsEnabled: string[];
   headers_schema?: Record<string, string>;
@@ -29,7 +29,7 @@ export const useAgentInfo = () => {
       developer: 'Local',
       category: 'Installed Connectors',
       brandColor: c.color || '#228be6',
-      icon: <IconTool size={24} stroke={1.5} />,
+      iconName: c.icon,
       sourcesAdded: [],
       toolsEnabled: c.tools || [],
       headers_schema: c.headers_schema || c.headers, // fallback to old headers
@@ -44,17 +44,14 @@ export const useAgentInfo = () => {
 };
 
 export const getToolInfo = (toolIdOrName: string, customAgents?: AgentInfo[]) => {
-  const fallbackIcon = <IconTool size={14} />;
+  const fallbackIcon = getAgentIcon(toolIdOrName, { size: 14 });
   
   const searchAgents = customAgents || [];
   const agent = searchAgents.find(a => a.toolsEnabled?.includes(toolIdOrName));
 
   if (agent) {
     const color = agent.brandColor || '#228be6';
-    let icon: React.ReactNode = fallbackIcon;
-    if (agent.icon && React.isValidElement(agent.icon)) {
-      icon = React.cloneElement(agent.icon as React.ReactElement<{ size?: number }>, { size: 14 });
-    }
+    let icon = getAgentIcon(agent.iconName || agent.name, { size: 14 });
     return {
       id: toolIdOrName,
       name: toolIdOrName,

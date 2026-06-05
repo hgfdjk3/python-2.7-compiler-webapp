@@ -1,9 +1,10 @@
 import React from 'react';
 import { Box, Text, Group, Loader } from '@mantine/core';
-import { IconCheck, IconX, IconTool, IconBrain } from '@tabler/icons-react';
+import { IconCheck, IconX, IconBrain } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NodeExecutionState } from '@/api/automations';
 import { AtomLoader } from '@/components/AtomLoader';
+import { getToolIcon } from '@/utils/iconUtils';
 
 export interface AutomationNodeExecutionProps {
   state: NodeExecutionState;
@@ -36,7 +37,7 @@ export const AutomationNodeExecution: React.FC<AutomationNodeExecutionProps> = (
       content = (
         <Group gap="xs" wrap="nowrap">
           <Loader size="xs" color="zinc" />
-          <IconTool size={14} />
+          {getToolIcon(activeTool.name, { size: 14 })}
           <Text size="xs" fw={500}>Running {activeTool.name}...</Text>
         </Group>
       );

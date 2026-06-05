@@ -20,6 +20,7 @@ import {
   IconChevronUp,
 } from '@tabler/icons-react';
 import { AgentInfo } from '../../../utils/agentUtils';
+import { getAgentIcon } from '../../../utils/iconUtils';
 import { AgentUsageChart } from '../AgentUsageChart/AgentUsageChart';
 import { motion, AnimatePresence } from 'motion/react';
 import './AgentRow.css';
@@ -69,7 +70,7 @@ export const AgentRow: React.FC<AgentRowProps> = ({ agent, status, delay = 0 }) 
         <Group justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
             <ThemeIcon size={36} radius="md" variant="light" color="gray" className="agent-row-icon">
-              {agent.icon}
+              {getAgentIcon(agent.iconName || agent.name)}
             </ThemeIcon>
             <Stack gap={0} style={{ minWidth: 0 }}>
               <Group gap="xs">

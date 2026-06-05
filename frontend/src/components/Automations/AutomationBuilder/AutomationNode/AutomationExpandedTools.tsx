@@ -1,27 +1,36 @@
 import React, { useState } from 'react';
-import { Group, Paper, Flex, ThemeIcon, Text, Box, ActionIcon } from '@mantine/core';
-import { IconTool, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { Group, Paper, Flex, ThemeIcon, Text, Box, ActionIcon, Select, Button } from '@mantine/core';
+import { IconTool, IconChevronLeft, IconChevronRight, IconX, IconPlus } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getToolInfo, useAgentInfo } from '../../../../utils/agentUtils';
+import { ManageToolsModal } from './ManageToolsModal/ManageToolsModal';
 import './AutomationNode.css';
 
 export interface AutomationExpandedToolsProps {
   tools: string[];
+  isEditing?: boolean;
+  onRemoveTool?: (tool: string) => void;
+  onUpdateTools?: (tools: string[]) => void;
 }
 
 const ITEMS_PER_PAGE = 3;
 
-export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = ({ tools }) => {
+export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = ({ tools, isEditing, onRemoveTool, onUpdateTools }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { agents } = useAgentInfo();
 
-  if (!tools || tools.length === 0) return null;
+  if (!isEditing && (!tools || tools.length === 0)) return null;
 
-  const totalPages = Math.ceil(tools.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(tools.length / ITEMS_PER_PAGE));
   const displayedTools = tools.slice(
     currentPage * ITEMS_PER_PAGE,
     (currentPage + 1) * ITEMS_PER_PAGE
   );
+
+  const allTools = React.useMemo(() => {
+    return Array.from(new Set(agents.flatMap(a => a.toolsEnabled || [])));
+  }, [agents]);
 
   return (
     <motion.div
@@ -60,26 +69,51 @@ export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = (
                       <Group
                         key={index}
                         w="100%"
+                        justify="space-between"
+                        wrap="nowrap"
                         className="automation-tool-item"
                       >
-                        <ThemeIcon
-                          variant="outline"
-                          size="sm"
-                          radius="xs"
-                          bg="body.2"
-                          style={{
-                            border: `1px solid ${toolInfo.color}`,
-                            color: toolInfo.color
-                          }}
-                        >
-                          {toolInfo.icon}
-                        </ThemeIcon>
-                        <Text size="xs" fw={600}>
-                          {toolInfo.name}
-                        </Text>
+                        <Group gap="sm" wrap="nowrap" style={{ overflow: 'hidden' }}>
+                          <ThemeIcon
+                            variant="outline"
+                            size="sm"
+                            radius="xs"
+                            bg="body.2"
+                            style={{
+                              border: `1px solid ${toolInfo.color}`,
+                              color: toolInfo.color,
+                              flexShrink: 0
+                            }}
+                          >
+                            {toolInfo.icon}
+                          </ThemeIcon>
+                          <Text size="xs" fw={600} truncate>
+                            {toolInfo.name}
+                          </Text>
+                        </Group>
+                        {isEditing && onRemoveTool && (
+                          <ActionIcon
+                            size="xs"
+                            color="red"
+                            variant="subtle"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemoveTool(tool);
+                              const newTotalPages = Math.max(1, Math.ceil((tools.length - 1) / ITEMS_PER_PAGE));
+                              if (currentPage >= newTotalPages) {
+                                setCurrentPage(Math.max(0, newTotalPages - 1));
+                              }
+                            }}
+                          >
+                            <IconX size={14} />
+                          </ActionIcon>
+                        )}
                       </Group>
                     );
                   })}
+                  {displayedTools.length === 0 && isEditing && (
+                    <Text size="xs" c="dimmed" ta="center" py="xs">No tools added</Text>
+                  )}
                 </Flex>
               </motion.div>
             </AnimatePresence>
@@ -110,7 +144,7 @@ export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = (
                 variant="transparent"
                 size="sm"
                 className="nodrag automation-paginator-btn"
-                disabled={currentPage === totalPages - 1}
+                disabled={currentPage >= totalPages - 1}
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -122,7 +156,39 @@ export const AutomationExpandedTools: React.FC<AutomationExpandedToolsProps> = (
               </ActionIcon>
             </Group>
           )}
+
+          {isEditing && onUpdateTools && (
+            <Box mt="xs" pt="sm" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <Button
+                variant="light"
+                size="xs"
+                fullWidth
+                leftSection={<IconPlus size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsModalOpen(true);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                Manage Tools
+              </Button>
+            </Box>
+          )}
         </Paper>
+
+        {isEditing && onUpdateTools && (
+          <ManageToolsModal
+            opened={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            currentTools={tools}
+            onUpdateTools={(newTools) => {
+              onUpdateTools(newTools);
+              // Calculate page after updating tools
+              const newTotalPages = Math.max(1, Math.ceil(newTools.length / ITEMS_PER_PAGE));
+              setCurrentPage(Math.min(currentPage, newTotalPages - 1));
+            }}
+          />
+        )}
       </Box>
     </motion.div>
   );

@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, TextInput, Button, Group, Stack, Text, Box, Textarea, Title, ColorInput, Select } from '@mantine/core';
-import { IconPlugConnected, IconEdit } from '@tabler/icons-react';
+import { Modal, TextInput, Button, Group, Stack, Text, Box, Title, ColorInput, Popover, Input, ScrollArea, SimpleGrid, ActionIcon } from '@mantine/core';
+import { IconPlugConnected, IconEdit, IconChevronDown } from '@tabler/icons-react';
 import './ConnectorModal.css';
 import { ConnectorFormData } from '../../../api/connectors';
 import { ConnectorHeaderSlots, HeaderSlot } from './ConnectorHeaderSlots';
+import { AGENT_ICON_MAP, getAgentIcon } from '../../../utils/iconUtils';
+
+const UNIQUE_ICONS = (() => {
+  const pairs: [string, any][] = [];
+  const seen = new Set();
+  Object.entries(AGENT_ICON_MAP).forEach(([k, V]) => {
+    if (!seen.has(V)) {
+      seen.add(V);
+      pairs.push([k, V]);
+    }
+  });
+  return pairs;
+})();
 
 interface ConnectorModalProps {
   opened: boolean;
@@ -70,7 +83,7 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
     } else {
       submissionData.headers_schema = undefined;
     }
-    
+
     // Clear out old headers format if it existed
     submissionData.headers = undefined;
 
@@ -127,18 +140,43 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
                   value={formData.color}
                   onChange={(val) => setFormData({ ...formData, color: val })}
                 />
-                <Select
-                  label="Icon"
-                  data={[
-                    { value: 'server', label: 'Server' },
-                    { value: 'database', label: 'Database' },
-                    { value: 'cloud', label: 'Cloud' },
-                    { value: 'api', label: 'API / Plug' },
-                    { value: 'terminal', label: 'Terminal' }
-                  ]}
-                  value={formData.icon || 'server'}
-                  onChange={(val) => setFormData({ ...formData, icon: val || 'server' })}
-                />
+                <Input.Wrapper label="Icon" style={{ flex: 1 }}>
+                  <Popover position="bottom-start" shadow="md">
+                    <Popover.Target>
+                      <Button
+                        variant="default"
+                        fullWidth
+                        justify="space-between"
+                        rightSection={<IconChevronDown size={14} opacity={0.5} />}
+                        styles={{ inner: { flex: 1, justifyContent: 'flex-start' }, label: { overflow: 'hidden' } }}
+                      >
+                        <Group gap="sm" wrap="nowrap">
+                          {getAgentIcon(formData.icon, { size: 16 })}
+                          <Text size="sm" truncate style={{ textTransform: 'capitalize' }}>
+                            {formData.icon || 'Select Icon'}
+                          </Text>
+                        </Group>
+                      </Button>
+                    </Popover.Target>
+                    <Popover.Dropdown p="xs">
+                      <ScrollArea.Autosize maxHeight={200}>
+                        <SimpleGrid cols={6} spacing="xs">
+                          {UNIQUE_ICONS.map(([key, IconComponent]) => (
+                            <ActionIcon
+                              key={key}
+                              variant={formData.icon === key ? 'light' : 'subtle'}
+                              color={formData.icon === key ? 'blue' : 'gray'}
+                              onClick={() => setFormData({ ...formData, icon: key, color: formData.color })}
+                              size="lg"
+                            >
+                              <IconComponent size={20} stroke={1.5} />
+                            </ActionIcon>
+                          ))}
+                        </SimpleGrid>
+                      </ScrollArea.Autosize>
+                    </Popover.Dropdown>
+                  </Popover>
+                </Input.Wrapper>
               </Group>
               <TextInput
                 label="Description"

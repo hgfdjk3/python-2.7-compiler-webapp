@@ -127,8 +127,18 @@ export const AutomationNode: React.FC<AutomationNodeProps> = ({ data, isConnecta
       </Card>
 
       <AnimatePresence>
-        {data.toolsExpanded && data.tools && data.tools.length > 0 ? (
-          <AutomationExpandedTools key="expanded-tools" tools={data.tools} />
+        {data.toolsExpanded ? (
+          <AutomationExpandedTools 
+            key="expanded-tools" 
+            tools={data.tools || []} 
+            isEditing={isEditing}
+            onRemoveTool={(t) => {
+              setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, tools: (n.data.tools as string[] || []).filter(tool => tool !== t) } } : n));
+            }}
+            onUpdateTools={(tools) => {
+              setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, tools } } : n));
+            }}
+          />
         ) : null}
       </AnimatePresence>
     </div>

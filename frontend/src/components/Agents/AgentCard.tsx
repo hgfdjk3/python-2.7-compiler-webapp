@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Text, Group, Box, ThemeIcon, Stack, Tooltip } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
 import { AgentInfo } from '../../utils/agentUtils';
+import { getAgentIcon } from '../../utils/iconUtils';
 import './AgentCard.css';
 
 interface AgentCardProps {
@@ -34,7 +35,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({
             color="gray"
             className="agent-icon-wrapper"
           >
-            {agent.icon}
+            {getAgentIcon(agent.iconName || agent.name, { size: 24, stroke: 1.5 })}
           </ThemeIcon>
         </Box>
         <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
