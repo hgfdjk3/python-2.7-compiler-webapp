@@ -40,3 +40,17 @@ async def update_user_config(config: UserConfig, username: str = Depends(get_cur
     
     return config
 
+class WhitelistCheckResponse(BaseModel):
+    allowed: bool
+
+@router.get("/user/whitelist", response_model=WhitelistCheckResponse)
+async def check_whitelist(username: str = Depends(get_current_user)):
+    whitelist_coll = get_collection("whitelist")
+    
+    # Seed the whitelist with default user if the collection is completely empty
+    if whitelist_coll.count_documents({}) == 0:
+        whitelist_coll.insert_one({"_id": "test_user"})
+        
+    doc = whitelist_coll.find_one({"_id": username})
+    return {"allowed": doc is not None}
+

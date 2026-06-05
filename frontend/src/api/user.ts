@@ -29,3 +29,14 @@ export const useUpdateUserConfig = () => {
     },
   });
 };
+
+export const useWhitelistCheck = () => {
+  return useQuery<{ allowed: boolean }>({
+    queryKey: ['whitelistCheck'],
+    queryFn: async () => {
+      const response = await apiClient.get('/user/whitelist');
+      return response.data;
+    },
+    retry: false, // Don't retry auth checks
+  });
+};

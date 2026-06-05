@@ -1,0 +1,139 @@
+.beta-page-root {
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000;
+  background-image: radial-gradient(circle at 50% 0%, rgba(39, 39, 42, 0.4) 0%, rgba(0, 0, 0, 1) 70%);
+  padding: 10px;
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+}
+
+.beta-container {
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.beta-kicker {
+  color: #71717A;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.beta-title {
+  font-family: 'Geist', sans-serif;
+  font-size: 36px;
+  letter-spacing: -1.5px;
+  color: #FFFFFF;
+}
+
+.beta-title-bold {
+  font-weight: 700;
+}
+
+.beta-title-light {
+  font-weight: 300;
+  color: #A1A1AA;
+}
+
+.beta-description {
+  color: #71717A;
+  letter-spacing: -0.2px;
+  line-height: 1.6;
+}
+
+.beta-success-container {
+  text-align: center;
+  padding: 32px 0;
+  border-top: 1px solid #27272A;
+  border-bottom: 1px solid #27272A;
+}
+
+.beta-success-title {
+  color: #FFFFFF;
+  letter-spacing: -0.5px;
+  font-weight: 500;
+}
+
+.beta-success-subtitle {
+  color: #A1A1AA;
+}
+
+.beta-submit-btn {
+  background-color: #FFFFFF;
+  color: #000000;
+  font-family: 'Geist', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  border-radius: 4px;
+  height: 48px;
+  margin-top: 8px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.beta-submit-btn:hover {
+  transform: scale(1.02);
+}
+
+.beta-footer {
+  width: 100%;
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+}
+
+.beta-footer-text {
+  color: #52525B;
+  font-weight: 400;
+}
+
+.beta-footer-link {
+  color: #52525B;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.beta-footer-link:hover {
+  color: #A1A1AA;
+}
+
+/* Form inputs styling overrides */
+.beta-input {
+  background-color: transparent !important;
+  border-bottom: 1px solid #27272A !important;
+  border-radius: 0 !important;
+  color: #FFFFFF !important;
+  padding: 12px 0 !important;
+  font-size: 16px !important;
+  font-weight: 300 !important;
+  letter-spacing: -0.2px !important;
+  transition: border-color 0.3s ease !important;
+}
+
+.beta-input:focus {
+  border-bottom: 1px solid #FFFFFF !important;
+}
+
+.beta-input::placeholder {
+  color: #52525B !important;
+}
+
+.beta-select-dropdown {
+  background-color: #18181B !important;
+  border: 1px solid #27272A !important;
+  color: #FFFFFF !important;
+}
+
+.beta-select-option {
+  color: #FFFFFF !important;
+}
+
+.beta-select-option[data-hovered] {
+  background-color: #27272A !important;
+  color: #FFFFFF !important;
+}
