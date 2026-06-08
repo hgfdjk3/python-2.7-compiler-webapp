@@ -18,6 +18,7 @@ import { useChatStore } from '../../../store/chatStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProjectConversations, updateConversation, getConversation } from '../../../api/conversations';
 import { parseChatHistory } from '../../../utils/chatHistoryParser';
+import { useChatScroll } from '../../../hooks/useChatScroll';
 
 export interface QueuedMessage {
   id: string;
@@ -151,6 +152,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [boardHeight, setBoardHeight] = useState(150);
   const [isResizing, setIsResizing] = useState(false);
 
+  const { scrollViewportRef, handleScroll } = useChatScroll({
+    messagesCount: messages.length,
+    queuedMessagesCount: queuedMessages.length,
+    streamedContent,
+    isPending,
+    showClarification,
+  });
+
   const handleResize = useCallback((deltaY: number) => {
     setBoardHeight((prev) => {
       const newHeight = prev + deltaY;
@@ -230,7 +239,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </>
         )}
       </AnimatePresence>
-      <Box className="chat-scroll-container" style={{ flex: 1, minHeight: 0 }}>
+      <Box 
+        className="chat-scroll-container" 
+        style={{ flex: 1, minHeight: 0 }}
+        ref={scrollViewportRef}
+        onScroll={handleScroll}
+      >
         <AnimatePresence mode="wait">
           {showMarkdownResponse ? (
             <motion.div
