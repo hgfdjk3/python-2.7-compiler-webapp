@@ -8,3 +8,6 @@ class AskRequest(BaseModel):
     system_instruction: Optional[str] = None
     stream: Optional[bool] = False
     automation: Optional[bool] = False
+    resume_decision: Optional[str] = None
+    tool_call_id: Optional[str] = None
+    tool_name: Optional[str] = None

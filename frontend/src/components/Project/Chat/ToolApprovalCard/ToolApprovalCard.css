@@ -1,0 +1,28 @@
+.tool-approval-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.tool-approval-content {
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-8));
+  border: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-sm);
+}
+
+.tool-approval-code {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 12px;
+  background-color: transparent !important;
+  padding: 0 !important;
+}
+
+.tool-name {
+  background-color: var(--mantine-color-dark-light);
+  color: var(--mantine-color-violet-light-color);
+  padding: var(--mantine-padding-xs) var(--mantine-padding-sm);
+  border-radius: var(--mantine-radius-xs);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+}

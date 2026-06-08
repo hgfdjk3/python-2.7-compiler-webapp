@@ -6,7 +6,7 @@ from fastmcp.server.dependencies import get_http_headers
 mcp = FastMCP("Weather app")
 
 
-@mcp.tool()
+@mcp.tool(meta={"tags": ["requires_approval"]})
 def get_weather_in_city(city: str) -> str:
     """Get the current weather for a given city (Mock data)."""
     headers = get_http_headers(include_all=True)
@@ -54,7 +54,7 @@ def recent_news() -> str:
     """
 
 
-@mcp.tool()
+@mcp.tool(tags={"requires_approval"}, meta={"tags": ["requires_approval"]})
 def list_directory(path: str = ".") -> list[str]:  
     """List the contents of a directory in the files system."""
     headers = get_http_headers(include_all=True)
@@ -65,11 +65,12 @@ def list_directory(path: str = ".") -> list[str]:
     if not os.path.exists(full_path):
         raise FileNotFoundError(f"Directory not found: {path}")
     
-    return os.listdir(full_path)
+    import json
+    return json.dumps(os.listdir(full_path))
 
 
 
-@mcp.tool(name="read files content1",description="read the file content")
+@mcp.tool(name="read_file_content", description="read the file content", tags={"requires_approval"}, meta={"tags": ["requires_approval"]})
 def read_file(path: str) -> str:
     """Read the contents of a file."""
     headers = get_http_headers(include_all=True)

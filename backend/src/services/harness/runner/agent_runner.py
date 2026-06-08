@@ -1,11 +1,12 @@
 import logging
 from typing import Any, Dict, AsyncGenerator, Optional
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from src.api.utils.serialization import serialize_message
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import Command
 
 from src.config import OPENAI_API_KEY
 from src.services.harness.graph.builder import create_graph
@@ -41,13 +42,14 @@ class AgentRunner:
         self.temperature = temperature
         self.model = model
 
-    def _prepare_config(self, thread_id: str, model: Any, tools: list) -> RunnableConfig:
+    def _prepare_config(self, thread_id: str, model: Any, tools: list, always_allowed_tools: list = None) -> RunnableConfig:
         """Creates standard LangGraph execution config with context injection."""
         return {
             "configurable": {
                 "thread_id": thread_id,
                 "model": model,
                 "tools": tools,
+                "always_allowed_tools": always_allowed_tools or [],
             }
         }
 
@@ -70,7 +72,9 @@ class AgentRunner:
         message: str,
         system_instruction: Optional[str] = None,
         automation: bool = False,
+        resume_decision: Optional[str] = None,
         mcp_configs: Optional[Dict[str, Any]] = None,
+        always_allowed_tools: Optional[list] = None,
         username: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
@@ -89,8 +93,11 @@ class AgentRunner:
             )
             async with get_checkpointer() as checkpointer:
                 graph = create_graph(tools=tools, checkpointer=checkpointer)
-                inputs = self._build_inputs(message, system_instruction, automation=automation)
-                config = self._prepare_config(thread_id, model, tools)
+                if resume_decision:
+                    inputs = Command(resume=resume_decision)
+                else:
+                    inputs = self._build_inputs(message, system_instruction, automation=automation)
+                config = self._prepare_config(thread_id, model, tools, always_allowed_tools)
                 return await graph.ainvoke(inputs, config=config)
         finally:
             await mcp_manager.disconnect_all()
@@ -101,7 +108,9 @@ class AgentRunner:
         message: str,
         system_instruction: Optional[str] = None,
         automation: bool = False,
+        resume_decision: Optional[str] = None,
         mcp_configs: Optional[Dict[str, Any]] = None,
+        always_allowed_tools: Optional[list] = None,
         username: Optional[str] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
@@ -120,8 +129,11 @@ class AgentRunner:
             )
             async with get_checkpointer() as checkpointer:
                 graph = create_graph(tools=tools, checkpointer=checkpointer)
-                inputs = self._build_inputs(message, system_instruction, automation=automation)
-                config = self._prepare_config(thread_id, model, tools)
+                if resume_decision:
+                    inputs = Command(resume=resume_decision)
+                else:
+                    inputs = self._build_inputs(message, system_instruction, automation=automation)
+                config = self._prepare_config(thread_id, model, tools, always_allowed_tools)
     
                 tokens_streamed = False
                 async for event in graph.astream_events(inputs, config=config, version="v2"):
@@ -129,7 +141,7 @@ class AgentRunner:
                     event_node = event.get("metadata", {}).get("langgraph_node")
     
                     # ── Worker token stream (real-time chunks) ───────────
-                    if event_type == "on_chat_model_stream":
+                    if event_type == "on_chat_model_stream" and event_node != "orchestrator":
                         result = handle_token_stream(event)
                         if result:
                             tokens_streamed = True
@@ -170,6 +182,22 @@ class AgentRunner:
                         result = handle_automation_builder_end(event)
                         if result:
                             yield result
+
+                    # ── Custom events (e.g. tool approval requests) ────
+                    elif event_type == "on_custom_event" and event.get("name") == "approval_request":
+                        import json
+                        tool_name = event.get("data", {}).get("tool_name")
+                        tool_args = event.get("data", {}).get("tool_args")
+                        tool_call_id = event.get("data", {}).get("tool_call_id")
+                        
+                        try:
+                            payload_str = json.dumps({"name": tool_name, "input": tool_args})
+                        except Exception:
+                            payload_str = json.dumps({"name": tool_name, "input": str(tool_args)})
+                            
+                        # Inject into the text stream so the frontend's markdown parser renders the ToolBlock
+                        from src.services.harness.runner.stream_handlers import wrap_message
+                        yield wrap_message(AIMessage(content=f'<approve-tool name="{tool_name}" id="{tool_call_id}"> {payload_str} </approve-tool>'))
         finally:
             await mcp_manager.disconnect_all()
 

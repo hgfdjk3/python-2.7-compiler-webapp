@@ -19,4 +19,10 @@ async def ask_endpoint(
     Main endpoint for sending prompts to the LangGraph agent.
     Delegates all execution and formatting logic to AgentService.
     """
+    if body.resume_decision == "always_allow" and body.tool_name:
+        from src.api.services.conversations_service import ConversationsService
+        ConversationsService.add_always_allowed_tool(body.thread_id, username, body.tool_name)
+
     return await service.ask(body, username)
+
+

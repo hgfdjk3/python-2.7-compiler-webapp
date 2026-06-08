@@ -17,6 +17,7 @@ import { Project } from '../../../api/projects';
 import { useChatStore } from '../../../store/chatStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProjectConversations, updateConversation, getConversation } from '../../../api/conversations';
+import { parseChatHistory } from '../../../utils/chatHistoryParser';
 
 export interface QueuedMessage {
   id: string;
@@ -56,7 +57,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [showClarification, setShowClarification] = useState(false);
 
   const [activeThreadId, setActiveThreadId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
-  const { mutate, streamedContent, isPending } = useChatStream(activeThreadId, project.id);
+  const { mutate, streamedContent, isPending, submitApproval } = useChatStream(activeThreadId, project.id, setMessages);
+  const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
+
+  const handleApprovalDecision = async (toolCallId: string, toolName: string, decision: 'allow' | 'reject' | 'try_again' | 'always_allow') => {
+    setIsSubmittingApproval(true);
+    try {
+      await submitApproval(toolCallId, toolName, decision);
+    } finally {
+      setIsSubmittingApproval(false);
+    }
+  };
 
   const queryClient = useQueryClient();
   const { data: serverChats = [] } = useQuery({
@@ -166,53 +177,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     onSuccess: (data) => {
       setActiveThreadId(data.metadata.id);
 
-      const collapsedMessages: ChatMessage[] = [];
-      let currentAssistantMessage: ChatMessage | null = null;
-
-      data.history.forEach((msg: any) => {
-        if (msg.type === 'human') {
-          if (currentAssistantMessage) {
-            collapsedMessages.push(currentAssistantMessage);
-            currentAssistantMessage = null;
-          }
-          collapsedMessages.push({
-            id: msg.id || Math.random().toString(),
-            role: 'user',
-            content: msg.content || '',
-            timestamp: ''
-          });
-        } else {
-          // Accumulate 'ai', 'tool', etc. into a single assistant bubble
-          let appendedContent = msg.content || '';
-          
-          if (msg.type === 'ai' && msg.tool_calls && msg.tool_calls.length > 0) {
-            msg.tool_calls.forEach((tc: any) => {
-              const payload = JSON.stringify({ name: tc.name, input: tc.args });
-              appendedContent += `\n<toolcall name="${tc.name}"> ${payload} `;
-            });
-          }
-          
-          if (msg.type === 'tool') {
-             const payload = JSON.stringify({ name: msg.name || 'unknown', output: msg.content });
-             appendedContent = ` ${payload} </toolcall>\n`;
-          }
-
-          if (!currentAssistantMessage) {
-            currentAssistantMessage = {
-              id: msg.id || Math.random().toString(),
-              role: 'assistant',
-              content: appendedContent,
-              timestamp: ''
-            };
-          } else {
-            currentAssistantMessage.content += appendedContent;
-          }
-        }
-      });
-
-      if (currentAssistantMessage) {
-        collapsedMessages.push(currentAssistantMessage);
-      }
+      const collapsedMessages = parseChatHistory(data.history);
 
       setMessages(collapsedMessages);
     }
@@ -279,10 +244,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <ChatConversation
                 messages={messages}
                 streamedContent={streamedContent}
-                isStreaming={isPending}
+                isStreaming={isPending || isSubmittingApproval}
                 queuedMessages={queuedMessages}
                 onSubmitAnswer={handleClarificationSubmit}
                 onTriggerClarification={handleTriggerClarification}
+                onSubmitApproval={handleApprovalDecision}
               />
             </motion.div>
           ) : (

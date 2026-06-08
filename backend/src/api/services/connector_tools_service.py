@@ -1,25 +1,41 @@
 import os
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Set
 
 logger = logging.getLogger("connector_tools_service")
 
-# In-memory tool to connector mapping cache: { tool_name: {"connector_id": str, "color": str} }
+# In-memory tool to connector mapping cache: { tool_name: {"connector_id": str, "color": str, "tags": list} }
 _TOOL_TO_CONNECTOR_MAPPING: Dict[str, Dict[str, Any]] = {}
 
-def register_tool_mapping(tool_name: str, connector_id: str, color: str):
+def register_tool_mapping(tool_name: str, connector_id: str, color: str, tags: List[str] = None):
     """Registers a dynamic tool mapping from an active MCP server connection."""
     _TOOL_TO_CONNECTOR_MAPPING[tool_name] = {
         "connector_id": connector_id,
-        "color": color
+        "color": color,
+        "tags": tags or []
     }
-    logger.info(f"Registered tool mapping: {tool_name} -> {connector_id} ({color})")
+    logger.info(f"Registered tool mapping: {tool_name} -> {connector_id} ({color}) tags={tags or []}")
 
 async def get_tool_mappings() -> Dict[str, Dict[str, Any]]:
     """
-    Returns mapping of tool_name/tool_id -> {"connector_id": str, "color": str}.
+    Returns mapping of tool_name/tool_id -> {"connector_id": str, "color": str, "tags": list}.
     """
     return _TOOL_TO_CONNECTOR_MAPPING
+
+def get_tools_requiring_approval(tool_names: List[str]) -> Set[str]:
+    """Returns the subset of tool_names that have 'requires_approval' in their tags."""
+    result = set()
+    for name in tool_names:
+        mapping = _TOOL_TO_CONNECTOR_MAPPING.get(name, {})
+        tags = mapping.get("tags", [])
+        if "requires_approval" in tags:
+            result.add(name)
+    return result
+
+def get_tool_tags(tool_name: str) -> List[str]:
+    """Returns the tags list for a given tool name."""
+    mapping = _TOOL_TO_CONNECTOR_MAPPING.get(tool_name, {})
+    return mapping.get("tags", [])
 
 def clear_connector_tools_cache():
     """Forces rebuilding cache (no-op since dynamic mappings are registered directly)."""
@@ -55,3 +71,4 @@ async def calculate_node_color(tools: List[str]) -> str:
                 most_used_color = color
 
     return most_used_color
+

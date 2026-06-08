@@ -11,6 +11,7 @@ router = APIRouter()
 class UserConfig(BaseModel):
     enabled_connectors: List[str] = []
     header_values: Dict[str, Dict[str, str]] = {}
+    always_allowed_tools: List[str] = []
 
 def get_user_config_dict(username: str) -> Dict[str, Any]:
     users_coll = get_collection("users")
@@ -20,9 +21,18 @@ def get_user_config_dict(username: str) -> Dict[str, Any]:
         # Ensure it has the structure we want
         return {
             "enabled_connectors": user_doc.get("enabled_connectors", []),
-            "header_values": user_doc.get("header_values", {})
+            "header_values": user_doc.get("header_values", {}),
+            "always_allowed_tools": user_doc.get("always_allowed_tools", [])
         }
-    return {"enabled_connectors": [], "header_values": {}}
+    return {"enabled_connectors": [], "header_values": {}, "always_allowed_tools": []}
+
+def add_always_allowed_tool(username: str, tool_name: str):
+    users_coll = get_collection("users")
+    users_coll.update_one(
+        {"_id": username},
+        {"$addToSet": {"always_allowed_tools": tool_name}},
+        upsert=True
+    )
 
 @router.get("/user/config", response_model=UserConfig)
 async def get_user_config(username: str = Depends(get_current_user)):

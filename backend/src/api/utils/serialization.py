@@ -25,6 +25,9 @@ def serialize_message(msg: Any) -> Dict[str, Any]:
     if hasattr(msg, "name") and msg.name:
         res["name"] = msg.name
         
+    if isinstance(msg, ToolMessage) and getattr(msg, "tool_call_id", None):
+        res["tool_call_id"] = msg.tool_call_id
+        
     if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
         res["tool_calls"] = [
             {

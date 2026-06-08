@@ -24,6 +24,7 @@ class ConversationsService:
                 "title": title,
                 "preview": title[:50] + "..." if len(title) > 50 else title,
                 "isSaved": False,
+                "always_allowed_tools": [],
                 "created_at": now,
                 "updated_at": now
             }
@@ -56,6 +57,16 @@ class ConversationsService:
             {"$set": data}
         )
         return ConversationsService.get_conversation(thread_id, username)
+
+    @staticmethod
+    def add_always_allowed_tool(thread_id: str, username: str, tool_name: str) -> None:
+        if thread_id == "default_api_session":
+            return
+        coll = ConversationsService.get_collection()
+        coll.update_one(
+            {"_id": thread_id, "username": username},
+            {"$addToSet": {"always_allowed_tools": tool_name}}
+        )
 
     @staticmethod
     def delete_conversation(thread_id: str, username: str) -> bool:

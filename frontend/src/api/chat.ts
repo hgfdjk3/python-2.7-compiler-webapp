@@ -6,6 +6,9 @@ export interface AskRequestPayload {
   project_id?: string;
   stream?: boolean;
   automation?: boolean;
+  resume_decision?: string;
+  tool_call_id?: string;
+  tool_name?: string;
 }
 
 /**
@@ -50,7 +53,11 @@ export const streamAsk = async (
   onUpdate: (content: string) => void,
   threadId: string = 'default_api_session',
   isAutomation: boolean = false,
-  projectId?: string
+  projectId?: string,
+  resumeDecision?: string,
+  toolCallId?: string,
+  toolName?: string,
+  initialContent: string = ''
 ): Promise<string> => {
   const response = await apiClient.post<ReadableStream>(
     '/ask',
@@ -60,6 +67,9 @@ export const streamAsk = async (
       project_id: projectId,
       stream: true,
       automation: isAutomation,
+      resume_decision: resumeDecision,
+      tool_call_id: toolCallId,
+      tool_name: toolName,
     },
     {
       responseType: 'stream',
@@ -72,7 +82,15 @@ export const streamAsk = async (
     throw new Error('No stream data received from backend');
   }
 
-  let accumulatedContent = '';
+  return processStream(stream, onUpdate, initialContent);
+};
+
+async function processStream(
+  stream: ReadableStream<Uint8Array>,
+  onUpdate: (content: string) => void,
+  initialContent: string = ''
+): Promise<string> {
+  let accumulatedContent = initialContent;
 
   for await (const chunk of parseSSEStream<any>(stream)) {
     if (chunk.error) {
@@ -91,4 +109,4 @@ export const streamAsk = async (
   }
 
   return accumulatedContent;
-};
+}

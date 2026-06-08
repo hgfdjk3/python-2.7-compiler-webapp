@@ -99,7 +99,12 @@ def handle_tool_start(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     except Exception:
         payload_str = json.dumps({"name": name, "input": str(tool_input)})
         
-    return wrap_message(AIMessage(content=f'<toolcall name="{name}"> {payload_str} '))
+    # Strip exactly one trailing brace so handle_tool_end can append to the same JSON object
+    payload_str = payload_str.strip(" \n\r\t")
+    if payload_str.endswith("}"):
+        payload_str = payload_str[:-1]
+        
+    return wrap_message(AIMessage(content=f'<tool-call name="{name}"> {payload_str} '))
 
 
 def handle_tool_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -122,17 +127,14 @@ def handle_tool_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     else:
         output_content = str(tool_output)
         
-    payload = {
-        "name": name,
-        "output": output_content
-    }
-    
     try:
-        payload_str = json.dumps(payload)
+        output_val = json.dumps(output_content)
     except Exception:
-        payload_str = json.dumps({"name": name, "output": str(output_content)})
+        output_val = json.dumps(str(output_content))
         
-    return wrap_message(AIMessage(content=f" {payload_str} </toolcall>"))
+    append_str = f', "output": {output_val}}}'
+        
+    return wrap_message(AIMessage(content=f"{append_str} </tool-call>"))
 
 
 def handle_automation_builder_end(event: Dict[str, Any]) -> Optional[Dict[str, Any]]:

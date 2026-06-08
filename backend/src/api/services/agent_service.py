@@ -19,7 +19,7 @@ class AgentService:
         self.runner = runner
 
     async def ask(self, body: AskRequest, username: str):
-        if not body.message.strip():
+        if not body.message.strip() and not body.resume_decision:
             raise HTTPException(status_code=400, detail="Message cannot be empty")
             
         if not self.runner:
@@ -41,6 +41,12 @@ class AgentService:
         enabled_connectors = user_config.get("enabled_connectors", [])
         user_headers = user_config.get("header_values", {})
         
+        conversation = ConversationsService.get_conversation(body.thread_id, username)
+        always_allowed_tools = []
+        if conversation:
+            always_allowed_tools = conversation.get("always_allowed_tools", [])
+
+        
         connectors_db = get_connectors_dict()
         user_scoped_configs = {}
         for conn_id in enabled_connectors:
@@ -52,7 +58,7 @@ class AgentService:
 
         if body.stream:
             return StreamingResponse(
-                self._stream_generator(body, user_scoped_configs, username),
+                self._stream_generator(body, user_scoped_configs, always_allowed_tools, username),
                 media_type="text/event-stream"
             )
         else:
@@ -62,14 +68,16 @@ class AgentService:
                     message=body.message,
                     system_instruction=body.system_instruction,
                     automation=body.automation,
+                    resume_decision=body.resume_decision,
                     mcp_configs=user_scoped_configs,
+                    always_allowed_tools=always_allowed_tools,
                     username=username
                 )
                 return serialize_state(final_state)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-    async def _stream_generator(self, body: AskRequest, user_scoped_configs: Dict[str, Any], username: str):
+    async def _stream_generator(self, body: AskRequest, user_scoped_configs: Dict[str, Any], always_allowed_tools: list, username: str):
         queue = asyncio.Queue()
 
         async def worker():
@@ -79,7 +87,9 @@ class AgentService:
                     message=body.message,
                     system_instruction=body.system_instruction,
                     automation=body.automation,
+                    resume_decision=body.resume_decision,
                     mcp_configs=user_scoped_configs,
+                    always_allowed_tools=always_allowed_tools,
                     username=username
                 ):
                     await queue.put(("data", event))

@@ -1,6 +1,6 @@
 import logging
 from typing import Any, Dict
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
@@ -33,6 +33,15 @@ Execute the user's request to the best of your ability. Keep your answer concise
 """
     
     messages = [SystemMessage(content=system_instruction)] + list(state.get("messages", []))
+    
+    # Sanitize history to prevent LLM crashes from old malformed ToolMessages (where content is a list of strings instead of a string)
+    import json
+    for m in messages:
+        if isinstance(m, ToolMessage) and isinstance(m.content, list):
+            try:
+                m.content = json.dumps(m.content)
+            except Exception:
+                m.content = str(m.content)
     
     # 3. Invoke LLM
     response = await llm.ainvoke(messages)

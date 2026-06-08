@@ -9,6 +9,7 @@ from src.services.harness.graph.nodes.orchestrator import orchestrator_node
 from src.services.harness.graph.nodes.worker import worker_node
 from src.services.harness.graph.nodes.clarifier import clarifier_node
 from src.services.harness.graph.nodes.automation_builder import automation_builder_node
+from src.services.harness.graph.nodes.tool_approval import tool_approval_node
 from src.services.harness.graph.checkpointer import get_checkpointer
 
 def route_start(state: AgentState):
@@ -53,6 +54,9 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     workflow.add_node("clarifier", clarifier_node)
     workflow.add_node("automation_builder", automation_builder_node)
     
+    # Tool approval gate — checks if tools require user approval before execution
+    workflow.add_node("tool_approval", tool_approval_node)
+    
     # ToolNode executes the LLM's requested tool calls
     tool_node = ToolNode(tools)
     workflow.add_node("tools", tool_node)
@@ -80,15 +84,20 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     )
 
 
-    # From worker, go to tools if worker wants to execute tools, otherwise back to orchestrator
+    # From worker, go to tool_approval if worker wants to execute tools, otherwise END
     workflow.add_conditional_edges(
         "worker",
         tools_condition,
         {
-            "tools": "tools",
-            END: "orchestrator"
+            "tools": "tool_approval",
+            END: END
         }
     )
+    
+    # tool_approval uses Command to route dynamically:
+    #   - goto="tools" (approved) 
+    #   - goto="worker" (try-again with rejection message)
+    #   - goto="__end__" (reject/abort)
     
     # From tools, go back to worker so worker can compile/use the tool execution results
     workflow.add_edge("tools", "worker")
@@ -104,4 +113,5 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
         checkpointer = get_checkpointer()
         
     return workflow.compile(checkpointer=checkpointer)
+
 

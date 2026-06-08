@@ -1,24 +1,10 @@
-import React, { useState } from 'react';
-import { Card, Text, Code, Group, Collapse, ActionIcon, ThemeIcon, Box, Badge, Tooltip, Divider, Accordion } from '@mantine/core';
-import {
-  IconChevronDown,
-  IconChevronUp,
-  IconTerminal,
-  IconSearch,
-  IconFileText,
-  IconDatabase,
-  IconCode,
-  IconCpu,
-  IconHammer,
-  IconCheck,
-  IconLoader,
-  IconTool,
-  IconChevronRight
-} from '@tabler/icons-react';
-import './ToolBlock.css';
+import React, { useEffect } from 'react';
+import { Code, Group, Collapse, ThemeIcon, Card, Text, Loader, ActionIcon, Box, Divider } from '@mantine/core';
+import { IconChevronRight, IconCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 
 import { getToolIcon } from '../../../../utils/iconUtils';
+import { useApprovalStore } from '../../../../utils/approvalStore';
 
 interface ToolCallBlockProps {
   name?: string;
@@ -26,27 +12,81 @@ interface ToolCallBlockProps {
 }
 
 export const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ name, children }) => {
-  const [open, { toggle }] = useDisclosure(false)
+  const [open, { toggle }] = useDisclosure(false);
 
-  return (<>
-    <Group w="100%" wrap="nowrap" gap="5" justify='space-between'>
-      <Group w="100%" wrap="nowrap" gap="5">
+  const cleanName = (name?.replace(/^user-content-/, '') || '').trim();
 
-        <ThemeIcon variant='outline' color="dimmed" c="dimmed" size="xs" radius={5}>
-          {getToolIcon(name ?? "", { size: 12 })}
+  let isRunning = true;
+  let parsed: any = null;
+  let outputPreview = "";
+
+  try {
+    parsed = JSON.parse(String(children));
+    if (parsed && parsed.output !== undefined) {
+      isRunning = false;
+      outputPreview = typeof parsed.output === 'string' ? parsed.output : JSON.stringify(parsed.output);
+      // Truncate preview
+      if (outputPreview.length > 150) {
+        outputPreview = outputPreview.substring(0, 150) + "...";
+      }
+    }
+  } catch (e) {
+    // If it fails to parse, it's still streaming, so it's running
+  }
+
+  const isPendingApprovalExec = useApprovalStore((state) =>
+    Object.values(state.activeTools).some(n => n.trim().toLowerCase() === cleanName.toLowerCase())
+  );
+
+  // Claim the execution if it was pending and NOW it has finished executing
+  useEffect(() => {
+    if (!isRunning && cleanName) {
+      useApprovalStore.getState().claimToolExecution(cleanName);
+    }
+  }, [cleanName, isRunning]);
+
+  // If this tool has an active approval block, hide this block entirely.
+  // The ApproveToolBlock is currently showing the loader.
+  // Once this tool finishes executing, the useEffect will claim the execution,
+  // which clears isPendingApprovalExec and hides ApproveToolBlock,
+  // causing this component to smoothly take its place.
+  if (isPendingApprovalExec) {
+    return null;
+  }
+
+  return (
+    <Box mb="xs">
+      <Group w="100%" wrap="nowrap" gap={5} justify='space-between'>
+        <Group w="100%" wrap="nowrap" gap={5}>
+          <ThemeIcon variant={isRunning ? 'light' : 'outline'} color={isRunning ? "blue" : "dimmed"} c="dimmed" size="xs" radius={5}>
+            {getToolIcon(cleanName ?? "", { size: 12 })}
+          </ThemeIcon>
+
+          <Divider
+            w="100%"
+            label={cleanName}
+            labelPosition='left'
+          />
+        </Group>
+        <ThemeIcon variant='transparent' onClick={toggle} size="xs" radius={5} style={{ cursor: 'pointer' }}>
+          <IconChevronRight size={16} color="var(--mantine-color-default-border)" style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
         </ThemeIcon>
-
-        <Divider w="100%" label={name} labelPosition='left' />
       </Group>
-      <ThemeIcon variant='transparent' onClick={toggle} size="xs" radius={5} >
-        <IconChevronRight size={16} color="var(--mantine-color-default-border)" />
-      </ThemeIcon>
-    </Group>
-    <Collapse expanded={open}>
-      {JSON.stringify(children)}
-    </Collapse>
 
-  </>
+      {/* {outputPreview && (
+          <Box pl={28} mt={5}>
+            <Text size="xs" c="dimmed" lineClamp={2} style={{ fontStyle: 'italic' }}>
+              {outputPreview}
+            </Text>
+          </Box>
+        )} */}
+
+      <Collapse expanded={open}>
+        <Box pl={28} mt="xs">
+          <Code block>{parsed ? JSON.stringify(parsed, null, 2) : String(children)}</Code>
+        </Box>
+      </Collapse>
+    </Box>
   );
 };
 

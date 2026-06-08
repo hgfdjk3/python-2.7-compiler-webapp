@@ -132,8 +132,12 @@ class MCPClientManager:
                         tool._run = safe_run
                         
                     color = config.get("color", "#228be6")
-                    register_tool_mapping(tool.name, name, color)
-                    logger.info(f"Loaded tool: {tool.name}")
+                    # Extract tags from MCP _meta field (propagated by langchain_mcp_adapters)
+                    tool_meta = getattr(tool, "metadata", None) or {}
+                    meta_block = tool_meta.get("_meta", {}) or {}
+                    tool_tags = meta_block.get("tags", []) if isinstance(meta_block, dict) else []
+                    register_tool_mapping(tool.name, name, color, tags=tool_tags)
+                    logger.info(f"Loaded tool: {tool.name} (tags={tool_tags})")
                 
                 all_tools.extend(server_tools)
             except Exception as e:

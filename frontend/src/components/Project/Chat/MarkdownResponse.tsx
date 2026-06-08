@@ -6,13 +6,16 @@ import './MarkdownResponse.css';
 import { ClarificationBlock } from './ClarificationBlock/ClarificationBlock';
 import { ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 import { ToolCallBlock } from './ToolBlock/ToolBlock';
+import { ApproveToolBlock } from './ApproveToolBlock/ApproveToolBlock';
 import { AutomationBlock } from './AutomationBlock/AutomationBlock';
 import { AutomationModeBlock } from './AutomationModeBlock/AutomationModeBlock';
+import { MetadataBlock } from './MetadataBlock/MetadataBlock';
 
 export interface MarkdownResponseProps {
   content: string;
   onSubmitAnswer?: (answer: string) => void;
   onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
+  onSubmitApproval?: (toolCallId: string, toolName: string, decision: 'allow' | 'reject' | 'try_again' | 'always_allow') => void;
 }
 
 /**
@@ -31,29 +34,24 @@ const getTextFromChildren = (children: React.ReactNode): string => {
   return '';
 };
 
-export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onSubmitAnswer, onTriggerClarification }) => {
+export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onSubmitAnswer, onTriggerClarification, onSubmitApproval }) => {
+  const callbacksRef = React.useRef({ onSubmitAnswer, onTriggerClarification, onSubmitApproval });
+  callbacksRef.current = { onSubmitAnswer, onTriggerClarification, onSubmitApproval };
+
   const components = React.useMemo(() => ({
-    'my-component': ({ children }: { children?: React.ReactNode }) => (
-      <div className="special-note">
-        <span className="special-note-title">Special Note: </span>
-        {children}
-      </div>
-    ),
     a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
       <Anchor href={href} target="_blank" rel="noopener noreferrer">
         {children}
       </Anchor>
     ),
-    metadata: ({ children }: { children?: React.ReactNode }) => {
-      return <Card withBorder> {JSON.parse(String(children)).next}:{JSON.parse(String(children)).reasoning}</Card>;
-    },
+    metadata: ({ children }: { children?: React.ReactNode }) => <MetadataBlock>{children}</MetadataBlock>,
     clarification: ({ children }: { children?: React.ReactNode }) => {
       const rawContent = getTextFromChildren(children);
       return (
         <ClarificationBlock
           content={rawContent}
-          onSubmitAnswer={onSubmitAnswer}
-          onTriggerClarification={onTriggerClarification}
+          onSubmitAnswer={(a) => callbacksRef.current.onSubmitAnswer?.(a)}
+          onTriggerClarification={(q) => callbacksRef.current.onTriggerClarification?.(q)}
         />
       );
     },
@@ -64,9 +62,10 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
     AutomationModeBlock: () => {
       return <AutomationModeBlock />;
     },
-    toolcall: ToolCallBlock,
+    'approve-tool': ({ children, ...props }: any) => <ApproveToolBlock {...props} onSubmitApproval={(id, name, decision) => callbacksRef.current.onSubmitApproval?.(id, name, decision)}>{getTextFromChildren(children)}</ApproveToolBlock>,
+    'tool-call': ({ children, ...props }: any) => <ToolCallBlock {...props}>{getTextFromChildren(children)}</ToolCallBlock>,
     table: Table.withProps({ variant: 'striped', withRowBorders: true, striped: 'even', })
-  }), [onSubmitAnswer, onTriggerClarification]);
+  }), []);
 
   return (
     <Box className="markdown-response-container" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }}>
@@ -78,8 +77,8 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
         isAnimating={false}
         caret="block"
         components={components}
-        allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [], 'automation': [], 'AutomationModeBlock': [], 'toolcall': ['name'] }}
-        literalTagContent={["toolcall", "automation", "AutomationModeBlock"]}
+        allowedTags={{ 'my-component': [], 'metadata': [], 'clarification': [], 'automation': [], 'AutomationModeBlock': [], 'approve-tool': ['name', 'id'], 'tool-call': ['name'] }}
+        literalTagContent={["approve-tool", "tool-call", "automation", "AutomationModeBlock"]}
       >
         {content}
       </Streamdown>

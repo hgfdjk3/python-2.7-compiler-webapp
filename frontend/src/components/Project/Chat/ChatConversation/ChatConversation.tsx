@@ -25,6 +25,7 @@ export interface ChatConversationProps {
   queuedMessages?: QueuedMessage[];
   onSubmitAnswer?: (answer: string) => void;
   onTriggerClarification?: (questions: ClarificationQuestionData[]) => void;
+  onSubmitApproval?: (toolCallId: string, toolName: string, decision: 'allow' | 'reject' | 'try_again' | 'always_allow') => void;
 }
 
 export const ChatConversation: React.FC<ChatConversationProps> = ({
@@ -34,6 +35,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
   queuedMessages = [],
   onSubmitAnswer,
   onTriggerClarification,
+  onSubmitApproval,
 }) => {
   return (
     <Box style={{ height: '100%' }}>
@@ -46,6 +48,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
               <MarkdownResponse
                 content={msg.content}
                 onSubmitAnswer={onSubmitAnswer}
+                onSubmitApproval={onSubmitApproval}
               />
             )}
           </Box>
@@ -57,6 +60,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
               content={streamedContent || ''}
               onSubmitAnswer={onSubmitAnswer}
               onTriggerClarification={onTriggerClarification}
+              onSubmitApproval={onSubmitApproval}
             />
             <ThinkingBlock />
           </Box>
