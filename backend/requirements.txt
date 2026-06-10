@@ -9,3 +9,5 @@ uvicorn>=0.20.0
 langchain-mcp-adapters>=0.1.0
 langgraph-checkpoint-postgres>=2.0.0
 pymongo>=4.0.0
+temporalio>=1.5.0
+python-dateutil>=2.8.2
