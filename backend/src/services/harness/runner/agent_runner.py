@@ -7,6 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
+from langgraph.errors import GraphInterrupt
 
 from src.config import OPENAI_API_KEY
 from src.services.harness.graph.builder import create_graph
@@ -98,7 +99,11 @@ class AgentRunner:
                 else:
                     inputs = self._build_inputs(message, system_instruction, automation=automation)
                 config = self._prepare_config(thread_id, model, tools, always_allowed_tools)
-                return await graph.ainvoke(inputs, config=config)
+                try:
+                    return await graph.ainvoke(inputs, config=config)
+                except GraphInterrupt:
+                    state = await graph.aget_state(config)
+                    return state.values
         finally:
             await mcp_manager.disconnect_all()
 

@@ -2,16 +2,13 @@ from typing import Any, Dict, Literal
 from pydantic import BaseModel, Field
 import json
 import logging
-from langchain_core.messages import SystemMessage, ToolMessage
-from langchain_core.messages import AIMessage
+from langchain_core.messages import SystemMessage, ToolMessage, AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
 from src.services.harness.graph.state import AgentState
 
 logger = logging.getLogger("orchestrator")
-
-
 
 ORCHESTRATOR_SYSTEM_PROMPT = """You are an AI Supervisor.
 Your goal is to actively manage the conversation flow, routing to the appropriate specialist node based on the user's request. 
@@ -25,14 +22,14 @@ Analyze the conversation history and select the next node:
 Additional Guidelines:
 - If the user explicitly asks to create a new automation, workflow, or sequence of actions, print/send to the user the message <AutomationModeBlock>'.
 - Be proactive and smart. Read the history to see what the worker has already done so you don't repeat mistakes.
-- In your reasoning, tell the user exactly what you are thinking and why you chose this route. Keep it concise.
+- Keep your reasoning concise.
 
 Available Tools:
 {tools_info}
 
 you should not say model name, or any details about you. if any user asks about you, say that you are an Atom agent.
 
-CRITICAL: You MUST respond ONLY with a raw JSON object and nothing else. No markdown formatting, no backticks.
+CRITICAL: You MUST respond ONLY with a raw JSON object.
 Schema:
 {{
     "next": "worker" | "clarifier" | "FINISH",
@@ -40,6 +37,20 @@ Schema:
     "response": "optional conversational response to the user. Use this if you are answering the user directly and routing to FINISH."
 }}
 """
+
+class OrchestratorDecision(BaseModel):
+    next_node: Literal["worker", "clarifier", "FINISH"] = Field(
+        alias="next",
+        description="The next node to route the conversation to.",
+        default="worker"
+    )
+    reasoning: str = Field(
+        description="Tell the user exactly what you are thinking and why you chose this route. Keep it concise."
+    )
+    response: str = Field(
+        description="Optional conversational response to the user.",
+        default=""
+    )
 
 async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     configurable = config.get("configurable", {})
@@ -62,7 +73,6 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[s
     else:
         tools_info = "No tools are currently available."
 
-    # Use raw LLM call without strict structured output parser to support OSS models
     system_prompt = ORCHESTRATOR_SYSTEM_PROMPT.format(tools_info=tools_info)
     messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
     
@@ -74,29 +84,46 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[s
             except Exception:
                 m.content = str(m.content)
 
+    route_next = "worker"
+    reasoning = "Routing to worker."
+    response_msg = ""
+
+    structured_llm = llm.with_structured_output(OrchestratorDecision)
+
     try:
-        response = await llm.ainvoke(messages)
-        content = response.content.strip()
-        
-        # Clean up markdown if the LLM ignored instructions
-        if content.startswith("```json"):
-            content = content[7:-3].strip()
-        elif content.startswith("```"):
-            content = content[3:-3].strip()
-            
-        data = json.loads(content)
-        route_next = data.get("next", "worker")
-        reasoning = data.get("reasoning", "Routing to worker.")
-        response_msg = data.get("response", "")
+        # Attempt 1: Fast structured output using tool calling
+        decision = await structured_llm.ainvoke(messages)
+        route_next = decision.next_node
+        reasoning = decision.reasoning
+        response_msg = decision.response
         
         if route_next not in ["worker", "clarifier", "FINISH"]:
             route_next = "worker"
             
     except Exception as e:
-        logger.warning(f"Manual JSON parsing failed: {e}")
-        route_next = "worker"
-        reasoning = "Failed to parse routing decision. Defaulting to worker."
-        response_msg = ""
+        logger.warning(f"Structured output failed, falling back to raw LLM parsing: {e}")
+        try:
+            # Attempt 2: Ultimate fallback to raw string parsing (supports OSS models)
+            response = await llm.ainvoke(messages)
+            content = response.content.strip()
+            
+            if content.startswith("```json"):
+                content = content[7:-3].strip()
+            elif content.startswith("```"):
+                content = content[3:-3].strip()
+                
+            data = json.loads(content)
+            route_next = data.get("next", "worker")
+            reasoning = data.get("reasoning", "Routing to worker.")
+            response_msg = data.get("response", "")
+            
+            if route_next not in ["worker", "clarifier", "FINISH"]:
+                route_next = "worker"
+        except Exception as e2:
+            logger.error(f"Fallback manual JSON parsing failed: {e2}")
+            route_next = "worker"
+            reasoning = "Failed to parse routing decision. Defaulting to worker."
+            response_msg = ""
     
     route_json = json.dumps({
         "next": route_next,

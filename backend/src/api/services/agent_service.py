@@ -3,6 +3,7 @@ import asyncio
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from typing import Dict, Any
+from langgraph.errors import GraphInterrupt
 
 from src.services.harness.runner import AgentRunner
 from src.api.schemas.ask import AskRequest
@@ -93,6 +94,8 @@ class AgentService:
                     username=username
                 ):
                     await queue.put(("data", event))
+            except GraphInterrupt:
+                pass
             except Exception as e:
                 await queue.put(("error", e))
             finally:

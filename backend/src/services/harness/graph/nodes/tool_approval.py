@@ -13,6 +13,7 @@ Flow:
 import logging
 import json
 from typing import Any, Dict
+from langchain_core.callbacks.manager import adispatch_custom_event
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import interrupt, Command
@@ -40,6 +41,12 @@ async def tool_approval_node(state: AgentState, config: RunnableConfig) -> Comma
         return Command(goto="tools")
     
     last_message = messages[-1]
+    
+    # If the user resumed by sending a new message instead of choosing an approval option,
+    # the last message will be a HumanMessage. Route back to orchestrator to handle it.
+    from langchain_core.messages import HumanMessage
+    if isinstance(last_message, HumanMessage):
+        return Command(goto="orchestrator")
     
     # Only AIMessages can have tool_calls
     if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
@@ -69,7 +76,6 @@ async def tool_approval_node(state: AgentState, config: RunnableConfig) -> Comma
             logger.info(f"Tool '{tc['name']}' requires approval. Interrupting graph.")
             
             # Dispatch custom event so the stream loop can yield it immediately
-            from langchain_core.callbacks.manager import adispatch_custom_event
             await adispatch_custom_event(
                 "approval_request",
                 approval_request,
