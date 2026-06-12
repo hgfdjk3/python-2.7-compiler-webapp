@@ -14,6 +14,45 @@ class LibraryService:
         return result
 
     @staticmethod
+    def get_library_stats(project_id: str) -> Dict[str, Any]:
+        coll = get_collection("library_entities")
+        pipeline = [
+            {"$match": {"project_id": project_id, "status": "approved"}},
+            {"$group": {"_id": "$type", "count": {"$sum": 1}}}
+        ]
+        results = list(coll.aggregate(pipeline))
+        total = sum(r["count"] for r in results)
+        by_type = {r["_id"]: r["count"] for r in results}
+        return {"total": total, "by_type": by_type}
+
+    @staticmethod
+    def get_entity(project_id: str, entity_id: str) -> Optional[Dict[str, Any]]:
+        coll = get_collection("library_entities")
+        doc = coll.find_one({"_id": entity_id, "project_id": project_id})
+        if doc:
+            doc["id"] = doc.pop("_id")
+            return doc
+        return None
+
+    @staticmethod
+    def search_entities(project_id: str, query: str) -> List[Dict[str, Any]]:
+        coll = get_collection("library_entities")
+        db_query = {
+            "project_id": project_id,
+            "status": "approved",
+            "$or": [
+                {"current_state.title": {"$regex": query, "$options": "i"}},
+                {"current_state.description": {"$regex": query, "$options": "i"}}
+            ]
+        }
+        result = []
+        for doc in coll.find(db_query):
+            if "_id" in doc:
+                doc["id"] = doc.pop("_id")
+            result.append(doc)
+        return result
+
+    @staticmethod
     def propose_changes(
         project_id: str,
         entity_id: Optional[str] = None,

@@ -23,7 +23,7 @@ def create_automation_graph(
     automation_data: Dict[str, Any], 
     all_tools: List[BaseTool],
     checkpointer: Any,
-    model_name: str = "gpt-4o-mini",
+    model_name: str = "qwen/qwen3.5-122b-a10b",
     temperature: float = 0.0
 ) -> StateGraph:
     """

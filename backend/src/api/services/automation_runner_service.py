@@ -17,8 +17,8 @@ from src.config import OPENAI_API_KEY
 def get_default_model():
     api_key = OPENAI_API_KEY or ""
     if api_key.startswith("nvapi-"):
-        return "openai/gpt-oss-120b"
-    return "gpt-4o-mini"
+        return "qwen/qwen3.5-122b-a10b"
+    return "qwen/qwen3.5-122b-a10b"
 
 class AutomationRunnerService:
     def __init__(self, mcp_configs: Optional[Dict[str, Dict[str, Any]]] = None):

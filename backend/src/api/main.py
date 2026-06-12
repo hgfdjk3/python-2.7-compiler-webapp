@@ -1,5 +1,6 @@
 import os
 import sys
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,11 +25,11 @@ from src.api.routes.user import router as user_router
 from src.api.routes.conversations import router as conversations_router
 from src.api.routes.library import router as library_router
 
+
+
 # Determine model configuration
 api_key = OPENAI_API_KEY or ""
-default_model = "gpt-4o-mini"
-if api_key.startswith("nvapi-"):
-    default_model = "openai/gpt-oss-120b"
+default_model = "moonshotai/kimi-k2.6"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,6 +40,9 @@ async def lifespan(app: FastAPI):
         temperature=0.7
     )
     yield
+    
+    # Cleanup (if any)
+    pass
 
 app = FastAPI(
     title="Atom LangGraph Agent API",

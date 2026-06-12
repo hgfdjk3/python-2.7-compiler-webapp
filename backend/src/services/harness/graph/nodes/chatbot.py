@@ -17,7 +17,7 @@ async def chatbot_node(state: AgentState, config: RunnableConfig) -> Dict[str, A
     # Allow injection of a mock LLM for testing, or default to ChatOpenAI
     llm = configurable.get("model")
     if llm is None:
-        model_name = configurable.get("model_name", "gpt-4o-mini")
+        model_name = configurable.get("model_name", "qwen/qwen3.5-122b-a10b")
         temperature = configurable.get("temperature", 0.7)
         llm = ChatOpenAI(model=model_name, temperature=temperature)
 

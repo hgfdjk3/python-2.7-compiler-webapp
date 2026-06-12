@@ -1,5 +1,6 @@
 import json
 import asyncio
+import logging
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from typing import Dict, Any
@@ -11,6 +12,8 @@ from src.api.utils.serialization import serialize_state
 from src.api.routes.user import get_user_config_dict
 from src.api.routes.connectors import get_connectors_dict
 from src.api.services.conversations_service import ConversationsService
+
+logger = logging.getLogger("agent_service")
 
 class AgentService:
     """
@@ -114,6 +117,7 @@ class AgentService:
                     serialized = serialize_state(payload)
                     yield f"data: {json.dumps(serialized)}\n\n"
         finally:
+            logger.info(f"Stream generator finally block reached for project {body.project_id}")
             task.cancel()
             try:
                 await asyncio.wait_for(task, timeout=2.0)

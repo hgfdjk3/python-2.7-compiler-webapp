@@ -137,8 +137,8 @@ async def run_quality_test(test_case: QualityTestCase) -> EvaluationResult:
         raise RuntimeError("OPENAI_API_KEY is not configured in the environment or .env file.")
 
     # Determine model configuration based on API key
-    model_name = "gpt-4o-mini"
-    evaluator_model_name = "gpt-4o-mini"
+    model_name = "qwen/qwen3.5-122b-a10b"
+    evaluator_model_name = "qwen/qwen3.5-122b-a10b"
     if api_key.startswith("nvapi-"):
         model_name = "meta/llama-3.1-70b-instruct"
         evaluator_model_name = "meta/llama-3.1-8b-instruct"

@@ -1,11 +1,60 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Request
 from typing import List, Dict, Any, Optional
+from pydantic import BaseModel
 from src.api.schemas.library import Entity, ProposeEntityRequest, ProposeSummaryRequest, LibrarySummaryState
 from src.api.services.library_service import LibraryService
 from src.api.services.projects_service import ProjectsService
 from src.api.dependencies.auth import get_current_user
+from src.services.harness.extraction.agent import ExtractorAgent
 
 router = APIRouter(prefix="/projects/{project_id}/library", tags=["library"])
+
+# ── Pre-processing endpoint ──────────────────────────────
+
+class ExtractRequest(BaseModel):
+    content: str
+    source_tool: str = "user_upload"
+
+@router.post("/extract")
+async def extract_from_content(
+    project_id: str,
+    request: ExtractRequest,
+    username: str = Depends(get_current_user),
+):
+    """Pre-processing: User explicitly sends content to be analyzed by the extraction agent."""
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    extractor = ExtractorAgent()
+    result = await extractor.preprocess(project_id, request.content, request.source_tool)
+    return {"message": "Extraction completed", "status": "success", "result": result}
+
+class ExtractConversationRequest(BaseModel):
+    thread_id: str
+
+@router.post("/extract-conversation")
+async def extract_from_conversation(
+    project_id: str,
+    request: ExtractConversationRequest,
+    fastapi_request: Request,
+    username: str = Depends(get_current_user),
+):
+    """Post-processing: Explicitly triggers the extraction agent on a past conversation."""
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    runner = fastapi_request.app.state.agent_runner
+    history = await runner.get_history(request.thread_id)
+    
+    if not history:
+        raise HTTPException(status_code=404, detail="Conversation history not found")
+
+    extractor = ExtractorAgent()
+    result = await extractor.postprocess_async(project_id, history)
+    
+    return {"message": "Conversation extraction completed", "status": "success", "result": result}
 
 @router.get("/entities", response_model=List[Entity])
 async def get_library_entities(project_id: str, username: str = Depends(get_current_user)):

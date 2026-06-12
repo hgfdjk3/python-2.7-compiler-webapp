@@ -34,7 +34,7 @@ class AgentRunner:
     def __init__(
         self,
         mcp_configs: Optional[Dict[str, Dict[str, Any]]] = None,
-        model_name: str = "gpt-4o-mini",
+        model_name: str = "qwen/qwen3.5-122b-a10b",
         temperature: float = 0.7,
         model: Optional[Any] = None,
     ):

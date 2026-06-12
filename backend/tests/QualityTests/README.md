@@ -2,7 +2,7 @@
 
 This directory contains a specialized quality testing framework designed to evaluate non-deterministic AI decisions, routing, and conversation nodes (e.g. `orchestrator`, `chatbot`, `clarifier`, `worker`) in LangGraph.
 
-Instead of writing strict assertion tests (which fail often on small textual changes), we use a structured **LLM Judge** (`gpt-4o-mini`) to evaluate the outputs against a natural language criterion.
+Instead of writing strict assertion tests (which fail often on small textual changes), we use a structured **LLM Judge** (`qwen/qwen3.5-122b-a10b`) to evaluate the outputs against a natural language criterion.
 
 ---
 

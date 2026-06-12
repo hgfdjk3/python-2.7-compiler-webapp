@@ -114,7 +114,7 @@ async def run_single(runner: AgentRunner, message: str, system_instruction: str 
 async def main():
     # Check if NVIDIA API key is used and set appropriate defaults
     api_key = OPENAI_API_KEY or ""
-    default_model = "gpt-4o-mini"
+    default_model = "qwen/qwen3.5-122b-a10b"
     
     if api_key.startswith("nvapi-"):
         default_model = "meta/llama-3.1-70b-instruct"

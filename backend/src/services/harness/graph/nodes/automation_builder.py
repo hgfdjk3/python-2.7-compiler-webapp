@@ -132,7 +132,7 @@ async def automation_builder_node(state: AgentState, config: RunnableConfig) -> 
 
     llm = configurable.get("model")
     if llm is None:
-        model_name = configurable.get("model_name", "gpt-4o-mini")
+        model_name = configurable.get("model_name", "qwen/qwen3.5-122b-a10b")
         temperature = configurable.get("temperature", 0.4)
         llm = ChatOpenAI(model=model_name, temperature=temperature)
 
