@@ -1,0 +1,102 @@
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List, Dict, Any, Optional
+from src.api.schemas.library import Entity, ProposeEntityRequest, ProposeSummaryRequest, LibrarySummaryState
+from src.api.services.library_service import LibraryService
+from src.api.services.projects_service import ProjectsService
+from src.api.dependencies.auth import get_current_user
+
+router = APIRouter(prefix="/projects/{project_id}/library", tags=["library"])
+
+@router.get("/entities", response_model=List[Entity])
+async def get_library_entities(project_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    return LibraryService.get_entities(project_id)
+
+@router.post("/entities", response_model=Entity)
+async def propose_entity_change(
+    project_id: str, 
+    request: ProposeEntityRequest, 
+    entity_id: Optional[str] = None, 
+    username: str = Depends(get_current_user)
+):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    try:
+        updated = LibraryService.propose_changes(
+            project_id=project_id,
+            entity_id=entity_id,
+            entity_type=request.type,
+            proposed_state=request.proposed_state.model_dump() if request.proposed_state else None
+        )
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/entities/{entity_id}/approve", response_model=Entity)
+async def approve_entity_proposal(project_id: str, entity_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    updated = LibraryService.approve_proposal(entity_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    return updated
+
+@router.post("/entities/{entity_id}/reject", response_model=Entity)
+async def reject_entity_proposal(project_id: str, entity_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    updated = LibraryService.reject_proposal(entity_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    return updated
+
+@router.put("/summary")
+async def propose_summary_change(project_id: str, request: ProposeSummaryRequest, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    summary = project.get("library_summary", {})
+    summary["proposed_text"] = request.proposed_text
+    summary["status"] = "pending"
+    
+    ProjectsService.update_project(project_id, {"library_summary": summary})
+    return {"message": "Summary change proposed", "library_summary": summary}
+
+@router.post("/summary/approve")
+async def approve_summary_change(project_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    summary = project.get("library_summary", {})
+    if summary.get("status") == "pending":
+        summary["current_text"] = summary.get("proposed_text")
+        summary["proposed_text"] = None
+        summary["status"] = "approved"
+        ProjectsService.update_project(project_id, {"library_summary": summary})
+        
+    return {"message": "Summary change approved", "library_summary": summary}
+
+@router.post("/summary/reject")
+async def reject_summary_change(project_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    summary = project.get("library_summary", {})
+    if summary.get("status") == "pending":
+        summary["proposed_text"] = None
+        summary["status"] = "approved"
+        ProjectsService.update_project(project_id, {"library_summary": summary})
+        
+    return {"message": "Summary change rejected", "library_summary": summary}
