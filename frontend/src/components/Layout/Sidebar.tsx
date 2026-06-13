@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ActionIcon, Avatar, Box, Group, NavLink, Stack, Text, ScrollArea, Modal, TextInput, Button } from '@mantine/core';
 import {
   IconLayoutSidebar,
-  IconSettings,
   IconSearch,
   IconFolders,
   IconPlug,
@@ -16,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AtomLogo } from '../AtomLogo/AtomLogo';
 import { useProjects } from '../../api/projects';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { useUserStore } from '../../store/userStore';
 
 
 const navItems = [
@@ -37,6 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
   const location = useLocation();
   const [openedProjects, setOpenedProjects] = useState<string[]>([]);
   const { data: projects = [] } = useProjects();
+  const user = useUserStore((state) => state.user);
+
 
   const toggleProject = (projectId: string) => {
     setOpenedProjects((prev) =>
@@ -155,30 +157,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
       {/* Footer Section */}
       <Stack gap="xs" mt="md">
         <ThemeToggle opened={opened} />
-        <NavLink
-          label={
-            <AnimatePresence mode="wait">
-              {opened && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                >
-                  <Text size="sm" fw={500}>Settings</Text>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          }
-          leftSection={<IconSettings size={18} stroke={1.5} />}
-          variant="subtle"
-          h={36}
-          style={{
-            borderRadius: 'var(--mantine-radius-md)',
-            display: 'flex',
-            justifyContent: opened ? 'flex-start' : 'center',
-            overflow: 'hidden'
-          }}
-        />
 
         <Box
           p="xs"
@@ -193,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
           }}
         >
           <Group wrap="nowrap" gap="sm">
-            <Avatar color="dark" radius="md" size="sm">R</Avatar>
+            <Avatar color="dark" radius="md" size="sm">{user.fullname ? user.fullname.charAt(0).toUpperCase() : 'U'}</Avatar>
             <AnimatePresence mode="wait">
               {opened && (
                 <motion.div
@@ -202,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
                   exit={{ opacity: 0, width: 0 }}
                   style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}
                 >
-                  <Text size="sm" fw={600} truncate lh={1.2}>Ran</Text>
+                  <Text size="sm" fw={600} truncate lh={1.2}>{user.fullname}</Text>
                   <Text c="dimmed" size="xs" truncate lh={1.2}>Free plan</Text>
                 </motion.div>
               )}

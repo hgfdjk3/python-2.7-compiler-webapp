@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Stack, Box, Text, ScrollArea } from '@mantine/core';
+import { Stack, Box, Text, ScrollArea, Center, Loader } from '@mantine/core';
 import { DragOverlay, useDroppable } from '@dnd-kit/react';
 import { Source, SourceGroup as SourceGroupType } from '../types';
 import { SourceGroup } from '../SourceGroup/SourceGroup';
@@ -12,12 +12,14 @@ interface ProjectSourcesPreviewProps {
   initialGroups: SourceGroupType[];
   standaloneSources: Source[];
   activeSourceId: string | null;
+  isLoading?: boolean;
 }
 
 export const ProjectSourcesPreview: React.FC<ProjectSourcesPreviewProps> = ({
   initialGroups,
   standaloneSources,
   activeSourceId,
+  isLoading,
 }) => {
   const activeSource = activeSourceId
     ? [...standaloneSources, ...initialGroups.flatMap((group) => group.sources)].find((source) => source.id === activeSourceId)
@@ -29,6 +31,7 @@ export const ProjectSourcesPreview: React.FC<ProjectSourcesPreviewProps> = ({
       sources={standaloneSources}
       activeSource={activeSource || null}
       isDraggingAny={!!activeSourceId}
+      isLoading={isLoading}
     />
   );
 };
@@ -38,13 +41,15 @@ interface ProjectSourcesPreviewContentProps {
   sources: Source[];
   activeSource: Source | null;
   isDraggingAny: boolean;
+  isLoading?: boolean;
 }
 
 const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> = ({
   groups,
   sources,
   activeSource,
-  isDraggingAny
+  isDraggingAny,
+  isLoading
 }) => {
   const { ref: standaloneRef, isDropTarget: isOverStandalone } = useDroppable({ id: 'standalone-zone' });
 
@@ -59,7 +64,7 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
   } = useSourceFilter(sources, groups);
 
   return (
-    <Box className="previewRoot" h={300} pt="5" style={{ display: 'flex', flexDirection: 'column' }}>
+    <Box className="previewRoot" pt="5" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <SourceFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -88,7 +93,11 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
           </Box>
         )}
 
-        {filteredGroups.length === 0 && filteredSources.length === 0 && (
+        {isLoading ? (
+          <Center h={100}>
+            <Loader size="sm" type="dots" color="gray" />
+          </Center>
+        ) : filteredGroups.length === 0 && filteredSources.length === 0 && (
           <Box className="emptyPreviewState">
             <Text size="xs" c="dimmed">
               No matching sources

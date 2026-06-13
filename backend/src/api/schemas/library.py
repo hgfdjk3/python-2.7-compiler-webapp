@@ -14,7 +14,7 @@ class EntityState(BaseModel):
 class Entity(BaseModel):
     id: str
     project_id: str
-    type: str  # e.g., 'person', 'place', 'concept', 'source'
+    type: str  # e.g., 'person', 'place', 'concept', 'source', 'product', 'tool', 'company', 'ip', 'county', 'file'
     status: str = "approved"  # "pending" or "approved"
     current_state: Optional[EntityState] = None
     proposed_state: Optional[EntityState] = None

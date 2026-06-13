@@ -13,7 +13,7 @@ interface ProjectConfigSectionProps {
 export const ProjectConfigSection = forwardRef<HTMLDivElement, ProjectConfigSectionProps>(
   ({ title, onAdd, rightSection, children, flex }, ref) => {
     return (
-      <Card withBorder p="md" py="sm" radius="md" style={{ flex }} ref={ref}>
+      <Card withBorder p="md" py="sm" radius="md" style={{ flex, display: 'flex', flexDirection: 'column', minHeight: 0 }} ref={ref}>
         <Group justify="space-between" mb="5">
           <Text size="sm" fw={600}>
             {title}

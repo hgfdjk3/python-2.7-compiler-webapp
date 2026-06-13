@@ -14,7 +14,14 @@ class EntityType(str, Enum):
     EVENT = "event"
     CONCEPT = "concept"
     TECHNOLOGY = "technology"
+    SOFTWARE = "software"
+    HARDWARE = "hardware"
     SOURCE = "source"
+    FILE = "file"
+    DOCUMENT = "document"
+    IP = "ip"
+    COMPANY = "company"
+    COUNTY = "county"
 
 class ConnectionType(str, Enum):
     RELATED_TO = "related_to"
@@ -72,7 +79,7 @@ class ExtractedEntity(BaseModel):
 class ExtractionResult(BaseModel):
     summary_update: Optional[str] = Field(
         default=None,
-        description="Updated project summary incorporating new knowledge. Null if no update needed."
+        description="A COMPLETE, rewritten project summary that merges the OLD summary with new knowledge. Do NOT return conversational text (e.g. 'No new entities'). Null if no update needed."
     )
     entities: List[ExtractedEntity] = Field(
         default_factory=list,

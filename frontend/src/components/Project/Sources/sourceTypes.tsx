@@ -9,7 +9,12 @@ import {
   IconBuilding,
   IconFile,
   IconTag,
-  IconDatabase
+  IconDatabase,
+  IconServer,
+  IconCpu,
+  IconPhoto,
+  IconVideo,
+  IconHeadphones
 } from '@tabler/icons-react';
 
 export interface SourceStyle {
@@ -27,6 +32,16 @@ const PREDEFINED_STYLES: Record<string, SourceStyle> = {
   place: { color: 'orange', icon: <IconMapPin size={16} /> },
   organization: { color: 'grape', icon: <IconBuilding size={16} /> },
   database: { color: 'teal', icon: <IconDatabase size={16} /> },
+  county: { color: 'orange', icon: <IconMapPin size={16} /> },
+  ip: { color: 'blue', icon: <IconServer size={16} /> },
+  company: { color: 'grape', icon: <IconBuilding size={16} /> },
+  file: { color: 'gray', icon: <IconFile size={16} /> },
+  document: { color: 'gray', icon: <IconFileText size={16} /> },
+  image: { color: 'pink', icon: <IconPhoto size={16} /> },
+  video: { color: 'red', icon: <IconVideo size={16} /> },
+  audio: { color: 'yellow', icon: <IconHeadphones size={16} /> },
+  software: { color: 'cyan', icon: <IconCpu size={16} /> },
+  hardware: { color: 'gray', icon: <IconCpu size={16} /> },
 };
 
 const DYNAMIC_COLORS = [

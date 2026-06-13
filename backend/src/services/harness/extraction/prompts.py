@@ -22,6 +22,12 @@ MAPPING TO EXISTING ENTITIES:
 3. If it's a completely new entity, leave `existing_id` null.
 4. Ensure all connections use the correct existing entity ID, or the exact title of a newly created entity in this batch.
 
+UPDATING THE SUMMARY:
+1. Review the EXISTING Library Summary provided below.
+2. If the new content adds significant overall context to the project, provide a COMPLETE, REWRITTEN summary that merges the OLD summary with the NEW knowledge.
+3. DO NOT output conversational text, patches, or commentary (e.g. 'No new entities...', 'However new content...'). Only output the final, polished summary paragraph(s).
+4. If no update to the summary is needed, return null for summary_update.
+
 EXISTING LIBRARY SUMMARY & ENTITIES:
 {{library_summary}}
 

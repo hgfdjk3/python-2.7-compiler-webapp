@@ -17,26 +17,6 @@ const MOCK_MEMBERS = [
   { id: '5', name: 'David', initials: 'D' },
 ];
 
-const MOCK_GROUPS: SourceGroup[] = [
-  {
-    id: 'group-1',
-    title: 'Research Papers',
-    description: 'A collection of PDFs about LLMs',
-    sources: [
-      { id: 's1', title: 'Attention is All You Need.pdf', description: 'Transformer architecture paper', type: 'pdf', color: 'red' },
-    ]
-  }
-];
-
-const MOCK_STANDALONE: Source[] = [
-  { id: 's2', title: 'Project Specs.txt', description: 'Requirements document', type: 'txt', color: 'blue' },
-  { id: 's3', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'orange' },
-  { id: 's4', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'green' },
-  { id: 's5', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'blue' },
-  { id: 's6', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'orange' },
-  { id: 's7', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'green' },
-  { id: 's8', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'blue' },
-];
 
 const MOCK_OVERVIEW = "This project focuses on creating a high-fidelity UI clone of the Claude AI web interface using Mantine and React. It includes a multi-panel layout with a responsive sidebar, a central chat area, and a context-aware configuration panel for project management and settings.";
 
@@ -46,6 +26,7 @@ interface ProjectConfigPanelProps {
   activeSourceId: string | null;
   summary?: string;
   pendingCount?: number;
+  isLoading?: boolean;
   onReviewPending?: () => void;
 }
 
@@ -94,7 +75,7 @@ const itemVariants: Variants = {
   },
 };
 
-export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, onReviewPending }) => {
+export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, isLoading, onReviewPending }) => {
   return (
     <MotionStack
       gap="sm"
@@ -105,18 +86,18 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
       exit="exit"
     >
       <AnimatePresence mode="popLayout">
-        <MotionSection key="members" title="Members" variants={itemVariants}>
+        {/* <MotionSection key="members" title="Members" variants={itemVariants}>
           <ProjectMembersPreview members={MOCK_MEMBERS} />
-        </MotionSection>
+        </MotionSection> */}
 
         <MotionSection key="overview" title="Overview" variants={itemVariants}>
           <ProjectOverview content={summary || MOCK_OVERVIEW} />
         </MotionSection>
 
-        <MotionSection 
-          key="sources" 
-          title="Library" 
-          flex={2} 
+        <MotionSection
+          key="sources"
+          title="Library"
+          flex={2}
           variants={itemVariants}
           rightSection={
             pendingCount > 0 ? (
@@ -142,6 +123,7 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
             initialGroups={groups}
             standaloneSources={standaloneSources}
             activeSourceId={activeSourceId}
+            isLoading={isLoading}
           />
         </MotionSection>
 

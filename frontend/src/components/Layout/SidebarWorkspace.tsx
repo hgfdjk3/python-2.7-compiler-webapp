@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Text } from '@mantine/core';
 import { IconFolder, IconFolderOpen, IconMessage } from '@tabler/icons-react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface ChatItem {
   id: string;
@@ -53,11 +53,13 @@ export const SidebarWorkspace: React.FC<SidebarWorkspaceProps> = ({
       {chats.map((chat) => (
         <NavLink
           key={chat.id}
+          component={Link}
+          to={`/project/${id}/chat/${chat.id}`}
           label={<Text size="xs" c="dimmed" truncate>{chat.name}</Text>}
           leftSection={<IconMessage size={14} stroke={1.5} color="light-dark(var(--mantine-color-zinc-6), var(--mantine-color-zinc-2))" />}
           h={32}
           variant="light"
-          active={location.pathname === `/chat/${chat.id}`}
+          active={location.pathname === `/project/${id}/chat/${chat.id}`}
           style={{ borderRadius: 'var(--mantine-radius-sm)', marginTop: '2px' }}
         />
       ))}

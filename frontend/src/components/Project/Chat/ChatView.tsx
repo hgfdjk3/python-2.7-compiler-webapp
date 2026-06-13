@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Box, Group, Stack, Text, Tooltip, Loader, Center } from '@mantine/core';
 import { AnimatePresence, motion } from 'motion/react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ProjectHeader } from '../ProjectHeader';
 import { ProjectDashboard } from '../ProjectDashboard';
 import { PromptInput } from './PromptInput/PromptInput';
@@ -57,6 +58,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestionData[]>([]);
   const [showClarification, setShowClarification] = useState(false);
 
+  const { chatId } = useParams<{ chatId: string }>();
+  const navigate = useNavigate();
   const [activeThreadId, setActiveThreadId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
   const { mutate, streamedContent, isPending, submitApproval } = useChatStream(activeThreadId, project.id, setMessages);
   const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
@@ -87,6 +90,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
 
   const processSend = useCallback((prompt: string, isAutomation: boolean, messageId: string, timestamp: string) => {
+    if (!chatId) {
+      navigate(`/project/${project.id}/chat/${activeThreadId}`);
+    }
     setMessages((prev) => [...prev, {
       id: messageId,
       role: 'user',
@@ -149,6 +155,31 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const automationBuilderData = useChatStore((state) => state.automationBuilderData);
   const setAutomationBuilderData = useChatStore((state) => state.setAutomationBuilderData);
 
+  // Sync with URL and reset when needed
+  useEffect(() => {
+    if (chatId) {
+      if (chatId !== activeThreadId) {
+        setIsAutomationMode(false);
+        setAutomationBuilderData(null);
+        loadConversationMutation.mutate(chatId);
+      }
+    } else {
+      // Navigated back to project dashboard
+      if (messages.length > 0) {
+        setMessages([]);
+        setQueuedMessages([]);
+        setActiveThreadId(`chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
+        setIsAutomationMode(false);
+        setAutomationBuilderData(null);
+      } else {
+        // Also just make sure automation mode is off for new chats
+        setIsAutomationMode(false);
+        setAutomationBuilderData(null);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId, project.id]);
+
   const [boardHeight, setBoardHeight] = useState(150);
   const [isResizing, setIsResizing] = useState(false);
 
@@ -193,13 +224,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
   });
 
   const handleChatClick = (id: string) => {
-    setIsAutomationMode(false);
-    setAutomationBuilderData(null);
-    loadConversationMutation.mutate(id);
+    navigate(`/project/${project.id}/chat/${id}`);
   };
 
 
-  const showMarkdownResponse = messages.length > 0 || isPending;
+  const isLoadingConversation = loadConversationMutation.isPending;
+  const showMarkdownResponse = messages.length > 0 || isPending || isLoadingConversation || !!chatId;
 
   return (
     <Box p="0" pr="0" pt="0" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }}>
@@ -255,15 +285,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
               transition={{ duration: 0.3, ease: "easeOut" }}
               style={{ height: '100%' }}
             >
-              <ChatConversation
-                messages={messages}
-                streamedContent={streamedContent}
-                isStreaming={isPending || isSubmittingApproval}
-                queuedMessages={queuedMessages}
-                onSubmitAnswer={handleClarificationSubmit}
-                onTriggerClarification={handleTriggerClarification}
-                onSubmitApproval={handleApprovalDecision}
-              />
+              {isLoadingConversation ? (
+                <Center h="100%">
+                  <Loader />
+                </Center>
+              ) : (
+                <ChatConversation
+                  messages={messages}
+                  streamedContent={streamedContent}
+                  isStreaming={isPending || isSubmittingApproval}
+                  queuedMessages={queuedMessages}
+                  onSubmitAnswer={handleClarificationSubmit}
+                  onTriggerClarification={handleTriggerClarification}
+                  onSubmitApproval={handleApprovalDecision}
+                />
+              )}
             </motion.div>
           ) : (
             <motion.div

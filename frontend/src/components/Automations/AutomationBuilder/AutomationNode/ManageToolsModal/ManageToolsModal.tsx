@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Text, Button, Group, Grid, Divider } from '@mantine/core';
+import { Modal, Text, Button, Group, Grid, Divider, Box } from '@mantine/core';
 import { useAgentInfo } from '@/utils/agentUtils';
 import { NodeToolsSection } from './NodeToolsSection';
 import { AvailableToolsSection } from './AvailableToolsSection';
@@ -45,23 +45,24 @@ export const ManageToolsModal: React.FC<ManageToolsModalProps> = ({ opened, onCl
       classNames={{ header: 'nodrag manageSourcesHeader', body: 'nodrag manageSourcesBody' }}
       onMouseDownCapture={(e) => e.stopPropagation()}
     >
-      <Grid grow>
-        <Grid.Col span={5}>
+      <Group justify='center' wrap="nowrap" align='top'>
+        <Box w="100%" h="100%">
+
           <NodeToolsSection
             draftTools={draftTools}
             agents={agents}
             onRemoveTool={handleRemove}
           />
-        </Grid.Col>
+        </Box>
         <Divider orientation="vertical" size="1px" />
-        <Grid.Col span={5}>
+        <Box w="100%" h="100%">
           <AvailableToolsSection
             draftTools={draftTools}
             agents={agents}
             onAddTool={handleAdd}
           />
-        </Grid.Col>
-      </Grid>
+        </Box>
+      </Group>
 
       <Group justify="flex-end" pt="lg" style={{ borderTop: '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))' }}>
         <Button variant="default" onClick={onClose}>

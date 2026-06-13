@@ -39,7 +39,14 @@ class EntityType(str, Enum):
     EVENT = "event"
     CONCEPT = "concept"
     TECHNOLOGY = "technology"
+    SOFTWARE = "software"
+    HARDWARE = "hardware"
     SOURCE = "source"  # a document, URL, file, etc.
+    FILE = "file"
+    DOCUMENT = "document"
+    IP = "ip"
+    COMPANY = "company"
+    COUNTY = "county"
 
 ENTITY_TYPES_DESC = ", ".join([f"'{t.value}'" for t in EntityType])
 
@@ -143,10 +150,10 @@ def _build_library_context(project_id: str) -> str:
     summary = (project.get("library_summary") or {}).get("current_text", "")
     entities = LibraryService.get_entities(project_id)
 
-    # Only include approved entities (the LLM shouldn't see pending proposals)
-    approved = [e for e in entities if e.get("status") == "approved" and e.get("current_state")]
+    # Include all entities that have a current state (even if they have pending proposals)
+    existing = [e for e in entities if e.get("current_state")]
 
-    if not approved and not summary:
+    if not existing and not summary:
         return "The library is currently empty."
 
     lines = []
@@ -154,7 +161,7 @@ def _build_library_context(project_id: str) -> str:
         lines.append(f"SUMMARY: {summary}")
     lines.append("")
 
-    for ent in approved:
+    for ent in existing:
         state = ent["current_state"]
         conns = state.get("related_entities", [])
         conn_str = ""
@@ -183,7 +190,8 @@ RULES:
 - To UPDATE an existing entity set its 'existing_id'. To CREATE a new one leave 'existing_id' null.
 - Connections can reference existing entity IDs OR the exact title of a new entity from this same batch.
 - Keep descriptions concise — capture facts, not fluff.
-- Only update the summary if meaningful new context warrants it. Set summary_update to null otherwise.
+- Only update the summary if meaningful new context warrants it. If you do, provide a COMPLETE, REWRITTEN summary that merges the OLD summary with the NEW knowledge, not too long!.
+- DO NOT output conversational text, patches, or commentary (e.g. 'No new entities...', 'However new content...'). Only output the final, polished summary. Set summary_update to null if no update is needed.
 - Do NOT duplicate entities that already exist unchanged.
 
 CURRENT LIBRARY:

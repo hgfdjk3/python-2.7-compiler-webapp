@@ -46,7 +46,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
   const [activeSourceId, setActiveSourceId] = React.useState<string | null>(null);
   const [manualOpenTrigger, setManualOpenTrigger] = React.useState(0);
 
-  const { data: entities } = useLibraryEntities(project.id);
+  const { data: entities, isLoading } = useLibraryEntities(project.id);
 
   const currentHasPendingSummary = project.library_summary?.status === 'pending' || project.library_summary?.proposed_text != null;
   const currentPendingEntities = (entities || []).filter(e => e.status === 'pending' || e.proposed_state != null);
@@ -55,7 +55,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
   React.useEffect(() => {
     if (entities) {
       const entitySources: Source[] = entities
-        .filter((entity) => entity.status === 'approved' && entity.current_state != null)
+        .filter((entity) => entity.current_state != null)
         .map((entity) => {
           const state = entity.current_state;
           return {
@@ -216,6 +216,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
             activeSourceId={activeSourceId}
             summary={project.library_summary?.current_text}
             pendingCount={pendingCount}
+            isLoading={isLoading || !entities}
             onReviewPending={() => setManualOpenTrigger(prev => prev + 1)}
           />
         </Box>

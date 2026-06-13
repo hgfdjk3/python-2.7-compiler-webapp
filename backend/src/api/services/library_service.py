@@ -17,7 +17,7 @@ class LibraryService:
     def get_library_stats(project_id: str) -> Dict[str, Any]:
         coll = get_collection("library_entities")
         pipeline = [
-            {"$match": {"project_id": project_id, "status": "approved"}},
+            {"$match": {"project_id": project_id, "current_state": {"$ne": None}}},
             {"$group": {"_id": "$type", "count": {"$sum": 1}}}
         ]
         results = list(coll.aggregate(pipeline))
@@ -39,7 +39,7 @@ class LibraryService:
         coll = get_collection("library_entities")
         db_query = {
             "project_id": project_id,
-            "status": "approved",
+            "current_state": {"$ne": None},
             "$or": [
                 {"current_state.title": {"$regex": query, "$options": "i"}},
                 {"current_state.description": {"$regex": query, "$options": "i"}}
