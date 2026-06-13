@@ -10,7 +10,7 @@ from src.api.services.projects_service import ProjectsService
 from src.api.services.library_service import LibraryService
 
 from src.services.harness.extraction.schemas import TriageResult, ExtractionResult
-from src.services.harness.extraction.prompts import TRIAGE_SYSTEM, REACT_AGENT_SYSTEM
+from src.services.harness.extraction.prompts import TRIAGE_SYSTEM, CHUNK_EXTRACTION_SYSTEM
 from src.services.harness.extraction.tools import get_extraction_tools
 
 logger = logging.getLogger("extractor_agent")
@@ -134,11 +134,7 @@ class ExtractorAgent:
     def __init__(self, model_name: str = "qwen/qwen3.5-122b-a10b", temperature: float = 0.0):
         self.llm = _create_llm(model_name, temperature)
 
-    async def _run_extraction_pipeline(self, project_id: str, content: str) -> ExtractionResult:
-        # 1. Setup ReAct Agent
-        tools = get_extraction_tools(project_id)
-        react_agent = create_react_agent(self.llm, tools=tools)
-        
+    async def _run_extraction_pipeline(self, project_id: str, chunks: List[str]) -> ExtractionResult:
         project = ProjectsService.get_project(project_id)
         if project:
             project_name = project.get("name", "Unknown Project")
@@ -166,44 +162,51 @@ class ExtractorAgent:
             f"Library Statistics:\n{stats_str}"
         )
         
-        system_message = REACT_AGENT_SYSTEM.format(
-            library_summary=full_summary
-        )
+        # Build existing context
+        existing_entities = LibraryService.get_entities(project_id)
+        existing_context_lines = []
+        for m in existing_entities:
+            state = m.get("current_state") or m.get("proposed_state") or {}
+            title = state.get("title", "Unknown")
+            desc = state.get("description", "")
+            existing_context_lines.append(f"ID: {m['id']} | Title: {title} | Type: {m.get('type')} | Desc: {desc[:150]}")
+            
+        existing_context = "\n".join(existing_context_lines) if existing_context_lines else "No existing entities found."
+        full_context = f"{full_summary}\n\nEXISTING ENTITIES:\n{existing_context}"
         
-        messages = [
-            SystemMessage(content=system_message),
-            HumanMessage(content=f"NEW CONTENT:\n{content}")
-        ]
-        
-        # Run the agent to research and draft
-        agent_state = await react_agent.ainvoke({"messages": messages})
-        final_agent_message = agent_state["messages"][-1].content
-        
-        # 2. Parse final output into strict JSON schema
-        parser_system = (
-            "You are the Knowledge Architect for this project. Your job is to read the research report "
-            "provided by the extraction agent and carefully translate its findings into formal, structured library entities.\n\n"
-            "You must understand the overarching purpose of the project and ensure the entities and connections "
-            "you output perfectly align with the project's domain and existing architecture.\n\n"
-            "--- PROJECT CONTEXT ---\n"
-            f"{full_summary}\n\n"
-            "--- INSTRUCTIONS ---\n"
-            "1. Output valid data adhering strictly to the provided JSON schema.\n"
-            "2. Ensure entity types and connection types are semantically correct and meaningful for this specific project.\n"
-            "3. If the research report concluded no changes are needed, return empty lists."
+        system_message = CHUNK_EXTRACTION_SYSTEM.format(
+            library_summary=full_context
         )
         
         structured_llm = self.llm.with_structured_output(ExtractionResult)
-        final_result = await structured_llm.ainvoke([
-            SystemMessage(content=parser_system),
-            HumanMessage(content=f"RESEARCH REPORT:\n{final_agent_message}")
-        ])
         
-        return final_result
+        import asyncio
+        sem = asyncio.Semaphore(3)
+        
+        async def process_chunk(chunk: str):
+            async with sem:
+                return await structured_llm.ainvoke([
+                    SystemMessage(content=system_message),
+                    HumanMessage(content=f"NEW CONTENT CHUNK:\n{chunk}")
+                ])
+
+        tasks = [process_chunk(chunk) for chunk in chunks]
+        results: List[ExtractionResult] = await asyncio.gather(*tasks)
+        
+        final_entities = []
+        summary_updates = []
+        
+        for res in results:
+            if res.summary_update:
+                summary_updates.append(res.summary_update)
+            final_entities.extend(res.entities)
+            
+        final_summary = "\n\n".join(summary_updates) if summary_updates else None
+        return ExtractionResult(summary_update=final_summary, entities=final_entities)
 
     async def preprocess(self, project_id: str, content: str, source_tool: str = "user_upload") -> Dict[str, Any]:
         logger.info(f"[preprocess] project={project_id}, content_len={len(content)}")
-        result = await self._run_extraction_pipeline(project_id, content)
+        result = await self._run_extraction_pipeline(project_id, [content])
         return _apply_extraction(project_id, result, source_tool)
 
     def postprocess(self, project_id: str, conversation_messages: List[Dict[str, str]], source_tool: str = "conversation") -> Dict[str, Any]:
@@ -215,18 +218,45 @@ class ExtractorAgent:
         for msg in conversation_messages:
             role = msg.get("type") or msg.get("role", "")
             text = msg.get("content", "")
-            if role in ("user", "assistant", "human", "ai") and text:
-                prefix = "USER" if role in ("user", "human") else "ASSISTANT"
-                if len(text) > 2000:
-                    text = text[:2000] + "... [truncated]"
-                transcript_lines.append(f"{prefix}: {text}")
+            
+            if role in ("user", "human"):
+                if text:
+                    transcript_lines.append(f"U: {text[:2000]}")
+            elif role in ("assistant", "ai"):
+                if text:
+                    transcript_lines.append(f"A: {text[:2000]}")
+                if "tool_calls" in msg:
+                    for tc in msg["tool_calls"]:
+                        name = tc.get("name", "")
+                        args = tc.get("args", {})
+                        transcript_lines.append(f"[{name}]({args})")
+            elif role == "tool":
+                if text:
+                    # Keep tool outputs even shorter for token efficiency
+                    transcript_lines.append(f"-> {str(text)[:1000]}")
 
         if not transcript_lines:
             logger.info(f"[postprocess] project={project_id} — empty transcript, skipping")
             return {"skipped": True, "reason": "empty_transcript"}
 
-        transcript = "\n".join(transcript_lines)
+        # Chunk the transcript lines
+        chunks = []
+        current_chunk = []
+        current_len = 0
+        for line in transcript_lines:
+            if current_len + len(line) > 60000 and current_chunk:
+                chunks.append("\n".join(current_chunk))
+                current_chunk = []
+                current_len = 0
+            current_chunk.append(line)
+            current_len += len(line) + 1
+            
+        if current_chunk:
+            chunks.append("\n".join(current_chunk))
 
-        logger.info(f"[postprocess] project={project_id}, running extraction on {len(transcript)} chars (skipping triage for explicit manual request)")
-        result = await self._run_extraction_pipeline(project_id, transcript)
+        transcript_for_print = "\n".join(transcript_lines)
+        print(f"\n--- EXTRACTOR TRANSCRIPT ---\n{transcript_for_print}\n----------------------------\n")
+
+        logger.info(f"[postprocess] project={project_id}, running extraction pipeline on {len(chunks)} chunks")
+        result = await self._run_extraction_pipeline(project_id, chunks)
         return _apply_extraction(project_id, result, source_tool)

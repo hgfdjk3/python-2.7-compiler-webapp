@@ -6,12 +6,19 @@ export interface ChatMeta {
   name: string;
 }
 
+export interface LibrarySummaryState {
+  status: string;
+  current_text: string;
+  proposed_text: string | null;
+}
+
 export interface Project {
   id: string;
   name: string;
   chats: ChatMeta[];
   automation_ids: string[];
   members?: string[];
+  library_summary?: LibrarySummaryState;
 }
 
 export const getProjects = async (): Promise<Project[]> => {

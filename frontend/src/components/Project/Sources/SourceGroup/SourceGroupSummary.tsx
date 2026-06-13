@@ -1,30 +1,23 @@
 import React from 'react';
 import { Group, ThemeIcon, Text } from '@mantine/core';
-import { IconPdf, IconFileText, IconExternalLink } from '@tabler/icons-react';
 import { Source, SourceType } from '../types';
 import { AnimatePresence } from 'motion/react';
 import AnimatedItem from '@/components/animations/AnimatedItem';
+import { getSourceStyle } from '../sourceTypes';
 
 interface SourceGroupSummaryProps {
   sources: Source[];
 }
 
-const getIcon = (type: SourceType) => {
-  switch (type) {
-    case 'pdf': return <IconPdf size={14} />;
-    case 'doc': return <IconFileText size={14} />;
-    case 'link': return <IconExternalLink size={14} />;
-    default: return <IconFileText size={14} />;
-  }
-};
-
 const MAX_VISIBLE_SOURCE_GROUPS = 3;
 
 export const SourceGroupSummary: React.FC<SourceGroupSummaryProps> = ({ sources = [] }) => {
   const summary = (sources || []).reduce((acc, source) => {
-    const key = `${source.type}-${source.color || 'gray'}`;
+    const styleInfo = getSourceStyle(source.type);
+    const color = source.color || styleInfo.color;
+    const key = `${source.type}-${color}`;
     if (!acc[key]) {
-      acc[key] = { type: source.type, color: source.color || 'gray', count: 0 };
+      acc[key] = { type: source.type, color, count: 0 };
     }
     acc[key].count++;
     return acc;
@@ -42,7 +35,9 @@ export const SourceGroupSummary: React.FC<SourceGroupSummaryProps> = ({ sources 
         <AnimatedItem key="sources">
           <Text size="xs" c="dimmed">Sources:</Text>
         </AnimatedItem>
-        {summaryItems.slice(0, MAX_VISIBLE_SOURCE_GROUPS).map((item, index) => (
+        {summaryItems.slice(0, MAX_VISIBLE_SOURCE_GROUPS).map((item, index) => {
+          const styleInfo = getSourceStyle(item.type);
+          return (
           <AnimatedItem key={`${item.type}-${item.color}-${index}`} delay={index * 0.1}>
             <Group gap="3px" wrap="nowrap">
               <Text size="xs" c="dimmed" fw={600}>
@@ -54,11 +49,11 @@ export const SourceGroupSummary: React.FC<SourceGroupSummaryProps> = ({ sources 
                 size="xs"
                 radius="xs"
               >
-                {getIcon(item.type)}
+                {styleInfo.icon}
               </ThemeIcon>
             </Group>
           </AnimatedItem>
-        ))}
+        )})}
         {summaryItems.length > MAX_VISIBLE_SOURCE_GROUPS && (
           <AnimatedItem key="more">
             <Text size="xs" c="dimmed">

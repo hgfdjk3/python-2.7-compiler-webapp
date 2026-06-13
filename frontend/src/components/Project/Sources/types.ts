@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type SourceType = 'pdf' | 'doc' | 'txt' | 'link';
+export type SourceType = 'pdf' | 'doc' | 'txt' | 'link' | string;
 
 export interface Source {
   id: string;

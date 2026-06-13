@@ -7,6 +7,8 @@ import { ProjectConfigPanel } from '../Layout/ProjectConfigPanel';
 import { Source, SourceGroup } from './Sources/types';
 import { SourceCard } from './Sources/SourceCard/SourceCard';
 import { Project } from '../../api/projects';
+import { useLibraryEntities } from '../../api/library';
+import { ProjectApprovalModal } from './Approval/ProjectApprovalModal';
 
 const MOCK_GROUPS: SourceGroup[] = [
   {
@@ -37,11 +39,28 @@ interface ProjectPanelProps {
 }
 
 export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
-  const [groups, setGroups] = React.useState<SourceGroup[]>(MOCK_GROUPS);
-  const [sources, setSources] = React.useState<Source[]>(MOCK_STANDALONE);
+  const [groups, setGroups] = React.useState<SourceGroup[]>([]);
+  const [sources, setSources] = React.useState<Source[]>([]);
   const [globalSources, setGlobalSources] = React.useState<Source[]>(MOCK_GLOBAL_SOURCES);
   const [attachedSourceIds, setAttachedSourceIds] = React.useState<string[]>([]);
   const [activeSourceId, setActiveSourceId] = React.useState<string | null>(null);
+
+  const { data: entities } = useLibraryEntities(project.id);
+
+  React.useEffect(() => {
+    if (entities) {
+      const entitySources: Source[] = entities.map((entity) => {
+        const state = entity.current_state || entity.proposed_state;
+        return {
+          id: entity.id,
+          title: state?.title || 'Unknown Entity',
+          description: state?.description || '',
+          type: entity.type,
+        };
+      });
+      setSources(entitySources);
+    }
+  }, [entities]);
 
   const handleDragStart = (event: any) => {
     setActiveSourceId(String(event.operation.source?.id ?? ''));
@@ -188,6 +207,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
             groups={groups}
             standaloneSources={sources}
             activeSourceId={activeSourceId}
+            summary={project.library_summary?.current_text}
           />
         </Box>
       </Group>
@@ -202,6 +222,8 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
           ) : null}
         </DragOverlay>
       </Portal>
+      
+      <ProjectApprovalModal project={project} entities={entities} />
     </DragDropProvider>
   );
 };

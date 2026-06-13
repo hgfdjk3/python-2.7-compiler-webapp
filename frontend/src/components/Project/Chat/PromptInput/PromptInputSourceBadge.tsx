@@ -2,6 +2,7 @@ import React from 'react';
 import { ActionIcon, Button, ButtonProps } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import { Source } from '../../Sources/types';
+import { getSourceStyle } from '../../Sources/sourceTypes';
 
 export interface PromptInputSourceBadgeProps extends Omit<ButtonProps, 'rightSection'> {
   source: Source;
@@ -15,19 +16,23 @@ export const PromptInputSourceBadge: React.FC<PromptInputSourceBadgeProps> = ({
   onClick,
   ...buttonProps
 }) => {
+  const styleInfo = getSourceStyle(source.type);
+  const color = source.color || styleInfo.color;
+
   return (
     <Button
       size="xs"
       variant="light"
-      color={source.color || 'gray'}
+      color={color}
       radius="xl"
       onClick={onClick}
+      leftSection={styleInfo.icon}
       rightSection={
         onDetachSource ? (
           <ActionIcon
             size="xs"
             variant="subtle"
-            color={source.color || 'gray'}
+            color={color}
             radius="xl"
             onClick={(e) => {
               e.stopPropagation();

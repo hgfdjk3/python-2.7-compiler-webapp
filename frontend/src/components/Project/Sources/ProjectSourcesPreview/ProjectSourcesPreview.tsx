@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Stack, Box, Text, ScrollArea } from '@mantine/core';
 import { DragOverlay, useDroppable } from '@dnd-kit/react';
 import { Source, SourceGroup as SourceGroupType } from '../types';
 import { SourceGroup } from '../SourceGroup/SourceGroup';
 import { SourceCard } from '../SourceCard/SourceCard';
+import { SourceFilter } from '../SourceFilter/SourceFilter';
+import { useSourceFilter } from '../useSourceFilter';
 import './ProjectSourcesPreview.css';
 
 interface ProjectSourcesPreviewProps {
@@ -46,33 +48,50 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
 }) => {
   const { ref: standaloneRef, isDropTarget: isOverStandalone } = useDroppable({ id: 'standalone-zone' });
 
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    availableTypes,
+    filteredGroups,
+    filteredSources,
+  } = useSourceFilter(sources, groups);
+
   return (
-    <Box className="previewRoot">
-      <ScrollArea h={300} scrollbars="y" scrollbarSize={3} offsetScrollbars>
+    <Box className="previewRoot" h={300} style={{ display: 'flex', flexDirection: 'column' }}>
+      <SourceFilter
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedTypes={selectedTypes}
+        onTypesChange={setSelectedTypes}
+        availableTypes={availableTypes}
+      />
+      <ScrollArea type="always" scrollbars="y" scrollbarSize={3} offsetScrollbars style={{ flex: 1 }}>
         <Stack gap="5">
-          {groups.map((group) => (
+          {filteredGroups.map((group) => (
             <SourceGroup key={group.id} group={group} isDraggingAny={isDraggingAny} />
           ))}
         </Stack>
 
-        {sources.length > 0 && (
+        {filteredSources.length > 0 && (
           <Box
             ref={standaloneRef}
             className="standaloneSourcesContainer"
             data-over={isOverStandalone || undefined}
           >
             <Stack gap="5">
-              {sources.map((source) => (
+              {filteredSources.map((source) => (
                 <SourceCard key={source.id} source={source} isDraggingAny={isDraggingAny} />
               ))}
             </Stack>
           </Box>
         )}
 
-        {groups.length === 0 && sources.length === 0 && (
+        {filteredGroups.length === 0 && filteredSources.length === 0 && (
           <Box className="emptyPreviewState">
             <Text size="xs" c="dimmed">
-              No sources or groups yet
+              No matching sources
             </Text>
           </Box>
         )}

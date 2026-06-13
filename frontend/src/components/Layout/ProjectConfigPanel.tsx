@@ -43,6 +43,7 @@ interface ProjectConfigPanelProps {
   groups: SourceGroup[];
   standaloneSources: Source[];
   activeSourceId: string | null;
+  summary?: string;
 }
 
 const MotionSection = motion.create(ProjectConfigSection);
@@ -90,7 +91,7 @@ const itemVariants: Variants = {
   },
 };
 
-export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId }) => {
+export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary }) => {
   return (
     <MotionStack
       gap="sm"
@@ -106,10 +107,10 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
         </MotionSection>
 
         <MotionSection key="overview" title="Overview" variants={itemVariants}>
-          <ProjectOverview content={MOCK_OVERVIEW} />
+          <ProjectOverview content={summary || MOCK_OVERVIEW} />
         </MotionSection>
 
-        <MotionSection key="sources" title="Sources" flex={2} variants={itemVariants}>
+        <MotionSection key="sources" title="Library" flex={2} variants={itemVariants}>
           <ProjectSourcesPreview
             initialGroups={groups}
             standaloneSources={standaloneSources}

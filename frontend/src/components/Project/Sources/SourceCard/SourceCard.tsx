@@ -19,14 +19,7 @@ interface SourceCardProps {
   onClick?: () => void;
 }
 
-const getIcon = (type: SourceType) => {
-  switch (type) {
-    case 'pdf': return <IconPdf size={16} />;
-    case 'doc': return <IconFileText size={16} />;
-    case 'link': return <IconExternalLink size={16} />;
-    default: return <IconFileText size={16} />;
-  }
-};
+import { getSourceStyle } from '../sourceTypes';
 
 export const SourceCard: React.FC<SourceCardProps> = ({
   source,
@@ -47,6 +40,9 @@ export const SourceCard: React.FC<SourceCardProps> = ({
 
   const mergedRef = useMergedRef(dragRef, hoverRef);
 
+  const styleInfo = getSourceStyle(source.type);
+  const cardColor = source.color || styleInfo.color;
+
   return (
     <Card
       ref={mergedRef}
@@ -60,7 +56,7 @@ export const SourceCard: React.FC<SourceCardProps> = ({
       shadow={isDragging ? 'md' : 'none'}
       onClick={onClick}
       style={{
-        borderLeft: source.color ? `4px solid var(--mantine-color-${source.color}-6)` : undefined,
+        borderLeft: `4px solid var(--mantine-color-${cardColor}-6)`,
         cursor: onClick ? 'pointer' : undefined,
       }}
     >
@@ -70,8 +66,8 @@ export const SourceCard: React.FC<SourceCardProps> = ({
             <IconGripVertical size={16} color="var(--mantine-color-gray-5)" />
           </Box>
 
-          <ThemeIcon variant="light" color={source.color || 'gray'} size="md">
-            {getIcon(source.type)}
+          <ThemeIcon variant="light" color={cardColor} size="md">
+            {styleInfo.icon}
           </ThemeIcon>
         </Group>
 

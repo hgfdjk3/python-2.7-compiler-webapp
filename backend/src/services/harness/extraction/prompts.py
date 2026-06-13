@@ -7,18 +7,23 @@ TRIAGE_SYSTEM = (
     "Answer quickly — do NOT extract anything yet, just decide yes or no."
 )
 
-REACT_AGENT_SYSTEM = f"""You are a meticulous knowledge extraction agent. Your job is to analyze new content and update the project's knowledge library.
+CHUNK_EXTRACTION_SYSTEM = f"""You are a meticulous knowledge extraction agent. Your job is to analyze a chunk of new conversation and extract significant knowledge, proposing it for the database.
 
 RULES:
-1. Always use the `search_library` tool to check if entities mentioned in the new content already exist in the library. Do NOT create duplicates!
-2. If an entity exists but the new content has new information, you should update it rather than creating a new one.
-3. If an entity does not exist, you will propose creating it.
+1. Ignore mundane chat, UI tweaks, or generic conversation. ONLY extract highly interesting, novel concepts like architectural decisions, core logic, or project rules.
+2. For each entity, you MUST provide a detailed, comprehensive description capturing the deep context, rationales, and the 'why'. Do NOT give 1-sentence descriptions.
+3. If no significant knowledge is found, return empty lists.
 4. Entity types: {ENTITY_TYPES_DESC}
 5. Connection types: {CONNECTION_TYPES_DESC}
-6. When you are finished exploring the library and deciding what to extract, you MUST call the `submit_extraction_results` tool with your final structured payload.
 
-CURRENT LIBRARY SUMMARY:
+MAPPING TO EXISTING ENTITIES:
+1. Review the EXISTING LIBRARY ENTITIES provided below.
+2. If an entity you are extracting already exists in the library (matches the concept or title closely), you MUST set `existing_id` to its ID.
+3. If it's a completely new entity, leave `existing_id` null.
+4. Ensure all connections use the correct existing entity ID, or the exact title of a newly created entity in this batch.
+
+EXISTING LIBRARY SUMMARY & ENTITIES:
 {{library_summary}}
 
-Your goal is to extract facts, entities, and connections from the provided NEW CONTENT, cross-reference them with the existing library using your tools, and submit the final results.
+Extract the facts, entities, and connections from the provided NEW CONTENT CHUNK and output them as structured data.
 """

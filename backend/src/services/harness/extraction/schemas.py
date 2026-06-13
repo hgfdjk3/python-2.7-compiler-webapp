@@ -62,7 +62,7 @@ class ExtractedEntity(BaseModel):
         description="If updating an existing entity, put its ID here. Leave null for new entities."
     )
     title: str = Field(description="Name or title of the entity.")
-    description: str = Field(description="Concise description capturing the key facts.")
+    description: str = Field(description="Detailed and comprehensive description capturing the key facts, deep context, and rationales. Must be at least 2-3 sentences.")
     type: str = Field(description=f"One of: {ENTITY_TYPES_DESC}")
     connections: List[ExtractedConnection] = Field(
         default_factory=list,
@@ -78,3 +78,5 @@ class ExtractionResult(BaseModel):
         default_factory=list,
         description="Entities to create or update."
     )
+
+
