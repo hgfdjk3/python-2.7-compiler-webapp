@@ -5,235 +5,263 @@ import { PointerSensor } from '@dnd-kit/dom';
 import { ChatView } from './Chat/ChatView';
 import { ProjectConfigPanel } from '../Layout/ProjectConfigPanel';
 import { Source, SourceGroup } from './Sources/types';
-import { SourceCard } from './Sources/SourceCard/SourceCard';
 import { Project } from '../../api/projects';
-import { useLibraryEntities } from '../../api/library';
+import { useLibraryEntities, useEditSummary, useEditEntity } from '../../api/library';
 import { ProjectApprovalModal } from './Approval/ProjectApprovalModal';
+import { EditSummaryModal } from './EditSummaryModal';
+import { EditEntityModal } from './Sources/EditEntityModal';
 
 const MOCK_GROUPS: SourceGroup[] = [
-  {
-    id: 'group-1',
-    title: 'Research Papers',
-    description: 'A collection of PDFs about LLMs',
-    sources: [
-      { id: 's1', title: 'Attention is All You Need.pdf', description: 'Transformer architecture paper', type: 'pdf', color: 'red' },
-    ]
-  }
+    {
+        id: 'group-1',
+        title: 'Research Papers',
+        description: 'A collection of PDFs about LLMs',
+        sources: [
+            { id: 's1', title: 'Attention is All You Need.pdf', description: 'Transformer architecture paper', type: 'pdf', color: 'red' },
+        ]
+    }
 ];
 
 const MOCK_STANDALONE: Source[] = [
-  { id: 's2', title: 'Project Specs.txt', description: 'Requirements document', type: 'txt', color: 'blue' },
-  { id: 's3', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'orange' },
-  { id: 's4', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'green' },
+    { id: 's2', title: 'Project Specs.txt', description: 'Requirements document', type: 'txt', color: 'blue' },
+    { id: 's3', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'orange' },
+    { id: 's4', title: 'Design Assets', description: 'Link to Figma', type: 'link', color: 'green' },
 ];
 
 const MOCK_GLOBAL_SOURCES: Source[] = [
-  { id: 'g1', title: 'Company Guidelines.pdf', description: 'Global company policy', type: 'pdf', color: 'red' },
-  { id: 'g2', title: 'API Documentation.txt', description: 'Backend API specs', type: 'txt', color: 'blue' },
-  { id: 'g3', title: 'Brand Assets', description: 'Logos and colors', type: 'link', color: 'orange' },
-  { id: 'g4', title: 'Onboarding.doc', description: 'New hire onboarding', type: 'doc', color: 'green' },
+    { id: 'g1', title: 'Company Guidelines.pdf', description: 'Global company policy', type: 'pdf', color: 'red' },
+    { id: 'g2', title: 'API Documentation.txt', description: 'Backend API specs', type: 'txt', color: 'blue' },
+    { id: 'g3', title: 'Brand Assets', description: 'Logos and colors', type: 'link', color: 'orange' },
+    { id: 'g4', title: 'Onboarding.doc', description: 'New hire onboarding', type: 'doc', color: 'green' },
 ];
 
 interface ProjectPanelProps {
-  project: Project;
+    project: Project;
 }
 
 export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
-  const [groups, setGroups] = React.useState<SourceGroup[]>([]);
-  const [sources, setSources] = React.useState<Source[]>([]);
-  const [globalSources, setGlobalSources] = React.useState<Source[]>(MOCK_GLOBAL_SOURCES);
-  const [attachedSourceIds, setAttachedSourceIds] = React.useState<string[]>([]);
-  const [activeSourceId, setActiveSourceId] = React.useState<string | null>(null);
-  const [manualOpenTrigger, setManualOpenTrigger] = React.useState(0);
+    const [groups, setGroups] = React.useState<SourceGroup[]>([]);
+    const [sources, setSources] = React.useState<Source[]>([]);
+    const [globalSources, setGlobalSources] = React.useState<Source[]>(MOCK_GLOBAL_SOURCES);
+    const [attachedSourceIds, setAttachedSourceIds] = React.useState<string[]>([]);
+    const [activeSourceId, setActiveSourceId] = React.useState<string | null>(null);
+    const [manualOpenTrigger, setManualOpenTrigger] = React.useState(0);
+    const [isEditSummaryOpen, setIsEditSummaryOpen] = React.useState(false);
+    const [editingEntityId, setEditingEntityId] = React.useState<string | null>(null);
 
-  const { data: entities, isLoading } = useLibraryEntities(project.id);
+    const { data: entities, isLoading } = useLibraryEntities(project.id);
+    const editSummaryMutation = useEditSummary(project.id);
+    const editEntityMutation = useEditEntity(project.id);
 
-  const currentHasPendingSummary = project.library_summary?.status === 'pending' || project.library_summary?.proposed_text != null;
-  const currentPendingEntities = (entities || []).filter(e => e.status === 'pending' || e.proposed_state != null);
-  const pendingCount = (currentHasPendingSummary ? 1 : 0) + currentPendingEntities.length;
+    const currentHasPendingSummary = project.library_summary?.status === 'pending' || project.library_summary?.proposed_text != null;
+    const currentPendingEntities = (entities || []).filter(e => e.status === 'pending' || e.proposed_state != null);
+    const pendingCount = (currentHasPendingSummary ? 1 : 0) + currentPendingEntities.length;
 
-  React.useEffect(() => {
-    if (entities) {
-      const entitySources: Source[] = entities
-        .filter((entity) => entity.current_state != null)
-        .map((entity) => {
-          const state = entity.current_state;
-          return {
-            id: entity.id,
-            title: state?.title || 'Unknown Entity',
-            description: state?.description || '',
-            type: entity.type,
-          };
-        });
-      setSources(entitySources);
-    }
-  }, [entities]);
+    React.useEffect(() => {
+        if (entities) {
+            const entitySources: Source[] = entities
+                .filter((entity) => entity.current_state != null)
+                .map((entity) => {
+                    const state = entity.current_state;
+                    return {
+                        id: entity.id,
+                        title: state?.title || 'Unknown Entity',
+                        description: state?.description || '',
+                        type: entity.type,
+                    };
+                });
+            setSources(entitySources);
+        }
+    }, [entities]);
 
-  const handleDragStart = (event: any) => {
-    setActiveSourceId(String(event.operation.source?.id ?? ''));
-  };
+    const handleDragStart = (event: any) => {
+        setActiveSourceId(String(event.operation.source?.id ?? ''));
+    };
 
-  const handleDragEnd = (event: any) => {
-    const { source: active, target: over } = event.operation;
-    setActiveSourceId(null);
-    if (event.canceled) return;
+    const handleDragEnd = (event: any) => {
+        const { source: active, target: over } = event.operation;
+        setActiveSourceId(null);
+        if (event.canceled) return;
 
-    const sourceId = String(active?.id ?? '');
-    const targetId = over?.id ? String(over.id) : null;
+        const sourceId = String(active?.id ?? '');
+        const targetId = over?.id ? String(over.id) : null;
 
-    if (!sourceId) {
-      return;
-    }
+        if (!sourceId) {
+            return;
+        }
 
-    if (targetId === 'prompt-input-sources') {
-      setAttachedSourceIds((current) => (current.includes(sourceId) ? current : [...current, sourceId]));
-      return;
-    }
+        if (targetId === 'prompt-input-sources') {
+            setAttachedSourceIds((current) => (current.includes(sourceId) ? current : [...current, sourceId]));
+            return;
+        }
 
-    if (targetId === 'project-sources-zone') {
-      const globalSource = globalSources.find(s => s.id === sourceId);
-      if (globalSource) {
-        setGlobalSources(current => current.filter(s => s.id !== sourceId));
-        setSources(current => [...current, globalSource]);
-        return;
-      }
-    }
-
-    if (!targetId || targetId === 'standalone-zone' || targetId === 'project-sources-zone') {
-      const sourceInGroup = groups.find((group) => group.sources.some((source) => source.id === sourceId));
-      if (!sourceInGroup) return;
-
-      const movingSource = sourceInGroup.sources.find((source) => source.id === sourceId);
-      if (!movingSource) return;
-
-      setGroups((currentGroups) =>
-        currentGroups.map((group) =>
-          group.id === sourceInGroup.id
-            ? { ...group, sources: group.sources.filter((source) => source.id !== sourceId) }
-            : group
-        )
-      );
-      setSources((currentSources) => [...currentSources, movingSource]);
-      return;
-    }
-
-    const targetGroup = groups.find((group) => String(group.id) === targetId);
-    if (targetGroup) {
-      const sourceInStandalone = sources.find((source) => source.id === sourceId);
-      const sourceInOtherGroup = groups.find((group) => group.sources.some((source) => source.id === sourceId));
-      const movingSource = sourceInStandalone || sourceInOtherGroup?.sources.find((source) => source.id === sourceId);
-
-      if (!movingSource) return;
-
-      if (sourceInStandalone) {
-        setSources((currentSources) => currentSources.filter((source) => source.id !== sourceId));
-        setGroups((currentGroups) =>
-          currentGroups.map((group) =>
-            group.id === targetGroup.id
-              ? { ...group, sources: [...group.sources, movingSource] }
-              : group
-          )
-        );
-        return;
-      }
-
-      if (sourceInOtherGroup && sourceInOtherGroup.id !== targetGroup.id) {
-        setGroups((currentGroups) =>
-          currentGroups.map((group) => {
-            if (group.id === sourceInOtherGroup.id) {
-              return { ...group, sources: group.sources.filter((source) => source.id !== sourceId) };
+        if (targetId === 'project-sources-zone') {
+            const globalSource = globalSources.find(s => s.id === sourceId);
+            if (globalSource) {
+                setGlobalSources(current => current.filter(s => s.id !== sourceId));
+                setSources(current => [...current, globalSource]);
+                return;
             }
-            if (group.id === targetGroup.id) {
-              return { ...group, sources: [...group.sources, movingSource] };
+        }
+
+        if (!targetId || targetId === 'standalone-zone' || targetId === 'project-sources-zone') {
+            const sourceInGroup = groups.find((group) => group.sources.some((source) => source.id === sourceId));
+            if (!sourceInGroup) return;
+
+            const movingSource = sourceInGroup.sources.find((source) => source.id === sourceId);
+            if (!movingSource) return;
+
+            setGroups((currentGroups) =>
+                currentGroups.map((group) =>
+                    group.id === sourceInGroup.id
+                        ? { ...group, sources: group.sources.filter((source) => source.id !== sourceId) }
+                        : group
+                )
+            );
+            setSources((currentSources) => [...currentSources, movingSource]);
+            return;
+        }
+
+        const targetGroup = groups.find((group) => String(group.id) === targetId);
+        if (targetGroup) {
+            const sourceInStandalone = sources.find((source) => source.id === sourceId);
+            const sourceInOtherGroup = groups.find((group) => group.sources.some((source) => source.id === sourceId));
+            const movingSource = sourceInStandalone || sourceInOtherGroup?.sources.find((source) => source.id === sourceId);
+
+            if (!movingSource) return;
+
+            if (sourceInStandalone) {
+                setSources((currentSources) => currentSources.filter((source) => source.id !== sourceId));
+                setGroups((currentGroups) =>
+                    currentGroups.map((group) =>
+                        group.id === targetGroup.id
+                            ? { ...group, sources: [...group.sources, movingSource] }
+                            : group
+                    )
+                );
+                return;
             }
-            return group;
-          })
-        );
-      }
-    } else if (targetId === 'create-group') {
-      const sourceInStandalone = sources.find((source) => source.id === sourceId);
-      const sourceInOtherGroup = groups.find((group) => group.sources.some((source) => source.id === sourceId));
-      const movingSource = sourceInStandalone || sourceInOtherGroup?.sources.find((source) => source.id === sourceId);
 
-      if (!movingSource) return;
+            if (sourceInOtherGroup && sourceInOtherGroup.id !== targetGroup.id) {
+                setGroups((currentGroups) =>
+                    currentGroups.map((group) => {
+                        if (group.id === sourceInOtherGroup.id) {
+                            return { ...group, sources: group.sources.filter((source) => source.id !== sourceId) };
+                        }
+                        if (group.id === targetGroup.id) {
+                            return { ...group, sources: [...group.sources, movingSource] };
+                        }
+                        return group;
+                    })
+                );
+            }
+        } else if (targetId === 'create-group') {
+            const sourceInStandalone = sources.find((source) => source.id === sourceId);
+            const sourceInOtherGroup = groups.find((group) => group.sources.some((source) => source.id === sourceId));
+            const movingSource = sourceInStandalone || sourceInOtherGroup?.sources.find((source) => source.id === sourceId);
 
-      const newGroup: SourceGroup = {
-        id: `group-${Date.now()}`,
-        title: `New Group ${groups.length + 1}`,
-        sources: [movingSource],
-      };
+            if (!movingSource) return;
 
-      if (sourceInStandalone) {
-        setSources((currentSources) => currentSources.filter((source) => source.id !== sourceId));
-      } else if (sourceInOtherGroup) {
-        setGroups((currentGroups) =>
-          currentGroups.map((group) =>
-            group.id === sourceInOtherGroup.id
-              ? { ...group, sources: group.sources.filter((source) => source.id !== sourceId) }
-              : group
-          )
-        );
-      }
+            const newGroup: SourceGroup = {
+                id: `group-${Date.now()}`,
+                title: `New Group ${groups.length + 1}`,
+                sources: [movingSource],
+            };
 
-      setGroups((currentGroups) => [...currentGroups, newGroup]);
-    }
-  };
+            if (sourceInStandalone) {
+                setSources((currentSources) => currentSources.filter((source) => source.id !== sourceId));
+            } else if (sourceInOtherGroup) {
+                setGroups((currentGroups) =>
+                    currentGroups.map((group) =>
+                        group.id === sourceInOtherGroup.id
+                            ? { ...group, sources: group.sources.filter((source) => source.id !== sourceId) }
+                            : group
+                    )
+                );
+            }
 
-  const allSources = [...sources, ...groups.flatMap((group) => group.sources), ...globalSources];
+            setGroups((currentGroups) => [...currentGroups, newGroup]);
+        }
+    };
 
-  const handleAddGlobalToProject = (sourceIds: string[]) => {
-    const sourcesToMove = globalSources.filter(s => sourceIds.includes(s.id));
-    setSources(current => [...current, ...sourcesToMove]);
-    setGlobalSources(current => current.filter(s => !sourceIds.includes(s.id)));
-  };
+    const allSources = [...sources, ...groups.flatMap((group) => group.sources), ...globalSources];
 
-  const activeSource = allSources.find(s => s.id === activeSourceId);
+    const handleAddGlobalToProject = (sourceIds: string[]) => {
+        const sourcesToMove = globalSources.filter(s => sourceIds.includes(s.id));
+        setSources(current => [...current, ...sourcesToMove]);
+        setGlobalSources(current => current.filter(s => !sourceIds.includes(s.id)));
+    };
 
-  return (
-    <DragDropProvider sensors={[PointerSensor]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <Group h="100%" align="stretch" wrap="nowrap" gap="xs" p="0">
-        <Box style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <ChatView
-            project={project}
-            sources={allSources}
-            standaloneSources={sources}
-            globalSources={globalSources}
-            groups={groups}
-            attachedSourceIds={attachedSourceIds}
-            onDetachSource={(sourceId) => setAttachedSourceIds((current) => current.filter((id) => id !== sourceId))}
-            onToggleSource={(sourceId) => setAttachedSourceIds((current) =>
-              current.includes(sourceId)
-                ? current.filter((id) => id !== sourceId)
-                : [...current, sourceId]
-            )}
-            onAddGlobalToProject={handleAddGlobalToProject}
-          />
-        </Box>
-        <Box w={{ base: 100, xs: 100, sm: 0, md: 260, lg: 380 }} pb="xs">
-          <ProjectConfigPanel
-            groups={groups}
-            standaloneSources={sources}
-            activeSourceId={activeSourceId}
-            summary={project.library_summary?.current_text}
-            pendingCount={pendingCount}
-            isLoading={isLoading || !entities}
-            onReviewPending={() => setManualOpenTrigger(prev => prev + 1)}
-          />
-        </Box>
-      </Group>
+    const activeSource = allSources.find(s => s.id === activeSourceId);
 
-      <Portal>
-        <DragOverlay dropAnimation={null} style={{ zIndex: 9999 }}>
-          {activeSource ? (
-            <SourceCard
-              source={activeSource}
-              isOverlay
+    return (
+        <DragDropProvider sensors={[PointerSensor]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <Group h="100%" align="stretch" wrap="nowrap" gap="xs" p="0">
+                <Box style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <ChatView
+                        project={project}
+                        sources={allSources}
+                        standaloneSources={sources}
+                        globalSources={globalSources}
+                        groups={groups}
+                        attachedSourceIds={attachedSourceIds}
+                        onDetachSource={(sourceId) => setAttachedSourceIds((current) => current.filter((id) => id !== sourceId))}
+                        onToggleSource={(sourceId) => setAttachedSourceIds((current) =>
+                            current.includes(sourceId)
+                                ? current.filter((id) => id !== sourceId)
+                                : [...current, sourceId]
+                        )}
+                        onAddGlobalToProject={handleAddGlobalToProject}
+                    />
+                </Box>
+                <Box w={{ base: 100, xs: 100, sm: 0, md: 260, lg: 380 }} pb="xs">
+                    <ProjectConfigPanel
+                        groups={groups}
+                        standaloneSources={sources}
+                        activeSourceId={activeSourceId}
+                        summary={project.library_summary?.current_text}
+                        pendingCount={pendingCount}
+                        isLoading={isLoading || !entities}
+                        onReviewPending={() => setManualOpenTrigger(prev => prev + 1)}
+                        onEditSummary={() => setIsEditSummaryOpen(true)}
+                        onEditSource={setEditingEntityId}
+                    />
+                </Box>
+            </Group>
+
+            <Portal>
+                <DragOverlay dropAnimation={null} style={{ zIndex: 9999 }}>
+                    {activeSource ? (
+                        <SourceCard
+                            source={activeSource}
+                            isOverlay
+                        />
+                    ) : null}
+                </DragOverlay>
+            </Portal>
+
+            <ProjectApprovalModal project={project} entities={entities} manualOpenTrigger={manualOpenTrigger} />
+
+            <EditSummaryModal
+                opened={isEditSummaryOpen}
+                onClose={() => setIsEditSummaryOpen(false)}
+                initialSummary={project.library_summary?.current_text || ''}
+                onSave={async (newSummary) => {
+                    await editSummaryMutation.mutateAsync(newSummary);
+                }}
+                isLoading={editSummaryMutation.isPending}
             />
-          ) : null}
-        </DragOverlay>
-      </Portal>
-      
-      <ProjectApprovalModal project={project} entities={entities} manualOpenTrigger={manualOpenTrigger} />
-    </DragDropProvider>
-  );
+
+            <EditEntityModal
+                opened={editingEntityId !== null}
+                onClose={() => setEditingEntityId(null)}
+                entity={entities?.find((e) => e.id === editingEntityId) || null}
+                onSave={async (id, data) => {
+                    await editEntityMutation.mutateAsync({ entityId: id, data });
+                    setEditingEntityId(null);
+                }}
+                isLoading={editEntityMutation.isPending}
+            />
+        </DragDropProvider>
+    );
 };

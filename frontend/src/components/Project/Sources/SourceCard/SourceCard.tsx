@@ -9,92 +9,92 @@ import { SourceCardMenu } from './SourceCardMenu';
 import './SourceCard.css';
 
 interface SourceCardProps {
-  source: Source;
-  isOverlay?: boolean;
-  isDraggingAny?: boolean;
-  onRemove?: (id: string) => void;
-  onGoToSource?: (id: string) => void;
-  onRename?: (id: string) => void;
-  selected?: boolean;
-  onClick?: () => void;
+    source: Source;
+    isOverlay?: boolean;
+    isDraggingAny?: boolean;
+    onRemove?: (id: string) => void;
+    onGoToSource?: (id: string) => void;
+    onRename?: (id: string) => void;
+    selected?: boolean;
+    onClick?: () => void;
 }
 
 import { getSourceStyle } from '../sourceTypes';
 
 export const SourceCard: React.FC<SourceCardProps> = ({
-  source,
-  isOverlay,
-  isDraggingAny,
-  onRemove,
-  onGoToSource,
-  onRename,
-  selected,
-  onClick,
+    source,
+    isOverlay,
+    isDraggingAny,
+    onRemove,
+    onGoToSource,
+    onRename,
+    selected,
+    onClick,
 }) => {
-  const { hovered, ref: hoverRef } = useHover();
-  const { ref: dragRef, handleRef, isDragging } = useDraggable({
-    id: source.id,
-    data: source,
-    disabled: isOverlay,
-  });
+    const { hovered, ref: hoverRef } = useHover();
+    const { ref: dragRef, handleRef, isDragging } = useDraggable({
+        id: source.id,
+        data: source,
+        disabled: isOverlay,
+    });
 
-  const mergedRef = useMergedRef(dragRef, hoverRef);
+    const mergedRef = useMergedRef(dragRef, hoverRef);
 
-  const styleInfo = getSourceStyle(source.type);
-  const cardColor = source.color || styleInfo.color;
+    const styleInfo = getSourceStyle(source.type);
+    const cardColor = source.color || styleInfo.color;
 
-  return (
-    <Card
-      ref={mergedRef}
-      withBorder
-      p="xs"
-      pl="5"
-      radius="sm"
-      className={`sourceCardRoot ${selected ? 'selected' : ''}`}
-      data-dragging={isDragging || undefined}
-      data-dragging-any={isDraggingAny || undefined}
-      shadow={isDragging ? 'md' : 'none'}
-      onClick={onClick}
-      style={{
-        borderLeft: `4px solid var(--mantine-color-${cardColor}-6)`,
-        cursor: onClick ? 'pointer' : undefined,
-      }}
-    >
-      <Group wrap="nowrap" gap="xs">
-        <Group wrap="nowrap" gap="5">
-          <Box ref={handleRef} className="dragHandle">
-            <IconGripVertical size={16} color="var(--mantine-color-gray-5)" />
-          </Box>
+    return (
+        <Card
+            ref={mergedRef}
+            withBorder
+            p="xs"
+            pl="5"
+            radius="sm"
+            className={`sourceCardRoot ${selected ? 'selected' : ''}`}
+            data-dragging={isDragging || undefined}
+            data-dragging-any={isDraggingAny || undefined}
+            shadow={isDragging ? 'md' : 'none'}
+            onClick={onClick}
+            style={{
+                borderLeft: `4px solid var(--mantine-color-${cardColor}-6)`,
+                cursor: onClick ? 'pointer' : undefined,
+            }}
+        >
+            <Group wrap="nowrap" gap="xs">
+                <Group wrap="nowrap" gap="5">
+                    <Box ref={handleRef} className="dragHandle">
+                        <IconGripVertical size={16} color="var(--mantine-color-gray-5)" />
+                    </Box>
 
-          <ThemeIcon variant="light" color={cardColor} size="md">
-            {styleInfo.icon}
-          </ThemeIcon>
-        </Group>
+                    <ThemeIcon variant="light" color={cardColor} size="md">
+                        {styleInfo.icon}
+                    </ThemeIcon>
+                </Group>
 
-        <Box className="sourceCardInfo">
-          <Text size="xs" fw={500} truncate>
-            {source.title}
-          </Text>
-          <Text size="10px" c="dimmed" truncate>
-            {source.description}
-          </Text>
-        </Box>
+                <Box className="sourceCardInfo">
+                    <Text size="xs" fw={500} truncate>
+                        {source.title}
+                    </Text>
+                    <Text size="10px" c="dimmed" truncate>
+                        {source.description}
+                    </Text>
+                </Box>
 
-        {!isOverlay && !selected && (
-          <SourceCardMenu
-            visible={hovered || isDragging}
-            onGoToSource={() => onGoToSource?.(source.id)}
-            onRemove={() => onRemove?.(source.id)}
-            onRename={() => onRename?.(source.id)}
-          />
-        )}
+                {!isOverlay && !selected && (
+                    <SourceCardMenu
+                        visible={hovered || isDragging}
+                        onGoToSource={() => onGoToSource?.(source.id)}
+                        onRemove={() => onRemove?.(source.id)}
+                        onRename={() => onRename?.(source.id)}
+                    />
+                )}
 
-        {selected && (
-          <Box className="selectedCheck">
-            <IconCheck size={14} stroke={3} />
-          </Box>
-        )}
-      </Group>
-    </Card>
-  );
+                {selected && (
+                    <Box className="selectedCheck">
+                        <IconCheck size={14} stroke={3} />
+                    </Box>
+                )}
+            </Group>
+        </Card>
+    );
 };

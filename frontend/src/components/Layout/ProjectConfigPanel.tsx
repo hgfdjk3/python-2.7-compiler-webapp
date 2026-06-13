@@ -1,13 +1,13 @@
 import React from 'react';
-import { Box, Stack, Button } from '@mantine/core';
+import { Box, Stack, Button, ActionIcon } from '@mantine/core';
 import { AnimatePresence, motion, Variants } from 'motion/react';
 import { ProjectConfigSection } from '../Project/ProjectConfigSection';
 import { KnowledgeGraphPreview } from '../Project/KnowledgeGraph/KnowledgeGraphPreview';
 import { ProjectMembersPreview } from '../Project/ProjectMembersPreview';
 import { ProjectOverview } from '../Project/ProjectOverview';
-import { ProjectSourcesPreview } from '../Project/Sources/ProjectSourcesPreview/ProjectSourcesPreview';
 import { Source, SourceGroup } from '../Project/Sources/types';
-import { IconGitPullRequest } from '@tabler/icons-react';
+import { IconGitPullRequest, IconEdit } from '@tabler/icons-react';
+import { ProjectSourcesPreview } from '../Project/Sources/ProjectSourcesPreview/ProjectSourcesPreview';
 
 const MOCK_MEMBERS = [
   { id: '1', name: 'Ran', initials: 'R' },
@@ -28,6 +28,8 @@ interface ProjectConfigPanelProps {
   pendingCount?: number;
   isLoading?: boolean;
   onReviewPending?: () => void;
+  onEditSummary?: () => void;
+  onEditSource?: (id: string) => void;
 }
 
 const MotionSection = motion.create(ProjectConfigSection);
@@ -75,7 +77,7 @@ const itemVariants: Variants = {
   },
 };
 
-export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, isLoading, onReviewPending }) => {
+export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, isLoading, onReviewPending, onEditSummary, onEditSource }) => {
   return (
     <MotionStack
       gap="sm"
@@ -90,8 +92,17 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
           <ProjectMembersPreview members={MOCK_MEMBERS} />
         </MotionSection> */}
 
-        <MotionSection key="overview" title="Overview" variants={itemVariants}>
-          <ProjectOverview content={summary || MOCK_OVERVIEW} />
+        <MotionSection
+          key="overview"
+          title="Overview"
+          variants={itemVariants}
+          rightSection={
+            <ActionIcon variant="subtle" color="gray" size="sm" onClick={onEditSummary}>
+              <IconEdit size={16} stroke={1.5} />
+            </ActionIcon>
+          }
+        >
+          <ProjectOverview content={summary || "No project overview was created"} />
         </MotionSection>
 
         <MotionSection
@@ -124,6 +135,7 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
             standaloneSources={standaloneSources}
             activeSourceId={activeSourceId}
             isLoading={isLoading}
+            onEditSource={onEditSource}
           />
         </MotionSection>
 

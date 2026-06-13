@@ -31,3 +31,10 @@ class LibrarySummaryState(BaseModel):
 
 class ProposeSummaryRequest(BaseModel):
     proposed_text: str
+
+class EditSummaryRequest(BaseModel):
+    current_text: str
+
+class EditEntityRequest(BaseModel):
+    type: Optional[str] = None
+    current_state: EntityState

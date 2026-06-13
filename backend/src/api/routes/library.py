@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Request
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
-from src.api.schemas.library import Entity, ProposeEntityRequest, ProposeSummaryRequest, LibrarySummaryState
+from src.api.schemas.library import Entity, ProposeEntityRequest, ProposeSummaryRequest, EditSummaryRequest, LibrarySummaryState, EditEntityRequest
 from src.api.services.library_service import LibraryService
 from src.api.services.projects_service import ProjectsService
 from src.api.dependencies.auth import get_current_user
@@ -86,6 +86,28 @@ async def propose_entity_change(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.put("/entities/{entity_id}", response_model=Entity)
+async def edit_entity(
+    project_id: str,
+    entity_id: str,
+    request: EditEntityRequest,
+    username: str = Depends(get_current_user)
+):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    try:
+        updated = LibraryService.edit_entity(
+            project_id=project_id,
+            entity_id=entity_id,
+            entity_type=request.type,
+            current_state=request.current_state.model_dump() if request.current_state else None
+        )
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.post("/entities/{entity_id}/approve")
 async def approve_entity_proposal(project_id: str, entity_id: str, username: str = Depends(get_current_user)):
     project = ProjectsService.get_project(project_id)
@@ -121,6 +143,17 @@ async def propose_summary_change(project_id: str, request: ProposeSummaryRequest
     ProjectsService.update_project(project_id, {"library_summary": summary})
     return {"message": "Summary change proposed", "library_summary": summary}
 
+@router.put("/summary/edit")
+async def edit_summary(project_id: str, request: EditSummaryRequest, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    summary = project.get("library_summary", {})
+    summary["current_text"] = request.current_text
+    
+    ProjectsService.update_project(project_id, {"library_summary": summary})
+    return {"message": "Summary updated", "library_summary": summary}
 @router.post("/summary/approve")
 async def approve_summary_change(project_id: str, username: str = Depends(get_current_user)):
     project = ProjectsService.get_project(project_id)

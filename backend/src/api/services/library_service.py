@@ -96,11 +96,32 @@ class LibraryService:
             return new_entity
 
     @staticmethod
+    def edit_entity(
+        project_id: str,
+        entity_id: str,
+        entity_type: Optional[str] = None,
+        current_state: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        coll = get_collection("library_entities")
+        existing = coll.find_one({"_id": entity_id, "project_id": project_id})
+        if not existing:
+            raise ValueError("Entity not found")
+            
+        if current_state:
+            existing["current_state"] = current_state
+        if entity_type:
+            existing["type"] = entity_type
+            
+        coll.replace_one({"_id": entity_id}, existing)
+        existing["id"] = existing.pop("_id")
+        return existing
+
+    @staticmethod
     def approve_proposal(entity_id: str) -> Optional[Dict[str, Any]]:
         coll = get_collection("library_entities")
         existing = coll.find_one({"_id": entity_id})
         if not existing:
-            return None
+                return None
             
         if existing.get("status") != "pending":
             existing["id"] = existing.pop("_id")

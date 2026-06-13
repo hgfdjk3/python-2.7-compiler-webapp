@@ -44,6 +44,11 @@ export const rejectEntityProposal = async (projectId: string, entityId: string):
   return response.data;
 };
 
+export const editEntity = async (projectId: string, entityId: string, data: { type?: string; current_state: EntityState }): Promise<Entity> => {
+  const response = await apiClient.put(`/projects/${projectId}/library/entities/${entityId}`, data);
+  return response.data;
+};
+
 export const proposeSummaryChange = async (projectId: string, proposedText: string): Promise<any> => {
   const response = await apiClient.put(`/projects/${projectId}/library/summary`, { proposed_text: proposedText });
   return response.data;
@@ -56,6 +61,11 @@ export const approveSummaryChange = async (projectId: string): Promise<any> => {
 
 export const rejectSummaryChange = async (projectId: string): Promise<any> => {
   const response = await apiClient.post(`/projects/${projectId}/library/summary/reject`);
+  return response.data;
+};
+
+export const editSummary = async (projectId: string, currentText: string): Promise<any> => {
+  const response = await apiClient.put(`/projects/${projectId}/library/summary/edit`, { current_text: currentText });
   return response.data;
 };
 
@@ -154,6 +164,16 @@ export const useRejectEntityProposal = (projectId: string) => {
   });
 };
 
+export const useEditEntity = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ entityId, data }: { entityId: string; data: { type?: string; current_state: EntityState } }) => editEntity(projectId, entityId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+    },
+  });
+};
+
 export const useProposeSummaryChange = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -209,6 +229,35 @@ export const useRejectSummaryChange = (projectId: string) => {
             ...previousProject.library_summary,
             proposed_text: null,
             status: 'approved'
+          }
+        });
+      }
+      return { previousProject };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousProject) {
+        queryClient.setQueryData(['projects', projectId], context.previousProject);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+    },
+  });
+};
+
+export const useEditSummary = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (currentText: string) => editSummary(projectId, currentText),
+    onMutate: async (currentText) => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId] });
+      const previousProject = queryClient.getQueryData<Project>(['projects', projectId]);
+      if (previousProject && previousProject.library_summary) {
+        queryClient.setQueryData<Project>(['projects', projectId], {
+          ...previousProject,
+          library_summary: {
+            ...previousProject.library_summary,
+            current_text: currentText
           }
         });
       }
