@@ -12,6 +12,7 @@ export const ProjectOverview: React.FC<ProjectOverviewProps> = ({ content, maxHe
       maxHeight={maxHeight}
       showLabel="Show more"
       hideLabel="Hide"
+      mah={400}
       styles={{
         control: {
           fontSize: 'var(--mantine-font-size-xs)',

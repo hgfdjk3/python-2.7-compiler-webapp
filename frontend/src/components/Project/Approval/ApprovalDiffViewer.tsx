@@ -29,7 +29,8 @@ export const ApprovalDiffViewer: React.FC<ApprovalDiffViewerProps> = ({ oldText,
             <Text 
               key={index} 
               span 
-              c="green.5" 
+              bg="var(--mantine-color-green-light)"
+              c="var(--mantine-color-green-light-color)"
             >
               {part.value}
             </Text>
@@ -40,7 +41,8 @@ export const ApprovalDiffViewer: React.FC<ApprovalDiffViewerProps> = ({ oldText,
             <Text 
               key={index} 
               span 
-              c="red.5" 
+              bg="var(--mantine-color-red-light)"
+              c="var(--mantine-color-red-light-color)"
               td="line-through" 
             >
               {part.value}
@@ -48,7 +50,7 @@ export const ApprovalDiffViewer: React.FC<ApprovalDiffViewerProps> = ({ oldText,
           );
         }
         return (
-          <Text key={index} span c="gray.3">
+          <Text key={index} span c="var(--mantine-color-text)">
             {part.value}
           </Text>
         );

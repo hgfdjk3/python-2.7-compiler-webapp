@@ -44,20 +44,27 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
   const [globalSources, setGlobalSources] = React.useState<Source[]>(MOCK_GLOBAL_SOURCES);
   const [attachedSourceIds, setAttachedSourceIds] = React.useState<string[]>([]);
   const [activeSourceId, setActiveSourceId] = React.useState<string | null>(null);
+  const [manualOpenTrigger, setManualOpenTrigger] = React.useState(0);
 
   const { data: entities } = useLibraryEntities(project.id);
 
+  const currentHasPendingSummary = project.library_summary?.status === 'pending' || project.library_summary?.proposed_text != null;
+  const currentPendingEntities = (entities || []).filter(e => e.status === 'pending' || e.proposed_state != null);
+  const pendingCount = (currentHasPendingSummary ? 1 : 0) + currentPendingEntities.length;
+
   React.useEffect(() => {
     if (entities) {
-      const entitySources: Source[] = entities.map((entity) => {
-        const state = entity.current_state || entity.proposed_state;
-        return {
-          id: entity.id,
-          title: state?.title || 'Unknown Entity',
-          description: state?.description || '',
-          type: entity.type,
-        };
-      });
+      const entitySources: Source[] = entities
+        .filter((entity) => entity.status === 'approved' && entity.current_state != null)
+        .map((entity) => {
+          const state = entity.current_state;
+          return {
+            id: entity.id,
+            title: state?.title || 'Unknown Entity',
+            description: state?.description || '',
+            type: entity.type,
+          };
+        });
       setSources(entitySources);
     }
   }, [entities]);
@@ -208,6 +215,8 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
             standaloneSources={sources}
             activeSourceId={activeSourceId}
             summary={project.library_summary?.current_text}
+            pendingCount={pendingCount}
+            onReviewPending={() => setManualOpenTrigger(prev => prev + 1)}
           />
         </Box>
       </Group>
@@ -223,7 +232,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
         </DragOverlay>
       </Portal>
       
-      <ProjectApprovalModal project={project} entities={entities} />
+      <ProjectApprovalModal project={project} entities={entities} manualOpenTrigger={manualOpenTrigger} />
     </DragDropProvider>
   );
 };

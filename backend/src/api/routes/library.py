@@ -86,7 +86,7 @@ async def propose_entity_change(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/entities/{entity_id}/approve", response_model=Entity)
+@router.post("/entities/{entity_id}/approve")
 async def approve_entity_proposal(project_id: str, entity_id: str, username: str = Depends(get_current_user)):
     project = ProjectsService.get_project(project_id)
     if not project or (username and username not in project.get("members", [])):
@@ -94,10 +94,10 @@ async def approve_entity_proposal(project_id: str, entity_id: str, username: str
         
     updated = LibraryService.approve_proposal(entity_id)
     if not updated:
-        raise HTTPException(status_code=404, detail="Entity not found")
+        return {"deleted": True, "id": entity_id, "status": "already_processed"}
     return updated
 
-@router.post("/entities/{entity_id}/reject", response_model=Entity)
+@router.post("/entities/{entity_id}/reject")
 async def reject_entity_proposal(project_id: str, entity_id: str, username: str = Depends(get_current_user)):
     project = ProjectsService.get_project(project_id)
     if not project or (username and username not in project.get("members", [])):
@@ -105,7 +105,7 @@ async def reject_entity_proposal(project_id: str, entity_id: str, username: str 
         
     updated = LibraryService.reject_proposal(entity_id)
     if not updated:
-        raise HTTPException(status_code=404, detail="Entity not found")
+        return {"deleted": True, "id": entity_id, "status": "already_processed"}
     return updated
 
 @router.put("/summary")
@@ -149,3 +149,48 @@ async def reject_summary_change(project_id: str, username: str = Depends(get_cur
         ProjectsService.update_project(project_id, {"library_summary": summary})
         
     return {"message": "Summary change rejected", "library_summary": summary}
+
+@router.post("/approve-all")
+async def approve_all_changes(project_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    # Approve summary if pending
+    summary = project.get("library_summary", {})
+    if summary.get("status") == "pending":
+        summary["current_text"] = summary.get("proposed_text")
+        summary["proposed_text"] = None
+        summary["status"] = "approved"
+        ProjectsService.update_project(project_id, {"library_summary": summary})
+        
+    # Approve all entities
+    updated_entities = LibraryService.approve_all_proposals(project_id)
+    
+    return {
+        "message": "All pending changes approved", 
+        "summary": summary,
+        "entities_approved": len(updated_entities)
+    }
+
+@router.post("/reject-all")
+async def reject_all_changes(project_id: str, username: str = Depends(get_current_user)):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    # Reject summary if pending
+    summary = project.get("library_summary", {})
+    if summary.get("status") == "pending":
+        summary["proposed_text"] = None
+        summary["status"] = "approved"
+        ProjectsService.update_project(project_id, {"library_summary": summary})
+        
+    # Reject all entities
+    updated_entities = LibraryService.reject_all_proposals(project_id)
+    
+    return {
+        "message": "All pending changes rejected", 
+        "summary": summary,
+        "entities_rejected": len(updated_entities)
+    }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack, Text, Title, Button, Group, Box, Badge } from '@mantine/core';
-import { IconCheck, IconPlayerSkipForward } from '@tabler/icons-react';
+import { IconCheck, IconX, IconPlayerSkipForward } from '@tabler/icons-react';
 import { motion } from 'motion/react';
 
 interface ApprovalStartScreenProps {
@@ -9,6 +9,10 @@ interface ApprovalStartScreenProps {
   updatedEntitiesCount: number;
   onStartReview: () => void;
   onSkip: () => void;
+  onApproveAll?: () => void;
+  onRejectAll?: () => void;
+  isApprovingAll?: boolean;
+  isRejectingAll?: boolean;
 }
 
 export const ApprovalStartScreen: React.FC<ApprovalStartScreenProps> = ({
@@ -17,6 +21,10 @@ export const ApprovalStartScreen: React.FC<ApprovalStartScreenProps> = ({
   updatedEntitiesCount,
   onStartReview,
   onSkip,
+  onApproveAll,
+  onRejectAll,
+  isApprovingAll,
+  isRejectingAll,
 }) => {
   return (
     <motion.div
@@ -56,13 +64,25 @@ export const ApprovalStartScreen: React.FC<ApprovalStartScreenProps> = ({
           )}
         </Stack>
 
-        <Group mt="xl" pt="xl">
+        <Group mt="xl" pt="xl" w="100%" justify="space-between">
           <Button variant="subtle" color="gray" onClick={onSkip} leftSection={<IconPlayerSkipForward size={16} />}>
-            Skip for now
+            Skip
           </Button>
-          <Button onClick={onStartReview} leftSection={<IconCheck size={16} />} size="md">
-            Review Changes
-          </Button>
+          <Group>
+            {onRejectAll && (
+              <Button variant="light" color="red" onClick={onRejectAll} loading={isRejectingAll} disabled={isApprovingAll} leftSection={<IconX size={16} />}>
+                Reject All
+              </Button>
+            )}
+            {onApproveAll && (
+              <Button variant="light" color="green" onClick={onApproveAll} loading={isApprovingAll} disabled={isRejectingAll} leftSection={<IconCheck size={16} />}>
+                Approve All
+              </Button>
+            )}
+            <Button onClick={onStartReview} >
+              Review Singly
+            </Button>
+          </Group>
         </Group>
       </Stack>
     </motion.div>

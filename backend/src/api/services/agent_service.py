@@ -45,10 +45,13 @@ class AgentService:
         enabled_connectors = user_config.get("enabled_connectors", [])
         user_headers = user_config.get("header_values", {})
         
+        project_id = body.project_id
         conversation = ConversationsService.get_conversation(body.thread_id, username)
         always_allowed_tools = []
         if conversation:
             always_allowed_tools = conversation.get("always_allowed_tools", [])
+            if not project_id:
+                project_id = conversation.get("project_id")
 
         
         connectors_db = get_connectors_dict()
@@ -62,7 +65,7 @@ class AgentService:
 
         if body.stream:
             return StreamingResponse(
-                self._stream_generator(body, user_scoped_configs, always_allowed_tools, username),
+                self._stream_generator(body, user_scoped_configs, always_allowed_tools, username, project_id),
                 media_type="text/event-stream"
             )
         else:
@@ -75,13 +78,14 @@ class AgentService:
                     resume_decision=body.resume_decision,
                     mcp_configs=user_scoped_configs,
                     always_allowed_tools=always_allowed_tools,
-                    username=username
+                    username=username,
+                    project_id=project_id
                 )
                 return serialize_state(final_state)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-    async def _stream_generator(self, body: AskRequest, user_scoped_configs: Dict[str, Any], always_allowed_tools: list, username: str):
+    async def _stream_generator(self, body: AskRequest, user_scoped_configs: Dict[str, Any], always_allowed_tools: list, username: str, project_id: str):
         queue = asyncio.Queue()
 
         async def worker():
@@ -94,7 +98,8 @@ class AgentService:
                     resume_decision=body.resume_decision,
                     mcp_configs=user_scoped_configs,
                     always_allowed_tools=always_allowed_tools,
-                    username=username
+                    username=username,
+                    project_id=project_id
                 ):
                     await queue.put(("data", event))
             except GraphInterrupt:

@@ -59,7 +59,7 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
   } = useSourceFilter(sources, groups);
 
   return (
-    <Box className="previewRoot" h={300} style={{ display: 'flex', flexDirection: 'column' }}>
+    <Box className="previewRoot" h={300} pt="5" style={{ display: 'flex', flexDirection: 'column' }}>
       <SourceFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

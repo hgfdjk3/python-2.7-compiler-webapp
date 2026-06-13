@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Box, Group, Text, Button, ActionIcon, Tooltip, Divider } from '@mantine/core';
 import { IconCheck, IconX, IconPlayerSkipForward } from '@tabler/icons-react';
 import { Project } from '../../../api/projects';
-import { Entity, useApproveEntityProposal, useRejectEntityProposal, useApproveSummaryChange, useRejectSummaryChange } from '../../../api/library';
+import { Entity, useApproveEntityProposal, useRejectEntityProposal, useApproveSummaryChange, useRejectSummaryChange, useApproveAllChanges, useRejectAllChanges } from '../../../api/library';
 import { ApprovalStartScreen } from './ApprovalStartScreen';
 import { SummaryApprovalStep } from './SummaryApprovalStep';
 import { EntityApprovalStep } from './EntityApprovalStep';
@@ -11,9 +11,10 @@ import { AnimatePresence } from 'motion/react';
 interface ProjectApprovalModalProps {
   project: Project;
   entities?: Entity[];
+  manualOpenTrigger?: number;
 }
 
-export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ project, entities }) => {
+export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ project, entities, manualOpenTrigger = 0 }) => {
   const [opened, setOpened] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1); // -1 means StartScreen
@@ -32,6 +33,8 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
   const rejectEntityMutation = useRejectEntityProposal(project.id);
   const approveSummaryMutation = useApproveSummaryChange(project.id);
   const rejectSummaryMutation = useRejectSummaryChange(project.id);
+  const approveAllMutation = useApproveAllChanges(project.id);
+  const rejectAllMutation = useRejectAllChanges(project.id);
 
   useEffect(() => {
     if (currentTotalSteps > 0 && !skipped && !opened) {
@@ -44,6 +47,16 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
     }
   }, [currentTotalSteps, skipped, opened]);
 
+  useEffect(() => {
+    if (manualOpenTrigger > 0 && currentTotalSteps > 0) {
+      setOpened(true);
+      setSkipped(false);
+      setCurrentStepIndex(-1);
+      setStaticEntities(currentPendingEntities);
+      setStaticHasSummary(currentHasPendingSummary);
+    }
+  }, [manualOpenTrigger]);
+
   const handleSkipFlow = () => {
     setSkipped(true);
     setOpened(false);
@@ -51,6 +64,18 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
 
   const handleStartReview = () => {
     setCurrentStepIndex(0);
+  };
+
+  const handleApproveAll = async () => {
+    await approveAllMutation.mutateAsync();
+    setOpened(false);
+    setSkipped(true);
+  };
+
+  const handleRejectAll = async () => {
+    await rejectAllMutation.mutateAsync();
+    setOpened(false);
+    setSkipped(true);
   };
 
   const handleNextStep = () => {
@@ -99,6 +124,10 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
         updatedEntitiesCount={updatedEntitiesCount}
         onStartReview={handleStartReview}
         onSkip={handleSkipFlow}
+        onApproveAll={handleApproveAll}
+        onRejectAll={handleRejectAll}
+        isApprovingAll={approveAllMutation.isPending}
+        isRejectingAll={rejectAllMutation.isPending}
       />
     );
   } else if (currentStepIndex < totalSteps) {
@@ -179,29 +208,25 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
 
         {/* Actions */}
         <Group gap="xs">
-          <Tooltip label="Reject">
-            <ActionIcon
-              variant="subtle"
-              color="red"
-              size="lg"
-              onClick={handleReject}
-              loading={isRejectPending}
-            >
-              <IconX size={20} />
-            </ActionIcon>
-          </Tooltip>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            size="lg"
+            onClick={handleReject}
+            loading={isRejectPending}
+          >
+            <IconX size={20} />
+          </ActionIcon>
 
-          <Tooltip label="Approve">
-            <ActionIcon
-              variant="subtle"
-              color="green"
-              size="lg"
-              onClick={handleApprove}
-              loading={isApprovePending}
-            >
-              <IconCheck size={20} />
-            </ActionIcon>
-          </Tooltip>
+          <ActionIcon
+            variant="subtle"
+            color="green"
+            size="lg"
+            onClick={handleApprove}
+            loading={isApprovePending}
+          >
+            <IconCheck size={20} />
+          </ActionIcon>
         </Group>
       </Group>
     );
@@ -216,7 +241,7 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
       closeOnEscape={true}
       size="lg"
       centered
-      p="xs"
+      // p="xs"
       radius="md"
       overlayProps={{
         backgroundOpacity: 0.55,

@@ -143,3 +143,27 @@ class LibraryService:
         coll.replace_one({"_id": entity_id}, existing)
         existing["id"] = existing.pop("_id")
         return existing
+
+    @staticmethod
+    def approve_all_proposals(project_id: str) -> List[Dict[str, Any]]:
+        coll = get_collection("library_entities")
+        pending = coll.find({"project_id": project_id, "status": "pending"})
+        results = []
+        for doc in pending:
+            entity_id = doc["_id"]
+            approved = LibraryService.approve_proposal(entity_id)
+            if approved:
+                results.append(approved)
+        return results
+
+    @staticmethod
+    def reject_all_proposals(project_id: str) -> List[Dict[str, Any]]:
+        coll = get_collection("library_entities")
+        pending = coll.find({"project_id": project_id, "status": "pending"})
+        results = []
+        for doc in pending:
+            entity_id = doc["_id"]
+            rejected = LibraryService.reject_proposal(entity_id)
+            if rejected:
+                results.append(rejected)
+        return results

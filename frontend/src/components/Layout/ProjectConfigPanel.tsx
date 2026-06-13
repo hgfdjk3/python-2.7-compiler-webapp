@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Stack } from '@mantine/core';
+import { Box, Stack, Button } from '@mantine/core';
 import { AnimatePresence, motion, Variants } from 'motion/react';
 import { ProjectConfigSection } from '../Project/ProjectConfigSection';
 import { KnowledgeGraphPreview } from '../Project/KnowledgeGraph/KnowledgeGraphPreview';
@@ -7,6 +7,7 @@ import { ProjectMembersPreview } from '../Project/ProjectMembersPreview';
 import { ProjectOverview } from '../Project/ProjectOverview';
 import { ProjectSourcesPreview } from '../Project/Sources/ProjectSourcesPreview/ProjectSourcesPreview';
 import { Source, SourceGroup } from '../Project/Sources/types';
+import { IconGitPullRequest } from '@tabler/icons-react';
 
 const MOCK_MEMBERS = [
   { id: '1', name: 'Ran', initials: 'R' },
@@ -44,6 +45,8 @@ interface ProjectConfigPanelProps {
   standaloneSources: Source[];
   activeSourceId: string | null;
   summary?: string;
+  pendingCount?: number;
+  onReviewPending?: () => void;
 }
 
 const MotionSection = motion.create(ProjectConfigSection);
@@ -91,7 +94,7 @@ const itemVariants: Variants = {
   },
 };
 
-export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary }) => {
+export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, onReviewPending }) => {
   return (
     <MotionStack
       gap="sm"
@@ -110,7 +113,31 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
           <ProjectOverview content={summary || MOCK_OVERVIEW} />
         </MotionSection>
 
-        <MotionSection key="sources" title="Library" flex={2} variants={itemVariants}>
+        <MotionSection 
+          key="sources" 
+          title="Library" 
+          flex={2} 
+          variants={itemVariants}
+          rightSection={
+            pendingCount > 0 ? (
+              <motion.div
+                animate={{ y: [0, -4, 0, -4, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 60, ease: "easeInOut" }}
+              >
+                <Button
+                  size="compact-xs"
+                  variant="light"
+                  color="gray"
+                  leftSection={<IconGitPullRequest size={14} />}
+                  onClick={onReviewPending}
+                  style={{ textTransform: 'none' }}
+                >
+                  {pendingCount} Pending Changes
+                </Button>
+              </motion.div>
+            ) : null
+          }
+        >
           <ProjectSourcesPreview
             initialGroups={groups}
             standaloneSources={standaloneSources}

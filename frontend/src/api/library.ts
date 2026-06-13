@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
+import { Project } from './projects';
 
 export interface EntityConnection {
   entity_id: string;
@@ -58,6 +59,16 @@ export const rejectSummaryChange = async (projectId: string): Promise<any> => {
   return response.data;
 };
 
+export const approveAllChanges = async (projectId: string): Promise<any> => {
+  const response = await apiClient.post(`/projects/${projectId}/library/approve-all`);
+  return response.data;
+};
+
+export const rejectAllChanges = async (projectId: string): Promise<any> => {
+  const response = await apiClient.post(`/projects/${projectId}/library/reject-all`);
+  return response.data;
+};
+
 // React Query Hooks
 export const useLibraryEntities = (projectId: string) => {
   return useQuery<Entity[]>({
@@ -81,7 +92,30 @@ export const useApproveEntityProposal = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (entityId: string) => approveEntityProposal(projectId, entityId),
-    onSuccess: () => {
+    onMutate: async (entityId) => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+      const previousEntities = queryClient.getQueryData<Entity[]>(['projects', projectId, 'library', 'entities']);
+      
+      if (previousEntities) {
+        queryClient.setQueryData<Entity[]>(['projects', projectId, 'library', 'entities'], old => {
+          if (!old) return old;
+          return old.map(entity => {
+            if (entity.id === entityId) {
+              if (!entity.proposed_state) return null as any;
+              return { ...entity, current_state: entity.proposed_state, proposed_state: null, status: 'approved' };
+            }
+            return entity;
+          }).filter(Boolean);
+        });
+      }
+      return { previousEntities };
+    },
+    onError: (err, newEntity, context) => {
+      if (context?.previousEntities) {
+        queryClient.setQueryData(['projects', projectId, 'library', 'entities'], context.previousEntities);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
     },
   });
@@ -91,7 +125,30 @@ export const useRejectEntityProposal = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (entityId: string) => rejectEntityProposal(projectId, entityId),
-    onSuccess: () => {
+    onMutate: async (entityId) => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+      const previousEntities = queryClient.getQueryData<Entity[]>(['projects', projectId, 'library', 'entities']);
+      
+      if (previousEntities) {
+        queryClient.setQueryData<Entity[]>(['projects', projectId, 'library', 'entities'], old => {
+          if (!old) return old;
+          return old.map(entity => {
+            if (entity.id === entityId) {
+              if (!entity.current_state) return null as any;
+              return { ...entity, proposed_state: null, status: 'approved' };
+            }
+            return entity;
+          }).filter(Boolean);
+        });
+      }
+      return { previousEntities };
+    },
+    onError: (err, newEntity, context) => {
+      if (context?.previousEntities) {
+        queryClient.setQueryData(['projects', projectId, 'library', 'entities'], context.previousEntities);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
     },
   });
@@ -111,7 +168,28 @@ export const useApproveSummaryChange = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => approveSummaryChange(projectId),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId] });
+      const previousProject = queryClient.getQueryData<Project>(['projects', projectId]);
+      if (previousProject && previousProject.library_summary) {
+        queryClient.setQueryData<Project>(['projects', projectId], {
+          ...previousProject,
+          library_summary: {
+            ...previousProject.library_summary,
+            current_text: previousProject.library_summary.proposed_text || previousProject.library_summary.current_text,
+            proposed_text: null,
+            status: 'approved'
+          }
+        });
+      }
+      return { previousProject };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousProject) {
+        queryClient.setQueryData(['projects', projectId], context.previousProject);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
     },
   });
@@ -121,7 +199,120 @@ export const useRejectSummaryChange = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => rejectSummaryChange(projectId),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId] });
+      const previousProject = queryClient.getQueryData<Project>(['projects', projectId]);
+      if (previousProject && previousProject.library_summary) {
+        queryClient.setQueryData<Project>(['projects', projectId], {
+          ...previousProject,
+          library_summary: {
+            ...previousProject.library_summary,
+            proposed_text: null,
+            status: 'approved'
+          }
+        });
+      }
+      return { previousProject };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousProject) {
+        queryClient.setQueryData(['projects', projectId], context.previousProject);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+    },
+  });
+};
+
+export const useApproveAllChanges = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => approveAllChanges(projectId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId] });
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+      
+      const previousProject = queryClient.getQueryData<Project>(['projects', projectId]);
+      const previousEntities = queryClient.getQueryData<Entity[]>(['projects', projectId, 'library', 'entities']);
+      
+      if (previousProject && previousProject.library_summary) {
+        queryClient.setQueryData<Project>(['projects', projectId], {
+          ...previousProject,
+          library_summary: {
+            ...previousProject.library_summary,
+            current_text: previousProject.library_summary.proposed_text || previousProject.library_summary.current_text,
+            proposed_text: null,
+            status: 'approved'
+          }
+        });
+      }
+      
+      if (previousEntities) {
+        queryClient.setQueryData<Entity[]>(['projects', projectId, 'library', 'entities'], old => {
+          if (!old) return old;
+          return old.map(entity => {
+            if (entity.status === 'pending' || entity.proposed_state) {
+              if (!entity.proposed_state) return null as any;
+              return { ...entity, current_state: entity.proposed_state, proposed_state: null, status: 'approved' };
+            }
+            return entity;
+          }).filter(Boolean);
+        });
+      }
+      return { previousProject, previousEntities };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousProject) queryClient.setQueryData(['projects', projectId], context.previousProject);
+      if (context?.previousEntities) queryClient.setQueryData(['projects', projectId, 'library', 'entities'], context.previousEntities);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+    },
+  });
+};
+
+export const useRejectAllChanges = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => rejectAllChanges(projectId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId] });
+      await queryClient.cancelQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+      
+      const previousProject = queryClient.getQueryData<Project>(['projects', projectId]);
+      const previousEntities = queryClient.getQueryData<Entity[]>(['projects', projectId, 'library', 'entities']);
+      
+      if (previousProject && previousProject.library_summary) {
+        queryClient.setQueryData<Project>(['projects', projectId], {
+          ...previousProject,
+          library_summary: {
+            ...previousProject.library_summary,
+            proposed_text: null,
+            status: 'approved'
+          }
+        });
+      }
+      
+      if (previousEntities) {
+        queryClient.setQueryData<Entity[]>(['projects', projectId, 'library', 'entities'], old => {
+          if (!old) return old;
+          return old.map(entity => {
+            if (entity.status === 'pending' || entity.proposed_state) {
+              if (!entity.current_state) return null as any;
+              return { ...entity, proposed_state: null, status: 'approved' };
+            }
+            return entity;
+          }).filter(Boolean);
+        });
+      }
+      return { previousProject, previousEntities };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousProject) queryClient.setQueryData(['projects', projectId], context.previousProject);
+      if (context?.previousEntities) queryClient.setQueryData(['projects', projectId, 'library', 'entities'], context.previousEntities);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
     },
   });

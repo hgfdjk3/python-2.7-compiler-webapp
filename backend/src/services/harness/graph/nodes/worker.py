@@ -5,6 +5,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
 from src.services.harness.graph.state import AgentState
+from src.api.services.projects_service import ProjectsService
 
 logger = logging.getLogger("worker_node")
 
@@ -21,15 +22,24 @@ async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, An
     # Bind tools to the LLM if any are registered
     tools = configurable.get("tools", [])
     if tools:
-        tool_names = [t.name for t in tools]
+        tool_names = [getattr(t, 'name', str(t)) for t in tools]
         logger.info(f"Worker node active. Binding tools: {tool_names}")
         llm = llm.bind_tools(tools)
     else:
         logger.info("Worker node active. No tools bound.")
 
+    project_id = configurable.get("project_id")
+    library_context = ""
+    if project_id:
+        project = ProjectsService.get_project(project_id)
+        if project:
+            summary = (project.get("library_summary") or {}).get("current_text", "")
+            if summary:
+                library_context = f"\n\nProject Context (Library Summary):\n{summary}\n"
+
     # 2. Formulate prompt specifically for this task
-    system_instruction = """You are a specialized worker node.
-Execute the user's request to the best of your ability. Keep your answer concise and focused.
+    system_instruction = f"""You are a specialized worker node.
+Execute the user's request to the best of your ability. Keep your answer concise and focused.{library_context}
 """
     
     messages = [SystemMessage(content=system_instruction)] + list(state.get("messages", []))

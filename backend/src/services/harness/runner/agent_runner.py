@@ -43,7 +43,7 @@ class AgentRunner:
         self.temperature = temperature
         self.model = model
 
-    def _prepare_config(self, thread_id: str, model: Any, tools: list, always_allowed_tools: list = None) -> RunnableConfig:
+    def _prepare_config(self, thread_id: str, model: Any, tools: list, always_allowed_tools: list = None, project_id: Optional[str] = None) -> RunnableConfig:
         """Creates standard LangGraph execution config with context injection."""
         return {
             "configurable": {
@@ -51,6 +51,7 @@ class AgentRunner:
                 "model": model,
                 "tools": tools,
                 "always_allowed_tools": always_allowed_tools or [],
+                "project_id": project_id,
             }
         }
 
@@ -77,6 +78,7 @@ class AgentRunner:
         mcp_configs: Optional[Dict[str, Any]] = None,
         always_allowed_tools: Optional[list] = None,
         username: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Executes the agent workflow and returns the final state.
@@ -85,6 +87,7 @@ class AgentRunner:
         configs_to_use = mcp_configs if mcp_configs is not None else self.mcp_configs
         mcp_manager = MCPClientManager(configs_to_use, username=username)
         tools = await mcp_manager.connect_all()
+            
         try:
             model = self.model or ChatOpenAI(
                 model=self.model_name,
@@ -98,7 +101,7 @@ class AgentRunner:
                     inputs = Command(resume=resume_decision)
                 else:
                     inputs = self._build_inputs(message, system_instruction, automation=automation)
-                config = self._prepare_config(thread_id, model, tools, always_allowed_tools)
+                config = self._prepare_config(thread_id, model, tools, always_allowed_tools, project_id)
                 try:
                     return await graph.ainvoke(inputs, config=config)
                 except GraphInterrupt:
@@ -117,6 +120,7 @@ class AgentRunner:
         mcp_configs: Optional[Dict[str, Any]] = None,
         always_allowed_tools: Optional[list] = None,
         username: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streams real-time events from the execution graph.
@@ -125,6 +129,7 @@ class AgentRunner:
         configs_to_use = mcp_configs if mcp_configs is not None else self.mcp_configs
         mcp_manager = MCPClientManager(configs_to_use, username=username)
         tools = await mcp_manager.connect_all()
+        
         try:
             model = self.model or ChatOpenAI(
                 model=self.model_name,
@@ -138,7 +143,7 @@ class AgentRunner:
                     inputs = Command(resume=resume_decision)
                 else:
                     inputs = self._build_inputs(message, system_instruction, automation=automation)
-                config = self._prepare_config(thread_id, model, tools, always_allowed_tools)
+                config = self._prepare_config(thread_id, model, tools, always_allowed_tools, project_id)
     
                 tokens_streamed = False
                 async for event in graph.astream_events(inputs, config=config, version="v2"):
