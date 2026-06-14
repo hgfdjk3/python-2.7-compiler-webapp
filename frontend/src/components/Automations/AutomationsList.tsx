@@ -82,11 +82,15 @@ export const AutomationsList: React.FC<AutomationsListProps> = ({
 
   const handleSaveSchedule = (config: ScheduleConfig) => {
     if (schedulingAutomationId) {
+      const cleanedConfig = { ...config };
+      if (cleanedConfig.frequency !== 'weeks') {
+        delete cleanedConfig.byDays;
+      }
       updateAutomation.mutate({
         id: schedulingAutomationId,
         automation: {
           automation_type: 'scheduled',
-          schedule_config: config,
+          schedule_config: cleanedConfig,
         }
       });
     }

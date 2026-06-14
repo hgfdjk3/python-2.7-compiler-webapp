@@ -55,14 +55,21 @@ const DayPicker: React.FC<{ value: string[]; onChange: (val: string[]) => void }
 export const ScheduleConfigurator: React.FC<ScheduleConfiguratorProps> = ({ value, onChange }) => {
   const [config, setConfig] = useState<ScheduleConfig>(() => {
     if (!value) return { frequency: 'days', interval: 1, startDate: new Date() };
-    return {
+    const initialConfig = {
       ...value,
       startDate: value.startDate ? new Date(value.startDate) : null
     };
+    if (initialConfig.frequency !== 'weeks') {
+      delete initialConfig.byDays;
+    }
+    return initialConfig;
   });
 
   const updateConfig = (updates: Partial<ScheduleConfig>) => {
     const newConfig = { ...config, ...updates };
+    if (newConfig.frequency !== 'weeks') {
+      delete newConfig.byDays;
+    }
     setConfig(newConfig);
     onChange(newConfig);
   };

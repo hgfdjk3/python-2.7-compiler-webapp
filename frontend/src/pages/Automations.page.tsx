@@ -10,7 +10,7 @@ export const AutomationsPage: React.FC = () => {
   const { automationId } = useParams<{ automationId: string }>();
   const { data: automation, isLoading } = useAutomation(automationId || '');
   const [selectedRun, setSelectedRun] = useState<any>(null);
-  const [builderState, setBuilderState] = useState<{ hasChanges: boolean; scheduleString?: string }>({ hasChanges: false });
+  const [builderState, setBuilderState] = useState<{ hasChanges: boolean; scheduleString?: string; isSaving?: boolean }>({ hasChanges: false });
   const builderRef = React.useRef<AutomationBuilderRef>(null);
 
   const isEditing = !!automationId;
@@ -22,9 +22,9 @@ export const AutomationsPage: React.FC = () => {
         projectId={automation?.project_id}
         hasChanges={builderState.hasChanges}
         scheduleString={builderState.scheduleString}
+        isSaving={builderState.isSaving}
         onRun={() => builderRef.current?.triggerRun()}
         onSave={() => builderRef.current?.triggerSave()}
-        onSchedule={() => builderRef.current?.triggerSchedule()}
       />
       <Flex flex={1} w="100%" p="0" gap="0" style={{ minHeight: 0, overflow: 'hidden' }}>
         {/* Left Sidebar: Runs History */}

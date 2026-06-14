@@ -4,15 +4,16 @@ import { IconSlash, IconPlayerPlay, IconBolt, IconDeviceFloppy, IconBriefcase, I
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../../api/projects';
 import { useProjectAutomations } from '../../api/automations';
+import { AutomationSaveButton } from './AutomationSaveButton';
 
 export interface AutomationSelectHeaderProps {
   automationId?: string;
   projectId?: string;
   hasChanges?: boolean;
   scheduleString?: string;
+  isSaving?: boolean;
   onRun?: () => void;
   onSave?: () => void;
-  onSchedule?: () => void;
 }
 
 export const AutomationSelectHeader: React.FC<AutomationSelectHeaderProps> = ({
@@ -20,9 +21,9 @@ export const AutomationSelectHeader: React.FC<AutomationSelectHeaderProps> = ({
   projectId,
   hasChanges,
   scheduleString,
+  isSaving,
   onRun,
   onSave,
-  onSchedule
 }) => {
   const navigate = useNavigate();
   const { data: projects } = useProjects();
@@ -97,16 +98,15 @@ export const AutomationSelectHeader: React.FC<AutomationSelectHeaderProps> = ({
         )}
 
         <Group gap="xs">
-          <Tooltip label="Schedule Automation">
-            <ActionIcon variant="subtle" color="gray" size="sm" radius="md" onClick={onSchedule} disabled={!automationId}>
-              <IconCalendarEvent size={16} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Save Automation">
-            <ActionIcon variant="subtle" color="gray" size="sm" radius="md" onClick={onSave} disabled={!automationId || !hasChanges}>
-              <IconDeviceFloppy size={16} />
-            </ActionIcon>
-          </Tooltip>
+          {onSave && (
+            <AutomationSaveButton
+              automationId={automationId}
+              onSave={onSave}
+              isSaving={isSaving}
+              hasChanges={hasChanges}
+              variant="icon"
+            />
+          )}
           <Tooltip label="Run Automation">
             <ActionIcon variant="light" color="primary" size="sm" radius="md" onClick={onRun} disabled={!automationId}>
               <IconPlayerPlay size={16} />

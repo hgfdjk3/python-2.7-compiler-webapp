@@ -7,7 +7,6 @@ import { useCreateAutomation, useUpdateAutomation } from '../../../api/automatio
 import { AutomationSaveButton } from '../AutomationSaveButton';
 import { AutomationHistoryButtons } from '../AutomationHistoryButtons';
 import { AutomationActionButton } from '../AutomationActionButton';
-import { ScheduleConfiguratorModal } from '../ScheduleConfiguratorModal';
 import { ScheduleConfig } from '../ScheduleConfigurator';
 import { AutomationBoard } from './AutomationBoard';
 import { AutomationExecutionPanel } from './AutomationExecutionPanel';
@@ -28,13 +27,12 @@ export interface AutomationBuilderProps {
   historicalRun?: any;
   showHeader?: boolean;
   initialScheduleConfig?: any;
-  onStateChange?: (state: { hasChanges: boolean; scheduleString?: string }) => void;
+  onStateChange?: (state: { hasChanges: boolean; scheduleString?: string; isSaving?: boolean }) => void;
 }
 
 export interface AutomationBuilderRef {
   triggerRun: () => void;
   triggerSave: () => void;
-  triggerSchedule: () => void;
 }
 
 const defaultNodes: AppNode[] = [
@@ -111,7 +109,6 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
 }, ref) => {
   const [currentAutomationId, setCurrentAutomationId] = useState<string | undefined>(automationId);
   const [automationName, setAutomationName] = useState(initialName || 'New Automation');
-  const [scheduleModalOpened, setScheduleModalOpened] = useState(false);
   const [panelOpened, setPanelOpened] = useState(false);
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [savedHistoryIndex, setSavedHistoryIndex] = useState(0);
@@ -147,15 +144,18 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
   const [isActive, setIsActive] = useState(!!initialScheduleConfig);
   const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig | undefined>(initialScheduleConfig);
 
+  const isSaving = createAutomation.isPending || updateAutomation.isPending;
+
   React.useEffect(() => {
     if (onStateChange) {
       const hasChanges = historyValue.current !== savedHistoryIndex || JSON.stringify(scheduleConfig) !== JSON.stringify(initialScheduleConfig) || automationName !== (initialName || 'New Automation');
       onStateChange({
         hasChanges,
-        scheduleString: scheduleConfig ? getScheduleString(scheduleConfig) : undefined
+        scheduleString: scheduleConfig ? getScheduleString(scheduleConfig) : undefined,
+        isSaving
       });
     }
-  }, [historyValue.current, savedHistoryIndex, scheduleConfig, initialScheduleConfig, onStateChange, automationName, initialName]);
+  }, [historyValue.current, savedHistoryIndex, scheduleConfig, initialScheduleConfig, onStateChange, automationName, initialName, isSaving]);
 
   const { mutate: runAutomation, nodeExecutionStates: savedExecutionStates, isPending: isRunningSaved } = useAutomationRun(currentAutomationId || '');
   const { mutate: runUnsavedAutomation, nodeExecutionStates: unsavedExecutionStates, isPending: isRunningUnsaved } = useUnsavedAutomationRun();
@@ -174,17 +174,24 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
   useImperativeHandle(ref, () => ({
     triggerRun: () => setIsRunModalOpen(true),
     triggerSave: () => setIsSaveModalOpen(true),
-    triggerSchedule: () => setScheduleModalOpened(true)
   }));
 
-  const handleSaveAutomation = (name: string) => {
+  const handleSaveAutomation = (name: string, isScheduled: boolean, scheduleConfig: ScheduleConfig | undefined) => {
     setAutomationName(name);
+    setIsScheduled(isScheduled);
+    setScheduleConfig(scheduleConfig);
+    
+    const cleanedScheduleConfig = isScheduled && scheduleConfig ? { ...scheduleConfig } : null;
+    if (cleanedScheduleConfig && cleanedScheduleConfig.frequency !== 'weeks') {
+      delete cleanedScheduleConfig.byDays;
+    }
+
     const payload = {
       name,
       nodes: historyState.nodes,
       edges: historyState.edges,
       automation_type: isScheduled ? 'scheduled' : 'manual',
-      schedule_config: scheduleConfig,
+      schedule_config: cleanedScheduleConfig,
       project_id: projectId,
     };
     if (currentAutomationId) {
@@ -301,7 +308,8 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
                 onRedo={() => handlers.forward()}
               />
               <AutomationSaveButton
-                isSaving={createAutomation.isPending || updateAutomation.isPending}
+                automationId={currentAutomationId}
+                isSaving={isSaving}
                 onSave={() => setIsSaveModalOpen(true)}
               />
               <AutomationActionButton
@@ -311,7 +319,6 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
                 schedule={scheduleConfig ? getScheduleString(scheduleConfig) : undefined}
                 onToggle={() => setIsActive(!isActive)}
                 onRun={() => setIsRunModalOpen(true)}
-                onScheduleClick={() => setScheduleModalOpened(true)}
               />
             </Group>
           </Box>
@@ -337,26 +344,15 @@ export const AutomationBuilder = forwardRef<AutomationBuilderRef, AutomationBuil
         </Box>
       </Group>
 
-      <ScheduleConfiguratorModal
-        opened={scheduleModalOpened}
-        onClose={() => setScheduleModalOpened(false)}
-        onSave={(config) => {
-          setScheduleConfig(config);
-          setIsScheduled(true);
-          setIsActive(true);
-          setScheduleModalOpened(false);
-        }}
-        initialConfig={scheduleConfig}
-        automationName="Automation Workflow"
-      />
-
       <SaveAutomationModal
         opened={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}
         onSave={handleSaveAutomation}
         initialName={automationName}
         isSavedBefore={!!currentAutomationId}
-        isSaving={createAutomation.isPending || updateAutomation.isPending}
+        isSaving={isSaving}
+        initialIsScheduled={isScheduled}
+        initialScheduleConfig={scheduleConfig}
         stats={{
           nodesCount: historyState.nodes.length,
           edgesCount: historyState.edges.length,

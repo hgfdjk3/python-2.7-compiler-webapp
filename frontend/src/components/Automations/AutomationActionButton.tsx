@@ -34,6 +34,32 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
   let tooltipLabel = isScheduled ? (isActive ? "Click to disable" : "Click to enable") : "Run manually";
   if (isRunning) tooltipLabel = "Automation is running...";
 
+  const hasDropdown = isScheduled || !!onScheduleClick || !!onRemoveSchedule || !!onEdit || !!onDelete;
+
+  if (!hasDropdown) {
+    return (
+      <Tooltip label={tooltipLabel} withArrow position="top">
+        <Button
+          variant={buttonVariant}
+          color={buttonColor}
+          size="compact-sm"
+          loading={isRunning}
+          loaderProps={{ type: 'dots' }}
+          leftSection={!isRunning && <IconPlayerPlay size={16} />}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isRunning) return;
+            onRun();
+          }}
+          style={{ fontWeight: 500 }}
+          className="action-btn"
+        >
+          {buttonText}
+        </Button>
+      </Tooltip>
+    );
+  }
+
   return (
     <Button.Group className="action-btn">
       <Tooltip label={tooltipLabel} withArrow position="top">
@@ -79,6 +105,15 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
               Activate
             </Menu.Item>
           )}
+          {isActive && isScheduled && (
+            <Menu.Item
+              leftSection={<IconClockCancel size={14} stroke={1.5} />}
+              onClick={onToggle}
+              style={{ padding: '6px 12px', fontSize: 13, height: 32 }}
+            >
+              Deactivate
+            </Menu.Item>
+          )}
           {isScheduled && (
             <Menu.Item
               leftSection={<IconPlayerPlay size={14} stroke={1.5} />}
@@ -88,14 +123,16 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
               Force Run
             </Menu.Item>
           )}
-          <Menu.Item
-            leftSection={<IconClock size={14} stroke={1.5} />}
-            onClick={onScheduleClick}
-            style={{ padding: '6px 12px', fontSize: 13, height: 32 }}
-          >
-            {isScheduled ? 'Edit Schedule' : 'Set Schedule'}
-          </Menu.Item>
-          {isScheduled && (
+          {onScheduleClick && (
+            <Menu.Item
+              leftSection={<IconClock size={14} stroke={1.5} />}
+              onClick={onScheduleClick}
+              style={{ padding: '6px 12px', fontSize: 13, height: 32 }}
+            >
+              {isScheduled ? 'Edit Schedule' : 'Set Schedule'}
+            </Menu.Item>
+          )}
+          {isScheduled && onRemoveSchedule && (
             <Menu.Item
               leftSection={<IconCalendarOff size={14} stroke={1.5} />}
               onClick={onRemoveSchedule}
@@ -104,13 +141,19 @@ export const AutomationActionButton: React.FC<AutomationActionButtonProps> = ({
               Turn to Manual
             </Menu.Item>
           )}
-          <Menu.Item leftSection={<IconEdit size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onEdit}>
-            Edit Details
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Item color="red" leftSection={<IconTrash size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onDelete}>
-            Delete
-          </Menu.Item>
+          {onEdit && (
+            <Menu.Item leftSection={<IconEdit size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onEdit}>
+              Edit Details
+            </Menu.Item>
+          )}
+          {onDelete && (
+            <>
+              <Menu.Divider />
+              <Menu.Item color="red" leftSection={<IconTrash size={14} stroke={1.5} />} style={{ padding: '6px 12px', fontSize: 13, height: 32 }} onClick={onDelete}>
+                Delete
+              </Menu.Item>
+            </>
+          )}
         </Menu.Dropdown>
       </Menu>
     </Button.Group>
