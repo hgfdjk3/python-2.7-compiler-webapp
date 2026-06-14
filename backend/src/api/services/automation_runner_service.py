@@ -50,32 +50,21 @@ class AutomationRunnerService:
         else:
             return await self._run_sync(automation_data, request.input_text, username=username)
 
-    async def _run_sync(self, automation_data: Dict[str, Any], input_text: Optional[str], username: str) -> Dict[str, Any]:
-        mcp_manager = MCPClientManager(self.mcp_configs, username=username)
-        tools = await mcp_manager.connect_all()
+    async def _run_sync(self, automation_data: Dict[str, Any], input_text: Optional[str], username: str, save_run: bool = True) -> Dict[str, Any]:
+        # To guarantee rich nodeExecutionStates trace logs identical to the UI, 
+        # we natively consume the stream generator in the background for sync requests.
+        gen = self._stream_generator(automation_data, input_text, username, save_run=save_run)
+        
         try:
-            model_name = get_default_model()
-            async with get_checkpointer() as checkpointer:
-                graph = create_automation_graph(automation_data, all_tools=tools, checkpointer=checkpointer, model_name=model_name)
+            async for _ in gen:
+                pass  # The generator internally builds nodeExecutionStates and saves to DB in its finally block
                 
-                inputs = {"messages": []}
-                if input_text:
-                    inputs["messages"].append(HumanMessage(content=input_text))
-                else:
-                    inputs["messages"].append(HumanMessage(content="Begin the automation workflow. Follow your system instructions to complete your specific stage, then pass control to the next stage."))
-                    
-                config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-                
-                final_state = await graph.ainvoke(inputs, config=config)
-                
-                return {
-                    "status": "success",
-                    "messages": serialize_state(final_state).get("messages", [])
-                }
+            return {
+                "status": "success",
+                "messages": [] # Detailed logs are saved to the DB via save_automation_run
+            }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        finally:
-            await mcp_manager.disconnect_all()
 
     async def _stream_generator(self, automation_data: Dict[str, Any], input_text: Optional[str], username: str, save_run: bool = True) -> AsyncGenerator[str, None]:
         mcp_manager = MCPClientManager(self.mcp_configs, username=username)

@@ -1,21 +1,33 @@
 from datetime import timedelta
 from temporalio import workflow, activity
 
-from src.api.services.automations_service import get_automation_by_id
-
 
 @activity.defn
 async def execute_langgraph_automation(automation_id: str) -> dict:
-    from src.api.services.automation_runner_service import AutomationRunnerService
-    from src.api.routes.connectors import get_connectors_dict
-    from src.api.schemas.automations import AutomationRunRequest
+    import httpx
+    from src.api.services.automations_service import get_automation_by_id
+    
     automation = get_automation_by_id(automation_id)
-    runner = AutomationRunnerService(mcp_configs=get_connectors_dict())
-    request = AutomationRunRequest(automation_data=None, stream=True)
+    if not automation:
+        return {"status": "error", "error": "Automation not found"}
+        
+    username = automation.get("creator", "system")
+    url = f"http://localhost:8000/api/v1/automations/{automation_id}/run"
+    
     try:
-        response = await runner.run_automation(automation_id, request, username=automation["creator"])
-
-        return {"status": "success", "result": str(response)}
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url, 
+                json={"stream": False},
+                headers={"x-username": username},
+                timeout=600.0
+            )
+            response.raise_for_status()
+            
+            return {
+                "status": "success", 
+                "result": response.json()
+            }
     except Exception as e:
         return {"status": "error", "error": str(e)}
 

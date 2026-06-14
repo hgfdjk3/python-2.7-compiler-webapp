@@ -187,7 +187,7 @@ async def run_unsaved_automation(request: AutomationRunRequest, username: str = 
     return await automation_runner.run_unsaved_automation(request, username)
 
 @router.post("/automations/{automation_id}/run")
-async def run_automation(automation_id: str, request: AutomationRunRequest = None, username: str = Depends(get_current_user), temporal_client: Client = Depends(get_temporal_client)):
+async def run_automation(automation_id: str, request: AutomationRunRequest = None, username: str = Depends(get_current_user)):
     existing = get_automation_by_id(automation_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Automation not found")
@@ -197,19 +197,7 @@ async def run_automation(automation_id: str, request: AutomationRunRequest = Non
         if not has_access:
             raise HTTPException(status_code=403, detail="Not authorized to run this automation")
 
-    run_uuid = str(uuid.uuid4())
-    workflow_id = f"manual-run-{automation_id}-{run_uuid}"
-    
-    try:
-        handle = await temporal_client.start_workflow(
-            "AutomationWorkflow",
-            args=[automation_id],
-            id=workflow_id,
-            task_queue="automations-task-queue",
-        )
-        return {"message": "Workflow started", "run_id": handle.id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start workflow: {str(e)}")
+    return await automation_runner.run_automation(automation_id, request, username)
 
 @router.get("/automations/{automation_id}/runs")
 async def list_automation_runs(automation_id: str, username: str = Depends(get_current_user)):
