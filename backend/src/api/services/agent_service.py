@@ -12,6 +12,7 @@ from src.api.utils.serialization import serialize_state
 from src.api.routes.user import get_user_config_dict
 from src.api.routes.connectors import get_connectors_dict
 from src.api.services.conversations_service import ConversationsService
+from src.api.services.library_service import LibraryService
 
 logger = logging.getLogger("agent_service")
 
@@ -62,6 +63,23 @@ class AgentService:
                 if conn_id in user_headers:
                     conn_copy["header_values"] = user_headers[conn_id]
                 user_scoped_configs[conn_id] = conn_copy
+
+        system_instruction = body.system_instruction or ""
+        if getattr(body, "source_ids", None):
+            sources_text = "The user has provided the following additional sources that he questions about:\n\n"
+            for sid in body.source_ids:
+                entity = LibraryService.get_entity(project_id, sid) if project_id else None
+                if entity and entity.get("current_state"):
+                    state = entity["current_state"]
+                    sources_text += f"--- Source ID: {sid} ---\n"
+                    sources_text += f"Type: {entity.get('type', 'Unknown')}\n"
+                    sources_text += f"Data:\n{json.dumps(state, indent=2)}\n\n"
+            if system_instruction:
+                system_instruction += "\n\n" + sources_text
+            else:
+                system_instruction = sources_text
+
+            body.system_instruction = system_instruction
 
         if body.stream:
             return StreamingResponse(

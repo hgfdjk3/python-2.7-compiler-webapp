@@ -11,3 +11,4 @@ class AskRequest(BaseModel):
     resume_decision: Optional[str] = None
     tool_call_id: Optional[str] = None
     tool_name: Optional[str] = None
+    source_ids: Optional[list[str]] = None

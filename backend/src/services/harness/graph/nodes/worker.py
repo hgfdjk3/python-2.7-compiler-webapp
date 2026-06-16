@@ -37,12 +37,16 @@ async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, An
             if summary:
                 library_context = f"\n\nProject Context (Library Summary):\n{summary}\n"
 
+    extra_instruction = state.get("system_instruction", "")
+    if extra_instruction:
+        extra_instruction = f"\n\nContext & Instructions:\n{extra_instruction}\n"
+
     # 2. Formulate prompt specifically for this task
-    system_instruction = f"""You are a specialized worker node.
-Execute the user's request to the best of your ability. Keep your answer concise and focused.{library_context}
+    system_instruction_str = f"""You are a specialized worker node.
+Execute the user's request to the best of your ability. Keep your answer concise and focused.{library_context}{extra_instruction}
 """
     
-    messages = [SystemMessage(content=system_instruction)] + list(state.get("messages", []))
+    messages = [SystemMessage(content=system_instruction_str)] + list(state.get("messages", []))
     
     # Sanitize history to prevent LLM crashes from old malformed ToolMessages (where content is a list of strings instead of a string)
     import json

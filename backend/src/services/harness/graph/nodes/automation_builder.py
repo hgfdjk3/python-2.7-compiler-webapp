@@ -156,6 +156,10 @@ async def automation_builder_node(state: AgentState, config: RunnableConfig) -> 
     )
 
     system_prompt = AUTOMATION_BUILDER_SYSTEM_PROMPT.format(tools_info=tools_info)
+    extra_instruction = state.get("system_instruction", "")
+    if extra_instruction:
+        system_prompt += f"\n\nContext & Instructions:\n{extra_instruction}\n"
+        
     messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
 
     try:

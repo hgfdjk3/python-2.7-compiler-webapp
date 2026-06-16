@@ -74,6 +74,10 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> Dict[s
         tools_info = "No tools are currently available."
 
     system_prompt = ORCHESTRATOR_SYSTEM_PROMPT.format(tools_info=tools_info)
+    extra_instruction = state.get("system_instruction", "")
+    if extra_instruction:
+        system_prompt += f"\n\nContext & Instructions:\n{extra_instruction}\n"
+        
     messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
     
     # Sanitize history to prevent LLM crashes from old malformed ToolMessages

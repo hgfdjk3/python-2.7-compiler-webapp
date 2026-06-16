@@ -45,7 +45,30 @@ export const ProjectApprovalModal: React.FC<ProjectApprovalModalProps> = ({ proj
     } else if (currentTotalSteps === 0 && opened) {
       setOpened(false);
     }
-  }, [currentTotalSteps, skipped, opened]);
+  }, [currentTotalSteps, skipped, opened, currentHasPendingSummary, currentPendingEntities]);
+
+  useEffect(() => {
+    if (opened) {
+      setStaticEntities(prev => {
+        const existingIds = new Set(prev.map(e => e.id));
+        const newEntities = currentPendingEntities.filter(e => !existingIds.has(e.id));
+        if (newEntities.length === 0) return prev;
+        
+        // Update existing entities to their latest pending state, and append new ones
+        const updatedPrev = prev.map(p => currentPendingEntities.find(c => c.id === p.id) || p);
+        return [...updatedPrev, ...newEntities];
+      });
+
+      if (!staticHasSummary && currentHasPendingSummary) {
+        setStaticHasSummary(true);
+        // If the user was already reviewing an entity, we keep them on it but the summary will be missed.
+        // However, summary is normally generated first, so this ensures it stays first.
+        if (currentStepIndex >= 0) {
+            setCurrentStepIndex(prev => prev + 1);
+        }
+      }
+    }
+  }, [currentPendingEntities, currentHasPendingSummary, opened, staticHasSummary, currentStepIndex]);
 
   useEffect(() => {
     if (manualOpenTrigger > 0 && currentTotalSteps > 0) {

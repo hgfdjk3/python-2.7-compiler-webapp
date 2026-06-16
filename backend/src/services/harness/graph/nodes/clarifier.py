@@ -85,7 +85,12 @@ async def clarifier_node(state: AgentState, config: RunnableConfig) -> Dict[str,
         wait_exponential_jitter=True
     )
 
-    messages = [SystemMessage(content=CLARIFIER_SYSTEM_PROMPT)] + list(state.get("messages", []))
+    system_prompt = CLARIFIER_SYSTEM_PROMPT
+    extra_instruction = state.get("system_instruction", "")
+    if extra_instruction:
+        system_prompt += f"\n\nContext & Instructions:\n{extra_instruction}\n"
+
+    messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
 
     # try:
     result: ClarificationResponse | None = await structured_llm.ainvoke(messages)

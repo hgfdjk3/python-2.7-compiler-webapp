@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import Any, Dict, AsyncGenerator, Optional
 from langchain_core.messages import HumanMessage, AIMessage
 from src.api.utils.serialization import serialize_message
@@ -105,7 +106,7 @@ class AgentRunner:
                 try:
                     return await graph.ainvoke(inputs, config=config)
                 except GraphInterrupt:
-                    state = await graph.aget_state(config)
+                    state = await asyncio.to_thread(graph.get_state, config)
                     return state.values
         finally:
             await mcp_manager.disconnect_all()
@@ -222,10 +223,10 @@ class AgentRunner:
             return "dummy"
         
         async with get_checkpointer() as checkpointer:
-            # Reconstruct empty graph just to use aget_state with checkpointer
+            # Reconstruct empty graph just to use get_state with checkpointer
             graph = create_graph(tools=[dummy_tool], checkpointer=checkpointer)
             config = {"configurable": {"thread_id": thread_id}}
-            snapshot = await graph.aget_state(config)
+            snapshot = await asyncio.to_thread(graph.get_state, config)
             
             if not snapshot or not snapshot.values:
                 return []

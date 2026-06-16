@@ -10,6 +10,7 @@ import { useLibraryEntities, useEditSummary, useEditEntity } from '../../api/lib
 import { ProjectApprovalModal } from './Approval/ProjectApprovalModal';
 import { EditSummaryModal } from './EditSummaryModal';
 import { EditEntityModal } from './Sources/EditEntityModal';
+import { SourceCard } from './Sources/SourceCard/SourceCard';
 
 const MOCK_GROUPS: SourceGroup[] = [
     {

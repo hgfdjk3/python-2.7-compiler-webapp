@@ -26,6 +26,7 @@ export interface QueuedMessage {
   prompt: string;
   isAutomation: boolean;
   timestamp: string;
+  sourceIds?: string[];
 }
 
 interface ChatViewProps {
@@ -89,7 +90,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const [queuedMessages, setQueuedMessages] = useState<QueuedMessage[]>([]);
 
-  const processSend = useCallback((prompt: string, isAutomation: boolean, messageId: string, timestamp: string) => {
+  const processSend = useCallback((prompt: string, isAutomation: boolean, messageId: string, timestamp: string, sourceIds?: string[]) => {
     if (!chatId) {
       navigate(`/project/${project.id}/chat/${activeThreadId}`);
     }
@@ -100,7 +101,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       timestamp
     }]);
     setShowClarification(false);
-    mutate({ prompt, isAutomation }, {
+    mutate({ prompt, isAutomation, sourceIds }, {
       onSuccess: (finalContent) => {
         setMessages((prev) => [...prev, {
           id: (Date.now() + 1).toString(),
@@ -110,7 +111,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         }]);
       }
     });
-  }, [mutate]);
+  }, [mutate, chatId, activeThreadId, project.id, navigate]);
 
   const handleSendMessage = useCallback((value: string, isAutomation: boolean = false) => {
     const now = new Date();
@@ -118,20 +119,20 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const messageId = Date.now().toString();
 
     if (isPending) {
-      setQueuedMessages(prev => [...prev, { id: messageId, prompt: value, isAutomation, timestamp }]);
+      setQueuedMessages(prev => [...prev, { id: messageId, prompt: value, isAutomation, timestamp, sourceIds: attachedSourceIds }]);
       return;
     }
 
-    processSend(value, isAutomation, messageId, timestamp);
-  }, [isPending, processSend]);
+    processSend(value, isAutomation, messageId, timestamp, attachedSourceIds);
+  }, [isPending, processSend, attachedSourceIds]);
 
   useEffect(() => {
     if (!isPending && queuedMessages.length > 0) {
       const nextMsg = queuedMessages[0];
       setQueuedMessages(prev => prev.slice(1));
-      processSend(nextMsg.prompt, nextMsg.isAutomation, nextMsg.id, nextMsg.timestamp);
+      processSend(nextMsg.prompt, nextMsg.isAutomation, nextMsg.id, nextMsg.timestamp, nextMsg.sourceIds);
     }
-  }, [isPending]);
+  }, [isPending, queuedMessages, processSend]);
 
   /** Called from MarkdownResponse / ClarificationBlock to show clarification above the prompt */
   const handleTriggerClarification = useCallback((questions: ClarificationQuestionData[]) => {

@@ -184,8 +184,6 @@ export const EditEntityModal: React.FC<EditEntityModalProps> = ({
                     value={type}
                     onChange={(val) => setType(val || '')}
                     searchable
-                    creatable
-                    getCreateLabel={(query) => `+ Create ${query}`}
                     variant="filled"
                     size="md"
                     radius="md"

@@ -18,6 +18,7 @@ export interface SidebarWorkspaceProps {
 }
 
 export const SidebarWorkspace: React.FC<SidebarWorkspaceProps> = ({
+  id,
   name,
   chats,
   isOpened,

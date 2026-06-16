@@ -9,6 +9,7 @@ export interface AskRequestPayload {
   resume_decision?: string;
   tool_call_id?: string;
   tool_name?: string;
+  source_ids?: string[];
 }
 
 /**
@@ -57,7 +58,8 @@ export const streamAsk = async (
   resumeDecision?: string,
   toolCallId?: string,
   toolName?: string,
-  initialContent: string = ''
+  initialContent: string = '',
+  sourceIds?: string[]
 ): Promise<string> => {
   const response = await apiClient.post<ReadableStream>(
     '/ask',
@@ -70,6 +72,7 @@ export const streamAsk = async (
       resume_decision: resumeDecision,
       tool_call_id: toolCallId,
       tool_name: toolName,
+      source_ids: sourceIds,
     },
     {
       responseType: 'stream',
