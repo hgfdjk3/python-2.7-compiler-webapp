@@ -4,11 +4,13 @@ import { MarkdownResponse } from '../MarkdownResponse';
 import { UserMessage } from '../UserMessage/UserMessage';
 import { ClarificationQuestionData } from '../PromptInput/PromptClarification/PromptClarification';
 import { ThinkingBlock } from '../ThinkingBlock/ThinkingBlock';
+import { Source } from '../../Sources/types';
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp?: string;
+  sources?: Source[];
 }
 
 export interface QueuedMessage {
@@ -16,6 +18,7 @@ export interface QueuedMessage {
   prompt: string;
   isAutomation: boolean;
   timestamp: string;
+  sources?: Source[];
 }
 
 export interface ChatConversationProps {
@@ -43,7 +46,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
         {messages.map((msg) => (
           <Box key={msg.id}>
             {msg.role === 'user' ? (
-              <UserMessage content={msg.content} timestamp={msg.timestamp} />
+              <UserMessage content={msg.content} timestamp={msg.timestamp} sources={msg.sources} />
             ) : (
               <MarkdownResponse
                 content={msg.content}
@@ -70,7 +73,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
           <Box mt="md">
             {queuedMessages.map(msg => (
               <Box key={msg.id} style={{ opacity: 0.5 }}>
-                <UserMessage content={msg.prompt} timestamp={`${msg.timestamp} (Queued)`} />
+                <UserMessage content={msg.prompt} timestamp={`${msg.timestamp} (Queued)`} sources={msg.sources} />
               </Box>
             ))}
           </Box>

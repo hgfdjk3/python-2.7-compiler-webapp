@@ -17,7 +17,6 @@ from src.services.harness.graph.checkpointer import get_checkpointer
 from src.services.harness.runner.stream_handlers import (
     handle_token_stream,
     handle_model_end,
-    handle_orchestrator_end,
     handle_clarifier_end,
     handle_tool_start,
     handle_tool_end,
@@ -47,6 +46,7 @@ class AgentRunner:
     def _prepare_config(self, thread_id: str, model: Any, tools: list, always_allowed_tools: list = None, project_id: Optional[str] = None) -> RunnableConfig:
         """Creates standard LangGraph execution config with context injection."""
         return {
+            "recursion_limit": 150,
             "configurable": {
                 "thread_id": thread_id,
                 "model": model,
@@ -152,14 +152,14 @@ class AgentRunner:
                     event_node = event.get("metadata", {}).get("langgraph_node")
     
                     # ── Worker token stream (real-time chunks) ───────────
-                    if event_type == "on_chat_model_stream" and event_node != "orchestrator":
+                    if event_type == "on_chat_model_stream":
                         result = handle_token_stream(event)
                         if result:
                             tokens_streamed = True
                             yield result
     
                     # ── Non-streamed model completion (fallback) ─────────
-                    elif event_type == "on_chat_model_end" and event_node not in ("orchestrator", "clarifier", "automation_builder") and not tokens_streamed:
+                    elif event_type == "on_chat_model_end" and event_node not in ("clarifier", "automation_builder") and not tokens_streamed:
                         result = handle_model_end(event)
                         if result:
                             yield result
@@ -176,11 +176,7 @@ class AgentRunner:
                         if result:
                             yield result
     
-                    # ── Orchestrator routing metadata (frontend only) ────
-                    elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "orchestrator":
-                        result = handle_orchestrator_end(event)
-                        if result:
-                            yield result
+
     
                     # ── Clarifier output (yield clarifying questions) ────
                     elif event_type in ("on_chain_end", "on_node_end") and event.get("name") == "clarifier":

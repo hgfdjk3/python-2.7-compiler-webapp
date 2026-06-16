@@ -27,6 +27,7 @@ export interface QueuedMessage {
   isAutomation: boolean;
   timestamp: string;
   sourceIds?: string[];
+  sources?: Source[];
 }
 
 interface ChatViewProps {
@@ -94,11 +95,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!chatId) {
       navigate(`/project/${project.id}/chat/${activeThreadId}`);
     }
+    const messageSources = sourceIds ? sources.filter(s => sourceIds.includes(s.id)) : undefined;
     setMessages((prev) => [...prev, {
       id: messageId,
       role: 'user',
       content: prompt,
-      timestamp
+      timestamp,
+      sources: messageSources
     }]);
     setShowClarification(false);
     mutate({ prompt, isAutomation, sourceIds }, {
@@ -111,7 +114,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         }]);
       }
     });
-  }, [mutate, chatId, activeThreadId, project.id, navigate]);
+  }, [mutate, chatId, activeThreadId, project.id, navigate, sources]);
 
   const handleSendMessage = useCallback((value: string, isAutomation: boolean = false) => {
     const now = new Date();
@@ -119,12 +122,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const messageId = Date.now().toString();
 
     if (isPending) {
-      setQueuedMessages(prev => [...prev, { id: messageId, prompt: value, isAutomation, timestamp, sourceIds: attachedSourceIds }]);
+      setQueuedMessages(prev => [...prev, { id: messageId, prompt: value, isAutomation, timestamp, sourceIds: attachedSourceIds, sources: sources.filter(s => attachedSourceIds.includes(s.id)) }]);
       return;
     }
 
     processSend(value, isAutomation, messageId, timestamp, attachedSourceIds);
-  }, [isPending, processSend, attachedSourceIds]);
+  }, [isPending, processSend, attachedSourceIds, sources]);
 
   useEffect(() => {
     if (!isPending && queuedMessages.length > 0) {

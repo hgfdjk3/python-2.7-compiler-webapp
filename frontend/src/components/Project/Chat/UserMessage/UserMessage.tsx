@@ -2,38 +2,45 @@ import React from 'react';
 import { Box, Flex, Stack, Text, Group, ActionIcon } from '@mantine/core';
 import { useHover } from '@mantine/hooks';
 import { IconEdit, IconCopy } from '@tabler/icons-react';
+import { Source } from '../../Sources/types';
+import { MessageSources } from '../../../Common/MessageSources';
 
 export interface UserMessageProps {
   content: string;
   timestamp?: string;
+  sources?: Source[];
 }
 
-export const UserMessage: React.FC<UserMessageProps> = ({ content, timestamp }) => {
+export const UserMessage: React.FC<UserMessageProps> = ({ content, timestamp, sources }) => {
   const { hovered, ref } = useHover();
 
   return (
     <Flex justify="flex-end" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }} pt="xs" mx="auto" ref={ref}>
       <Stack align="flex-end" gap={4} style={{ maxWidth: '85%' }}>
-        <Box
-          px="md"
-          py="sm"
-          style={{
-            backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))',
-            borderRadius: '18px 18px 4px 18px',
-            border: '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))',
-            transition: 'transform 0.1s ease',
-          }}
-        >
-          <Text size="md" c="light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-1))" style={{ lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-            {content}
-          </Text>
-        </Box>
+        <Group wrap="nowrap" align="center" gap="sm">
+          {sources && sources.length > 0 && (
+            <MessageSources sources={sources} />
+          )}
+          <Box
+            px="md"
+            py="sm"
+            style={{
+              backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))',
+              borderRadius: '18px 18px 4px 18px',
+              border: '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))',
+              transition: 'transform 0.1s ease',
+            }}
+          >
+            <Text size="md" c="light-dark(var(--mantine-color-gray-9), var(--mantine-color-gray-1))" style={{ lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+              {content}
+            </Text>
+          </Box>
+        </Group>
 
         <Group
           gap={8}
           h={20}
           px={4}
-
         >
           {timestamp && (
             <Text size="xs" c="dimmed" style={{

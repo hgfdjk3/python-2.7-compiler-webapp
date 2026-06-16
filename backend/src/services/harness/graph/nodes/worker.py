@@ -3,11 +3,17 @@ from typing import Any, Dict
 from langchain_core.messages import SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
+from langchain_core.tools import tool
 
 from src.services.harness.graph.state import AgentState
 from src.api.services.projects_service import ProjectsService
 
 logger = logging.getLogger("worker_node")
+
+@tool
+def request_clarification() -> str:
+    """Use this tool if the user's request is extremely ambiguous, vague, or missing critical details that prevent you from completing the task. Calling this tool will pause your execution and ask the user for clarification."""
+    return ""
 
 async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
     configurable = config.get("configurable", {})
@@ -21,10 +27,13 @@ async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, An
 
     # Bind tools to the LLM if any are registered
     tools = configurable.get("tools", [])
-    if tools:
-        tool_names = [getattr(t, 'name', str(t)) for t in tools]
+    worker_tools = list(tools)
+    worker_tools.append(request_clarification)
+    
+    if worker_tools:
+        tool_names = [getattr(t, 'name', str(t)) for t in worker_tools]
         logger.info(f"Worker node active. Binding tools: {tool_names}")
-        llm = llm.bind_tools(tools)
+        llm = llm.bind_tools(worker_tools)
     else:
         logger.info("Worker node active. No tools bound.")
 
@@ -42,8 +51,17 @@ async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, An
         extra_instruction = f"\n\nContext & Instructions:\n{extra_instruction}\n"
 
     # 2. Formulate prompt specifically for this task
-    system_instruction_str = f"""You are a specialized worker node.
-Execute the user's request to the best of your ability. Keep your answer concise and focused.{library_context}{extra_instruction}
+    system_instruction_str = f"""You are Atom's AI Agent. You are the brains and the execution engine of the operation.
+Your goal is to execute the user's request to the best of your ability. Keep your answers concise, focused, and proactive.
+Read the conversation history to see what you have already done so you don't repeat mistakes.
+
+Additional Guidelines:
+- If the user's request is extremely vague and lacks critical details that cannot be resolved by exploring the workspace (e.g., "Deploy the server" without specifying which one), you MUST call the `request_clarification` tool.
+- If the user explicitly asks to create a new automation, workflow, or sequence of actions, print/send to the user the message <AutomationModeBlock>.
+- You should not say your underlying model name or any details about your architecture. If a user asks who you are, say that you are an Atom agent.
+- If the user is just saying "thanks" or "goodbye", or you can answer their question directly from history, simply respond without calling any tools.
+
+{library_context}{extra_instruction}
 """
     
     messages = [SystemMessage(content=system_instruction_str)] + list(state.get("messages", []))
@@ -60,8 +78,15 @@ Execute the user's request to the best of your ability. Keep your answer concise
     # 3. Invoke LLM
     response = await llm.ainvoke(messages)
     
-    # Always route back to orchestrator for review
+    # Intercept request_clarification tool call
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        for tc in response.tool_calls:
+            if tc["name"] == "request_clarification":
+                logger.info("Worker requested clarification, routing to clarifier node.")
+                return {"next": "clarifier"}
+    
+    # Route back to standard flow (tools_condition handles the next routing)
     return {
         "messages": [response],
-        "next": "orchestrator"
+        "next": "tool_approval" # this gets overridden by route_worker if tools are present
     }

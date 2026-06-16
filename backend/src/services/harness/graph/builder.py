@@ -5,7 +5,6 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 
 from src.services.harness.graph.state import AgentState
-from src.services.harness.graph.nodes.orchestrator import orchestrator_node
 from src.services.harness.graph.nodes.worker import worker_node
 from src.services.harness.graph.nodes.clarifier import clarifier_node
 from src.services.harness.graph.nodes.automation_builder import automation_builder_node
@@ -15,21 +14,22 @@ from src.services.harness.graph.checkpointer import get_checkpointer
 def route_start(state: AgentState):
     """
     Routes from START: if automation flag is set, go directly to automation_builder.
-    Otherwise, follow normal orchestrator flow.
+    Otherwise, follow normal worker flow.
     """
     if state.get("automation"):
         return "automation_builder"
-    return "orchestrator"
+    return "worker"
 
-def route_orchestrator(state: AgentState):
+def route_worker(state: AgentState):
     """
-    Decides the next node to transition to based on the `next` routing field.
+    Routes from worker:
+    - If next is 'clarifier', go to clarifier.
+    - Otherwise use standard tools_condition.
     """
-    route = state.get("next")
-    if route == "worker":
-        return "worker"
-    if route == "clarifier":
+    if state.get("next") == "clarifier":
         return "clarifier"
+    if tools_condition(state) == "tools":
+        return "tool_approval"
     return END
 
 def route_automation_builder(state: AgentState):
@@ -49,7 +49,6 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     workflow = StateGraph(AgentState)
 
     # 2. Add nodes
-    workflow.add_node("orchestrator", orchestrator_node)
     workflow.add_node("worker", worker_node)
     workflow.add_node("clarifier", clarifier_node)
     workflow.add_node("automation_builder", automation_builder_node)
@@ -62,18 +61,11 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     workflow.add_node("tools", tool_node)
 
     # 3. Add flow edges
-    # Conditional start: automation requests bypass orchestrator
+    # Conditional start: automation requests bypass worker
     workflow.add_conditional_edges(
         START,
         route_start,
-        {"automation_builder": "automation_builder", "orchestrator": "orchestrator"}
-    )
-    
-    # Orchestrator decides: worker (do work), clarifier (ask questions), or END (done)
-    workflow.add_conditional_edges(
-        "orchestrator", 
-        route_orchestrator, 
-        {"worker": "worker", "clarifier": "clarifier", END: END}
+        {"automation_builder": "automation_builder", "worker": "worker"}
     )
     
     # Route from automation_builder to clarifier or END
@@ -83,13 +75,13 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
         {"clarifier": "clarifier", END: END}
     )
 
-
-    # From worker, go to tool_approval if worker wants to execute tools, otherwise END
+    # From worker, go to tool_approval if tools are requested, clarifier if clarification needed, or END
     workflow.add_conditional_edges(
         "worker",
-        tools_condition,
+        route_worker,
         {
-            "tools": "tool_approval",
+            "clarifier": "clarifier",
+            "tool_approval": "tool_approval",
             END: END
         }
     )
