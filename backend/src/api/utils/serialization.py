@@ -41,6 +41,9 @@ def serialize_message(msg: Any) -> Dict[str, Any]:
     if hasattr(msg, "id") and msg.id:
         res["id"] = msg.id
         
+    if hasattr(msg, "additional_kwargs") and msg.additional_kwargs:
+        res["additional_kwargs"] = msg.additional_kwargs
+        
     return res
 
 def serialize_state(state: Dict[str, Any]) -> Dict[str, Any]:

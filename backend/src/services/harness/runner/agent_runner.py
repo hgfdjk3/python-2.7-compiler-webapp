@@ -57,11 +57,15 @@ class AgentRunner:
         }
 
     def _build_inputs(
-        self, message: str, system_instruction: Optional[str] = None, automation: bool = False
+        self, message: str, system_instruction: Optional[str] = None, automation: bool = False, source_ids: Optional[list[str]] = None
     ) -> Dict[str, Any]:
         """Builds the initial graph input dict from a user message."""
+        additional_kwargs = {}
+        if source_ids:
+            additional_kwargs["source_ids"] = source_ids
+            
         inputs: Dict[str, Any] = {
-            "messages": [HumanMessage(content=message)],
+            "messages": [HumanMessage(content=message, additional_kwargs=additional_kwargs)],
         }
         if system_instruction:
             inputs["system_instruction"] = system_instruction
@@ -80,6 +84,7 @@ class AgentRunner:
         always_allowed_tools: Optional[list] = None,
         username: Optional[str] = None,
         project_id: Optional[str] = None,
+        source_ids: Optional[list[str]] = None,
     ) -> Dict[str, Any]:
         """
         Executes the agent workflow and returns the final state.
@@ -101,7 +106,7 @@ class AgentRunner:
                 if resume_decision:
                     inputs = Command(resume=resume_decision)
                 else:
-                    inputs = self._build_inputs(message, system_instruction, automation=automation)
+                    inputs = self._build_inputs(message, system_instruction, automation=automation, source_ids=source_ids)
                 config = self._prepare_config(thread_id, model, tools, always_allowed_tools, project_id)
                 try:
                     return await graph.ainvoke(inputs, config=config)
@@ -122,6 +127,7 @@ class AgentRunner:
         always_allowed_tools: Optional[list] = None,
         username: Optional[str] = None,
         project_id: Optional[str] = None,
+        source_ids: Optional[list[str]] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Streams real-time events from the execution graph.
@@ -143,7 +149,7 @@ class AgentRunner:
                 if resume_decision:
                     inputs = Command(resume=resume_decision)
                 else:
-                    inputs = self._build_inputs(message, system_instruction, automation=automation)
+                    inputs = self._build_inputs(message, system_instruction, automation=automation, source_ids=source_ids)
                 config = self._prepare_config(thread_id, model, tools, always_allowed_tools, project_id)
     
                 tokens_streamed = False

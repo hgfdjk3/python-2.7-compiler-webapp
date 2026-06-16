@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, Stack, Text, ActionIcon, Group } from '@mantine/core';
-import { IconDatabase } from '@tabler/icons-react';
+import { IconClipboard, IconDatabase, IconLibrary } from '@tabler/icons-react';
 import { Source } from '../../Project/Sources/types';
 import { PromptInputSourceBadge } from '../../Project/Chat/PromptInput/PromptInputSourceBadge';
 
@@ -25,7 +25,7 @@ export const MessageSources: React.FC<MessageSourcesProps> = ({ sources }) => {
       <Menu.Target>
         <ActionIcon size="md" variant="light" color="gray" radius="xl" style={{ width: 'auto', paddingLeft: 8, paddingRight: 8 }}>
           <Group gap={4} wrap="nowrap">
-            <IconDatabase size={14} stroke={2} />
+            <IconLibrary size={14} stroke={2} />
             <Text size="xs" fw={600} lh={1}>{sources.length}</Text>
           </Group>
         </ActionIcon>

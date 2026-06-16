@@ -11,6 +11,7 @@ export interface ChatMessage {
   content: string;
   timestamp?: string;
   sources?: Source[];
+  sourceIds?: string[];
 }
 
 export interface QueuedMessage {

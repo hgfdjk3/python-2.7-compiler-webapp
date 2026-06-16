@@ -97,7 +97,8 @@ class AgentService:
                     mcp_configs=user_scoped_configs,
                     always_allowed_tools=always_allowed_tools,
                     username=username,
-                    project_id=project_id
+                    project_id=project_id,
+                    source_ids=body.source_ids
                 )
                 return serialize_state(final_state)
             except Exception as e:
@@ -117,7 +118,8 @@ class AgentService:
                     mcp_configs=user_scoped_configs,
                     always_allowed_tools=always_allowed_tools,
                     username=username,
-                    project_id=project_id
+                    project_id=project_id,
+                    source_ids=body.source_ids
                 ):
                     await queue.put(("data", event))
             except GraphInterrupt:

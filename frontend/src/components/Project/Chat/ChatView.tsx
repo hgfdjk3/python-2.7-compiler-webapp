@@ -223,7 +223,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       const collapsedMessages = parseChatHistory(data.history);
 
-      setMessages(collapsedMessages);
+      const finalMessages = collapsedMessages.map(msg => ({
+        ...msg,
+        sources: msg.sourceIds ? sources.filter(s => msg.sourceIds?.includes(s.id)) : undefined
+      }));
+
+      setMessages(finalMessages);
     }
   });
 

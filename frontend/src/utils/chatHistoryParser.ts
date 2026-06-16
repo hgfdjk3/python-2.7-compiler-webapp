@@ -24,7 +24,8 @@ export const parseChatHistory = (history: any[]): ChatMessage[] => {
         id: msg.id || Math.random().toString(),
         role: 'user',
         content: msg.content || '',
-        timestamp: ''
+        timestamp: '',
+        sourceIds: msg.additional_kwargs?.source_ids
       });
     } else {
       // Accumulate 'ai', 'tool', etc. into a single assistant bubble

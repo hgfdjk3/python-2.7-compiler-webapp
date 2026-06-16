@@ -17,7 +17,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({ content, timestamp, so
   return (
     <Flex justify="flex-end" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }} pt="xs" mx="auto" ref={ref}>
       <Stack align="flex-end" gap={4} style={{ maxWidth: '85%' }}>
-        <Group wrap="nowrap" align="center" gap="sm">
+        <Group wrap="nowrap" gap="xs" align='end'>
           {sources && sources.length > 0 && (
             <MessageSources sources={sources} />
           )}
