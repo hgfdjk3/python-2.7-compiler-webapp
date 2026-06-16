@@ -366,3 +366,19 @@ export const useRejectAllChanges = (projectId: string) => {
     },
   });
 };
+
+export const extractConversation = async (projectId: string, threadId: string): Promise<any> => {
+  const response = await apiClient.post(`/projects/${projectId}/library/extract-conversation`, { thread_id: threadId });
+  return response.data;
+};
+
+export const useExtractConversation = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (threadId: string) => extractConversation(projectId, threadId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+    },
+  });
+};

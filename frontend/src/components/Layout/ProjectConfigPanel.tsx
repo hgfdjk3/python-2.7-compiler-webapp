@@ -1,12 +1,12 @@
 import React from 'react';
-import { Box, Stack, Button, ActionIcon } from '@mantine/core';
+import { Box, Stack, Button, ActionIcon, Group, Tooltip } from '@mantine/core';
 import { AnimatePresence, motion, Variants } from 'motion/react';
 import { ProjectConfigSection } from '../Project/ProjectConfigSection';
 import { KnowledgeGraphPreview } from '../Project/KnowledgeGraph/KnowledgeGraphPreview';
 import { ProjectMembersPreview } from '../Project/ProjectMembersPreview';
 import { ProjectOverview } from '../Project/ProjectOverview';
 import { Source, SourceGroup } from '../Project/Sources/types';
-import { IconGitPullRequest, IconEdit } from '@tabler/icons-react';
+import { IconGitPullRequest, IconEdit, IconWand } from '@tabler/icons-react';
 import { ProjectSourcesPreview } from '../Project/Sources/ProjectSourcesPreview/ProjectSourcesPreview';
 
 const MOCK_MEMBERS = [
@@ -30,6 +30,7 @@ interface ProjectConfigPanelProps {
   onReviewPending?: () => void;
   onEditSummary?: () => void;
   onEditSource?: (id: string) => void;
+  onExtract?: () => void;
 }
 
 const MotionSection = motion.create(ProjectConfigSection);
@@ -77,7 +78,7 @@ const itemVariants: Variants = {
   },
 };
 
-export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, isLoading, onReviewPending, onEditSummary, onEditSource }) => {
+export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, standaloneSources, activeSourceId, summary, pendingCount = 0, isLoading, onReviewPending, onEditSummary, onEditSource, onExtract }) => {
   return (
     <MotionStack
       gap="sm"
@@ -111,23 +112,30 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
           flex={2}
           variants={itemVariants}
           rightSection={
-            pendingCount > 0 ? (
-              <motion.div
-                animate={{ y: [0, -4, 0, -4, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 60, ease: "easeInOut" }}
-              >
-                <Button
-                  size="compact-xs"
-                  variant="light"
-                  color="gray"
-                  leftSection={<IconGitPullRequest size={14} />}
-                  onClick={onReviewPending}
-                  style={{ textTransform: 'none' }}
+            <Group gap="xs">
+              {pendingCount > 0 && (
+                <motion.div
+                  animate={{ y: [0, -4, 0, -4, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 60, ease: "easeInOut" }}
                 >
-                  {pendingCount} Pending Changes
-                </Button>
-              </motion.div>
-            ) : null
+                  <Button
+                    size="compact-xs"
+                    variant="light"
+                    color="gray"
+                    leftSection={<IconGitPullRequest size={14} />}
+                    onClick={onReviewPending}
+                    style={{ textTransform: 'none' }}
+                  >
+                    {pendingCount} Pending Changes
+                  </Button>
+                </motion.div>
+              )}
+              <Tooltip label="Extract Conversation">
+                <ActionIcon variant="subtle" color="gray" size="sm" onClick={onExtract}>
+                  <IconWand size={16} stroke={1.5} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
           }
         >
           <ProjectSourcesPreview
@@ -136,6 +144,7 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
             activeSourceId={activeSourceId}
             isLoading={isLoading}
             onEditSource={onEditSource}
+            onExtract={onExtract}
           />
         </MotionSection>
 

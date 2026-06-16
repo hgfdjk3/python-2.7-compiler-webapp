@@ -11,6 +11,7 @@ import { ProjectApprovalModal } from './Approval/ProjectApprovalModal';
 import { EditSummaryModal } from './EditSummaryModal';
 import { EditEntityModal } from './Sources/EditEntityModal';
 import { SourceCard } from './Sources/SourceCard/SourceCard';
+import { ExtractConversationModal } from './Sources/ExtractConversationModal/ExtractConversationModal';
 
 const MOCK_GROUPS: SourceGroup[] = [
     {
@@ -49,6 +50,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
     const [manualOpenTrigger, setManualOpenTrigger] = React.useState(0);
     const [isEditSummaryOpen, setIsEditSummaryOpen] = React.useState(false);
     const [editingEntityId, setEditingEntityId] = React.useState<string | null>(null);
+    const [isExtractOpen, setIsExtractOpen] = React.useState(false);
 
     const { data: entities, isLoading } = useLibraryEntities(project.id);
     const editSummaryMutation = useEditSummary(project.id);
@@ -226,6 +228,7 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
                         onReviewPending={() => setManualOpenTrigger(prev => prev + 1)}
                         onEditSummary={() => setIsEditSummaryOpen(true)}
                         onEditSource={setEditingEntityId}
+                        onExtract={() => setIsExtractOpen(true)}
                     />
                 </Box>
             </Group>
@@ -262,6 +265,12 @@ export const ProjectPanel: React.FC<ProjectPanelProps> = ({ project }) => {
                     setEditingEntityId(null);
                 }}
                 isLoading={editEntityMutation.isPending}
+            />
+
+            <ExtractConversationModal
+                opened={isExtractOpen}
+                onClose={() => setIsExtractOpen(false)}
+                projectId={project.id}
             />
         </DragDropProvider>
     );

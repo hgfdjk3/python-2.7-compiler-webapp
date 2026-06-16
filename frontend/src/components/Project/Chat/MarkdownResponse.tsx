@@ -68,7 +68,7 @@ export const MarkdownResponse: React.FC<MarkdownResponseProps> = ({ content, onS
   }), []);
 
   return (
-    <Box className="markdown-response-container" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }}>
+    <Box className="markdown-response-container" w="100%">
       <Streamdown
         animated={{
           animation: "blurIn",

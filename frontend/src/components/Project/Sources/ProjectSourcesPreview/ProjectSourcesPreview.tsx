@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Stack, Box, Text, ScrollArea, Center, Loader } from '@mantine/core';
+import { Stack, Box, Text, ScrollArea, Center, Loader, Button } from '@mantine/core';
 import { DragOverlay, useDroppable } from '@dnd-kit/react';
 import { Source, SourceGroup as SourceGroupType } from '../types';
 import { SourceGroup } from '../SourceGroup/SourceGroup';
@@ -14,6 +14,7 @@ interface ProjectSourcesPreviewProps {
     activeSourceId: string | null;
     isLoading?: boolean;
     onEditSource?: (id: string) => void;
+    onExtract?: () => void;
 }
 
 export const ProjectSourcesPreview: React.FC<ProjectSourcesPreviewProps> = ({
@@ -22,6 +23,7 @@ export const ProjectSourcesPreview: React.FC<ProjectSourcesPreviewProps> = ({
     activeSourceId,
     isLoading,
     onEditSource,
+    onExtract,
 }) => {
     const activeSource = activeSourceId
         ? [...standaloneSources, ...initialGroups.flatMap((group) => group.sources)].find((source) => source.id === activeSourceId)
@@ -35,6 +37,7 @@ export const ProjectSourcesPreview: React.FC<ProjectSourcesPreviewProps> = ({
             isDraggingAny={!!activeSourceId}
             isLoading={isLoading}
             onEditSource={onEditSource}
+            onExtract={onExtract}
         />
     );
 };
@@ -46,6 +49,7 @@ interface ProjectSourcesPreviewContentProps {
     isDraggingAny: boolean;
     isLoading?: boolean;
     onEditSource?: (id: string) => void;
+    onExtract?: () => void;
 }
 
 const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> = ({
@@ -54,7 +58,8 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
     activeSource,
     isDraggingAny,
     isLoading,
-    onEditSource
+    onEditSource,
+    onExtract
 }) => {
     const { ref: standaloneRef, isDropTarget: isOverStandalone } = useDroppable({ id: 'standalone-zone' });
 
@@ -102,13 +107,22 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
                     <Center h={100}>
                         <Loader size="sm" type="dots" color="gray" />
                     </Center>
-                ) : filteredGroups.length === 0 && filteredSources.length === 0 && (
+                ) : groups.length === 0 && sources.length === 0 ? (
+                    <Box style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                        <Text size="sm" c="dimmed" mb="md">
+                            Your library is empty. Extract knowledge from past conversations to get started.
+                        </Text>
+                        <Button variant="filled" size="sm" onClick={onExtract}>
+                            Extract Conversation
+                        </Button>
+                    </Box>
+                ) : filteredGroups.length === 0 && filteredSources.length === 0 ? (
                     <Box className="emptyPreviewState">
                         <Text size="xs" c="dimmed">
                             No matching sources
                         </Text>
                     </Box>
-                )}
+                ) : null}
             </ScrollArea>
 
             <DragOverlay>

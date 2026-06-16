@@ -42,7 +42,7 @@ export const ChatConversation: React.FC<ChatConversationProps> = ({
   onSubmitApproval,
 }) => {
   return (
-    <Box style={{ height: '100%' }}>
+    <Box className="chat-content-area" maw={{ xs: 800, sm: 900, md: 1000, lg: 1100, xl: 1000 }}>
       <Stack gap="0" pb={120}>
         {messages.map((msg) => (
           <Box key={msg.id}>

@@ -10,7 +10,7 @@ export const ThinkingBlock: React.FC = () => {
       exit={{ opacity: 0, y: -5 }}
       transition={{ duration: 0.2 }}
     >
-      <Group mx="auto" gap="xs" justify="end" mt="sm" w={{ xs: 100, sm: 100, md: 600, lg: 900, xl: 1000, xxl: 1200 }}>
+      <Group gap="xs" justify="end" mt="sm" w="100%">
         <Loader size="sm" type="dots" color="gray" />
         <Text size="sm" c="dimmed" fs="italic">Thinking</Text>
       </Group>
