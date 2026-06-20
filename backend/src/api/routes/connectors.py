@@ -38,6 +38,7 @@ class ConnectorCreate(BaseModel):
     header_values: Optional[Dict[str, str]] = None
     publisher_name: Optional[str] = None
     developers: Optional[List[str]] = []
+    tags: Optional[List[str]] = []
 
 class ConnectorResponse(BaseModel):
     id: str
@@ -52,6 +53,7 @@ class ConnectorResponse(BaseModel):
     tools: Optional[List[str]] = None
     publisher_name: Optional[str] = None
     developers: Optional[List[str]] = []
+    tags: Optional[List[str]] = []
 
 @router.get("/connectors", response_model=List[ConnectorResponse])
 async def list_connectors():

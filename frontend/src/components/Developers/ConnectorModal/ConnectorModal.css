@@ -1,54 +1,81 @@
-.connector-modal {
-  background: var(--mantine-color-body);
-  border: 1px solid var(--mantine-color-default-border);
-  box-shadow: var(--mantine-shadow-xl);
-  border-radius: var(--mantine-radius-md);
+.connector-modal .mantine-Modal-content {
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9)) !important;
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
   overflow: hidden;
 }
 
-.connector-modal-header {
-  background: transparent;
-  padding: 24px 24px 16px;
-  border-bottom: 1px solid var(--mantine-color-default-border);
+.connector-modal-hero {
+  position: relative;
+  padding: 32px 32px 24px;
+  background: radial-gradient(circle at top left,
+      color-mix(in srgb, var(--modal-brand-color) 15%, transparent) 0%,
+      transparent 70%);
+  margin: 0;
+  display: flex;
+  border-bottom: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
 }
 
-.connector-modal-title {
-  width: 100%;
-}
-
-.modal-icon-wrapper {
+.connector-modal-icon-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--mantine-radius-sm);
-  background: var(--mantine-color-default-hover);
-  border: 1px solid var(--mantine-color-default-border);
+}
+
+.connector-modal-icon-aura {
+  position: absolute;
+  inset: -15px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--modal-brand-color) 30%, transparent) 0%, transparent 70%);
+  filter: blur(10px);
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.connector-modal-icon-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--mantine-color-zinc-9);
+  border: 1px solid var(--mantine-color-zinc-8);
+  border-radius: 20px;
+  color: var(--modal-brand-color);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.connector-modal-icon-wrapper:hover .connector-modal-icon-inner {
+  border-color: color-mix(in srgb, var(--modal-brand-color) 40%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+}
+
+.connector-modal-title {
+  letter-spacing: -1.5px;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
 .connector-modal-form {
-  padding: 24px;
+  padding: 32px;
 }
 
 .form-section {
-  background: transparent;
-  padding: 0;
   position: relative;
 }
 
 .section-title {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--mantine-color-text);
-  margin-bottom: 16px;
-}
-
-.premium-input {
-  /* Inherits from mantine, removing custom styling */
+  margin-bottom: 20px;
 }
 
 .modal-actions {
-  border-top: 1px solid var(--mantine-color-default-border);
-  padding-top: 24px;
+  padding-top: 16px;
 }

@@ -51,7 +51,7 @@ const router = createBrowserRouter([
         element: <NewProjectPage />,
       },
       {
-        path: '/knowledge-graph',
+        path: '/project/:projectId/graph',
         element: <KnowledgeGraphPage />,
       },
       {

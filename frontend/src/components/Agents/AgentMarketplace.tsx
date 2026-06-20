@@ -30,18 +30,22 @@ export const AgentMarketplace: React.FC = () => {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
-  const MAX_VISIBLE_AGENTS = 4;
-
-  const categories = useMemo(() => Array.from(new Set(agents.map(a => a.category))), [agents]);
-
-  const filteredAgents = useMemo(() => {
-    return agents.filter(agent => {
-      const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = activeFilter === 'All' || agent.category === activeFilter;
-      return matchesSearch && matchesCategory;
+  const categories = useMemo(() => {
+    const tagSet = new Set<string>();
+    let hasUncategorized = false;
+    agents.forEach(a => {
+      if (a.tags && a.tags.length > 0) {
+        a.tags.forEach(t => tagSet.add(t));
+      } else {
+        hasUncategorized = true;
+      }
     });
-  }, [agents, searchQuery, activeFilter]);
+    const sortedTags = Array.from(tagSet).sort();
+    if (hasUncategorized) {
+      sortedTags.push('Uncategorized');
+    }
+    return sortedTags;
+  }, [agents]);
 
   const displayedCategories = activeFilter === 'All'
     ? categories
@@ -58,13 +62,6 @@ export const AgentMarketplace: React.FC = () => {
       enabled_connectors: newEnabled,
       header_values: userConfig.header_values || {},
     });
-  };
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [category]: !prev[category]
-    }));
   };
 
   const handleUpdateConfig = async (id: string, header_values: Record<string, string>) => {
@@ -113,7 +110,7 @@ export const AgentMarketplace: React.FC = () => {
             }}
           />
 
-          <Group gap="xs">
+          <Group gap="xs" style={{ flexWrap: 'wrap' }}>
             {['All', ...categories].map((category) => {
               const isActive = activeFilter === category;
               return (
@@ -143,7 +140,7 @@ export const AgentMarketplace: React.FC = () => {
                       transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
                     />
                   )}
-                  <Text size="sm" fw={600} style={{ position: 'relative', zIndex: 1 }}>
+                  <Text size="sm" fw={600} style={{ position: 'relative', zIndex: 1, textTransform: 'capitalize' }}>
                     {category}
                   </Text>
                 </Box>
@@ -153,45 +150,67 @@ export const AgentMarketplace: React.FC = () => {
         </Group>
       </Stack>
 
-      <Stack gap="xl">
+      <Stack gap="3xl">
         {displayedCategories.map(category => {
-          const categoryAgents = filteredAgents.filter(a => a.category === category);
+          const categoryAgents = agents.filter(a => {
+            const matchesSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              a.description.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            if (!matchesSearch) return false;
+
+            if (category === 'Uncategorized') {
+              return !a.tags || a.tags.length === 0;
+            }
+            return a.tags && a.tags.includes(category);
+          });
+
           if (categoryAgents.length === 0) return null;
 
-          const isExpanded = expandedCategories[category];
-          const showSeeAll = categoryAgents.length > MAX_VISIBLE_AGENTS;
-          const visibleAgents = isExpanded ? categoryAgents : categoryAgents.slice(0, MAX_VISIBLE_AGENTS);
-
           return (
-            <Stack key={category} gap="xs">
-              <Group justify='space-between'>
-                <Title order={5} size={18} fw={600}>
-                  {category}
-                </Title>
-                {showSeeAll && (
-                  <Anchor
-                    size='sm'
-                    fw={500}
-                    onClick={() => toggleCategory(category)}
-                    c="zinc.4"
-                  >
-                    {isExpanded ? 'See Less' : 'See All'}
-                  </Anchor>
-                )}
-              </Group>
-              <Divider color="zinc.8" />
+            <Stack key={category} gap="md">
+              <Box style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--mantine-radius-md)' }}>
+                <Box
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(90deg, var(--mantine-color-zinc-8) 0%, transparent 100%)',
+                    opacity: 0.3,
+                    zIndex: 0
+                  }}
+                />
+                <Group justify="space-between" align="center" style={{ position: 'relative', zIndex: 1 }} py="xs" px="md">
+                  <Group gap="sm">
+                    <Title order={4} size={20} fw={700} style={{ letterSpacing: '-0.5px', textTransform: 'capitalize' }}>
+                      {category}
+                    </Title>
+                    <Box
+                      px={8}
+                      py={2}
+                      style={{
+                        background: 'var(--mantine-color-zinc-8)',
+                        border: '1px solid var(--mantine-color-zinc-7)',
+                        borderRadius: 12,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: 'var(--mantine-color-zinc-4)'
+                      }}
+                    >
+                      {categoryAgents.length}
+                    </Box>
+                  </Group>
+                </Group>
+              </Box>
               <Box p="xs">
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg">
                   <AnimatePresence initial={false}>
-                    {visibleAgents.map(agent => (
+                    {categoryAgents.map(agent => (
                       <motion.div
-                        key={agent.id}
+                        key={`${category}-${agent.id}`}
                         layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ duration: 0.2 }}
-                        style={{ padding: 4 }}
                       >
                         <AgentCard
                           agent={agent}

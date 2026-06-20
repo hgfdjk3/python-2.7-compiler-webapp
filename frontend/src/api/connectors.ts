@@ -14,6 +14,7 @@ export interface ConnectorFormData {
   tools?: string[];
   publisher_name?: string;
   developers?: string[];
+  tags?: string[];
 }
 
 export const getConnectors = async (): Promise<ConnectorFormData[]> => {

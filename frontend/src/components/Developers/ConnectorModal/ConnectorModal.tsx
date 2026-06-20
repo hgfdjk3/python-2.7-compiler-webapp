@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, TextInput, Button, Group, Stack, Text, Box, Title, ColorInput, Popover, Input, ScrollArea, SimpleGrid, ActionIcon } from '@mantine/core';
+import { Modal, TextInput, Button, Group, Stack, Text, Box, Title, ColorInput, Popover, Input, ScrollArea, SimpleGrid, ActionIcon, TagsInput, Divider } from '@mantine/core';
 import { IconPlugConnected, IconEdit, IconChevronDown } from '@tabler/icons-react';
 import './ConnectorModal.css';
 import { ConnectorFormData } from '../../../api/connectors';
 import { ConnectorHeaderSlots, HeaderSlot } from './ConnectorHeaderSlots';
 import { AGENT_ICON_MAP, getAgentIcon } from '../../../utils/iconUtils';
+import { motion } from 'motion/react';
 
 const UNIQUE_ICONS = (() => {
   const pairs: [string, any][] = [];
@@ -36,7 +37,8 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
     icon: 'server',
     description: '',
     publisher_name: '',
-    developers: []
+    developers: [],
+    tags: []
   });
   const [developersStr, setDevelopersStr] = useState('');
   const [headerSlots, setHeaderSlots] = useState<HeaderSlot[]>([]);
@@ -56,7 +58,7 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
         }
         setDevelopersStr(initialData.developers?.join(', ') || '');
       } else {
-        setFormData({ id: '', name: '', url: '', color: '#3b82f6', icon: 'server', description: '', publisher_name: '', developers: [] });
+        setFormData({ id: '', name: '', url: '', color: '#3b82f6', icon: 'server', description: '', publisher_name: '', developers: [], tags: [] });
         setHeaderSlots([]);
         setDevelopersStr('');
       }
@@ -101,140 +103,173 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
     <Modal
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="sm" align="center">
-          <Box className="modal-icon-wrapper">
-            {isEdit ? <IconEdit size={18} /> : <IconPlugConnected size={18} />}
-          </Box>
-          <Box>
-            <Title order={4} fw={600}>{isEdit ? 'Edit Connection' : 'New Connection'}</Title>
-            <Text size="xs" c="dimmed" mt={2}>
-              {isEdit ? 'Update your Model Context Protocol server.' : 'Connect a new Model Context Protocol server.'}
-            </Text>
-          </Box>
-        </Group>
-      }
+      withCloseButton={false}
       centered
       size="md"
+      radius="xl"
+      padding={0}
       overlayProps={{ backgroundOpacity: 0.5, blur: 0 }}
-      classNames={{ content: 'connector-modal', header: 'connector-modal-header', title: 'connector-modal-title' }}
+      className="connector-modal"
       transitionProps={{ transition: 'pop', duration: 200 }}
     >
-      <form onSubmit={handleSubmit} className="connector-modal-form">
-        <Stack gap="xl">
-          <Box className="form-section">
-            <Text className="section-title">General</Text>
-            <Stack gap="md">
-              <TextInput
-                label="Connection Name"
-                placeholder="e.g., Internal Database Tools"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.currentTarget.value })}
-                data-autofocus
-              />
-              <Group grow align="flex-start">
-                <ColorInput
-                  label="Brand Color"
-                  format="hex"
-                  value={formData.color}
-                  onChange={(val) => setFormData({ ...formData, color: val })}
-                />
-                <Input.Wrapper label="Icon" style={{ flex: 1 }}>
-                  <Popover position="bottom-start" shadow="md">
-                    <Popover.Target>
-                      <Button
-                        variant="default"
-                        fullWidth
-                        justify="space-between"
-                        rightSection={<IconChevronDown size={14} opacity={0.5} />}
-                        styles={{ inner: { flex: 1, justifyContent: 'flex-start' }, label: { overflow: 'hidden' } }}
-                      >
-                        <Group gap="sm" wrap="nowrap">
-                          {getAgentIcon(formData.icon, { size: 16 })}
-                          <Text size="sm" truncate style={{ textTransform: 'capitalize' }}>
-                            {formData.icon || 'Select Icon'}
-                          </Text>
-                        </Group>
-                      </Button>
-                    </Popover.Target>
-                    <Popover.Dropdown p="xs">
-                      <ScrollArea.Autosize maxHeight={200}>
-                        <SimpleGrid cols={6} spacing="xs">
-                          {UNIQUE_ICONS.map(([key, IconComponent]) => (
-                            <ActionIcon
-                              key={key}
-                              variant={formData.icon === key ? 'light' : 'subtle'}
-                              color={formData.icon === key ? 'blue' : 'gray'}
-                              onClick={() => setFormData({ ...formData, icon: key, color: formData.color })}
-                              size="lg"
-                            >
-                              <IconComponent size={20} stroke={1.5} />
-                            </ActionIcon>
-                          ))}
-                        </SimpleGrid>
-                      </ScrollArea.Autosize>
-                    </Popover.Dropdown>
-                  </Popover>
-                </Input.Wrapper>
-              </Group>
-              <TextInput
-                label="Description"
-                placeholder="Briefly describe what these tools do"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.currentTarget.value })}
-              />
-              <Group grow align="flex-start">
-                <TextInput
-                  label="Publisher Name"
-                  placeholder="e.g., Acme Corp"
-                  value={formData.publisher_name || ''}
-                  onChange={(e) => setFormData({ ...formData, publisher_name: e.currentTarget.value })}
-                />
-                <TextInput
-                  label="Developers"
-                  placeholder="Comma-separated usernames"
-                  value={developersStr}
-                  onChange={(e) => {
-                    setDevelopersStr(e.currentTarget.value);
-                    setFormData({ ...formData, developers: e.currentTarget.value.split(',').map(s => s.trim()).filter(Boolean) });
-                  }}
-                />
-              </Group>
-            </Stack>
-          </Box>
+      <Box style={{ '--modal-brand-color': formData.color || '#3b82f6' } as React.CSSProperties}>
+        <Group justify='space-between' align='center' className="connector-modal-hero" gap="xl">
+          <Stack gap={4} style={{ flex: 1 }}>
+            <Title order={2} className="connector-modal-title" style={{ marginBottom: 0, textAlign: 'left' }}>
+              {isEdit ? 'Edit Connection' : 'New Connection'}
+            </Title>
+            <Text size="sm" c="zinc.4">
+              {isEdit ? 'Update your Model Context Protocol server.' : 'Connect a new Model Context Protocol server.'}
+            </Text>
+          </Stack>
 
-          <Box className="form-section">
-            <Text className="section-title">Connection Details</Text>
-            <Stack gap="md">
-              <TextInput
-                label="SSE Endpoint URL"
-                placeholder="http://localhost:8000/sse"
-                required
-                type="url"
-                value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.currentTarget.value })}
-              />
-              <ConnectorHeaderSlots
-                slots={headerSlots}
-                onChange={setHeaderSlots}
-              />
-            </Stack>
-          </Box>
+          <div className="connector-modal-icon-wrapper">
+            <motion.div
+              className="connector-modal-icon-aura"
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.6, 0.8, 0.6]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            <div className="connector-modal-icon-inner">
+              {getAgentIcon(formData.icon, { size: 32, stroke: 1.5 })}
+            </div>
+          </div>
+        </Group>
 
-          <Group justify="flex-end" grow mt="md" className="modal-actions">
+        <form onSubmit={handleSubmit} className="connector-modal-form">
+          <ScrollArea.Autosize mah="calc(80vh - 160px)" type="hover" scrollbarSize={4} offsetScrollbars>
+            <Stack gap="xl" pr="sm">
+              <Box className="form-section">
+                <Text className="section-title">General</Text>
+                <Stack gap="md">
+                  <TextInput
+                    label="Connection Name"
+                    placeholder="e.g., Internal Database Tools"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.currentTarget.value })}
+                    data-autofocus
+                  />
+                  <Group grow align="flex-start">
+                    <ColorInput
+                      label="Brand Color"
+                      format="hex"
+                      value={formData.color}
+                      onChange={(val) => setFormData({ ...formData, color: val })}
+                    />
+                    <Input.Wrapper label="Icon" style={{ flex: 1 }}>
+                      <Popover position="bottom-start" shadow="md">
+                        <Popover.Target>
+                          <Button
+                            variant="default"
+                            fullWidth
+                            justify="space-between"
+                            rightSection={<IconChevronDown size={14} opacity={0.5} />}
+                            styles={{ inner: { flex: 1, justifyContent: 'flex-start' }, label: { overflow: 'hidden' } }}
+                          >
+                            <Group gap="sm" wrap="nowrap">
+                              {getAgentIcon(formData.icon, { size: 16 })}
+                              <Text size="sm" truncate style={{ textTransform: 'capitalize' }}>
+                                {formData.icon || 'Select Icon'}
+                              </Text>
+                            </Group>
+                          </Button>
+                        </Popover.Target>
+                        <Popover.Dropdown p="xs">
+                          <ScrollArea.Autosize maxHeight={200}>
+                            <SimpleGrid cols={6} spacing="xs">
+                              {UNIQUE_ICONS.map(([key, IconComponent]) => (
+                                <ActionIcon
+                                  key={key}
+                                  variant={formData.icon === key ? 'light' : 'subtle'}
+                                  color={formData.icon === key ? 'blue' : 'gray'}
+                                  onClick={() => setFormData({ ...formData, icon: key, color: formData.color })}
+                                  size="lg"
+                                >
+                                  <IconComponent size={20} stroke={1.5} />
+                                </ActionIcon>
+                              ))}
+                            </SimpleGrid>
+                          </ScrollArea.Autosize>
+                        </Popover.Dropdown>
+                      </Popover>
+                    </Input.Wrapper>
+                  </Group>
+                  <TextInput
+                    label="Description"
+                    placeholder="Briefly describe what these tools do"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.currentTarget.value })}
+                  />
+                  <Group grow align="flex-start">
+                    <TextInput
+                      label="Publisher Name"
+                      placeholder="e.g., Acme Corp"
+                      value={formData.publisher_name || ''}
+                      onChange={(e) => setFormData({ ...formData, publisher_name: e.currentTarget.value })}
+                    />
+                    <TextInput
+                      label="Developers"
+                      placeholder="Comma-separated usernames"
+                      value={developersStr}
+                      onChange={(e) => {
+                        setDevelopersStr(e.currentTarget.value);
+                        setFormData({ ...formData, developers: e.currentTarget.value.split(',').map(s => s.trim()).filter(Boolean) });
+                      }}
+                    />
+                  </Group>
+                  <TagsInput
+                    label="Tags"
+                    placeholder="e.g., database, CRM"
+                    value={formData.tags || []}
+                    onChange={(tags) => setFormData({ ...formData, tags })}
+                    clearable
+                  />
+                </Stack>
+              </Box>
+
+              <Divider color="var(--mantine-color-default-border)" />
+
+              <Box className="form-section">
+                <Text className="section-title">Connection Details</Text>
+                <Stack gap="md">
+                  <TextInput
+                    label="SSE Endpoint URL"
+                    placeholder="http://localhost:8000/sse"
+                    required
+                    type="url"
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.currentTarget.value })}
+                  />
+                  <ConnectorHeaderSlots
+                    slots={headerSlots}
+                    onChange={setHeaderSlots}
+                  />
+                </Stack>
+              </Box>
+            </Stack>
+          </ScrollArea.Autosize>
+
+          <Group justify="flex-end" grow mt="xl" className="modal-actions">
             <Button variant="default" onClick={onClose}>
               Cancel
             </Button>
             <Button
               type="submit"
               loading={loading}
+              color={formData.color}
             >
               {isEdit ? 'Save Changes' : 'Connect Server'}
             </Button>
           </Group>
-        </Stack>
-      </form>
+        </form>
+      </Box>
     </Modal>
   );
 };

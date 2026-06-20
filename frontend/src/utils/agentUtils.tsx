@@ -9,7 +9,8 @@ export interface AgentInfo {
   developer: string;
   developerWebsite?: string;
   developerSupport?: string;
-  category: string;
+  category?: string;
+  tags: string[];
   brandColor: string;
   iconName?: string;
   sourcesAdded: string[];
@@ -27,7 +28,7 @@ export const useAgentInfo = () => {
       name: c.name,
       description: c.description || 'Custom Connector',
       developer: 'Local',
-      category: 'Installed Connectors',
+      tags: c.tags || [],
       brandColor: c.color || '#228be6',
       iconName: c.icon,
       sourcesAdded: [],

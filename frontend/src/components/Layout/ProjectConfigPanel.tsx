@@ -148,10 +148,10 @@ export const ProjectConfigPanel: React.FC<ProjectConfigPanelProps> = ({ groups, 
           />
         </MotionSection>
 
-        {/* <MotionSection key="graph" title="Knowledge Graph" flex={1} variants={itemVariants}>
+        <MotionSection key="graph" title="Knowledge Graph" flex={1} variants={itemVariants}>
           <Box pt="5" />
           <KnowledgeGraphPreview />
-        </MotionSection> */}
+        </MotionSection>
       </AnimatePresence>
     </MotionStack>
   );
