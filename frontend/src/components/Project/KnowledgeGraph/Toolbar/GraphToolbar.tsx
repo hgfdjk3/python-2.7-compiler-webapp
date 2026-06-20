@@ -12,7 +12,7 @@ interface GraphToolbarProps {
 }
 
 export const GraphToolbar: React.FC<GraphToolbarProps> = ({
-  selectedNodeIds,
+  selectedNodeIds = [],
   onEdit,
   onConnect,
   onMerge,
@@ -27,13 +27,8 @@ export const GraphToolbar: React.FC<GraphToolbarProps> = ({
       p="xs"
       withBorder
       style={{
-        position: 'absolute',
-        top: 20,
-        left: '50%',
-        transform: 'translateX(-50%)',
         backdropFilter: 'blur(10px)',
         backgroundColor: 'color-mix(in srgb, var(--mantine-color-body) 80%, transparent)',
-        zIndex: 10,
       }}
     >
       <Group gap="xs">

@@ -8,6 +8,8 @@ interface KnowledgeGraphCoreProps {
   projectId: string;
   interactive?: boolean;
   selectedNodeIds?: string[];
+  highlightedNodeIds?: string[];
+  focusedNodeId?: string | null;
   onNodeClick?: (nodeId: string, event: MouseEvent) => void;
 }
 
@@ -15,6 +17,8 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
   projectId,
   interactive = true,
   selectedNodeIds = [],
+  highlightedNodeIds,
+  focusedNodeId,
   onNodeClick
 }) => {
   const theme = useMantineTheme();
@@ -173,6 +177,18 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
       graphRef.current.enableNodeDrag(interactive);
     }
   }, [interactive]);
+
+  // Handle focused node zoom
+  useEffect(() => {
+    if (graphRef.current && focusedNodeId) {
+      const { nodes } = graphRef.current.graphData();
+      const targetNode = nodes.find((n: any) => n.id === focusedNodeId);
+      if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined) {
+        graphRef.current.centerAt(targetNode.x, targetNode.y, 800);
+        graphRef.current.zoom(2, 800);
+      }
+    }
+  }, [focusedNodeId]);
 
   // Update Canvas Object rendering (depends on theme, selection, isDarkMode)
   useEffect(() => {
