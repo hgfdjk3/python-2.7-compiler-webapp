@@ -30,6 +30,25 @@ async def extract_from_content(
     result = await extractor.preprocess(project_id, request.content, request.source_tool)
     return {"message": "Extraction completed", "status": "success", "result": result}
 
+class ExtractDumpRequest(BaseModel):
+    content: str
+    source_tool: str = "text_dump"
+
+@router.post("/extract-dump")
+async def extract_from_dump(
+    project_id: str,
+    request: ExtractDumpRequest,
+    username: str = Depends(get_current_user),
+):
+    """Pre-processing: User explicitly sends a large text dump to be chunked and analyzed by the extraction agent."""
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    extractor = ExtractorAgent()
+    result = await extractor.extract_large_text(project_id, request.content, request.source_tool)
+    return {"message": "Dump extraction completed", "status": "success", "result": result}
+
 class ExtractConversationRequest(BaseModel):
     thread_id: str
 
@@ -106,6 +125,24 @@ async def edit_entity(
         )
         return updated
     except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete("/entities/{entity_id}")
+async def delete_entity(
+    project_id: str,
+    entity_id: str,
+    username: str = Depends(get_current_user)
+):
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    try:
+        deleted = LibraryService.delete_entity(project_id=project_id, entity_id=entity_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Entity not found")
+        return {"deleted": True, "id": entity_id}
+    except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/entities/{entity_id}/approve")

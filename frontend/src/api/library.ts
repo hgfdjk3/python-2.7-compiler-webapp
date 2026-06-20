@@ -49,6 +49,11 @@ export const editEntity = async (projectId: string, entityId: string, data: { ty
   return response.data;
 };
 
+export const deleteEntity = async (projectId: string, entityId: string): Promise<{ deleted: boolean; id: string }> => {
+  const response = await apiClient.delete(`/projects/${projectId}/library/entities/${entityId}`);
+  return response.data;
+};
+
 export const proposeSummaryChange = async (projectId: string, proposedText: string): Promise<any> => {
   const response = await apiClient.put(`/projects/${projectId}/library/summary`, { proposed_text: proposedText });
   return response.data;
@@ -168,6 +173,16 @@ export const useEditEntity = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ entityId, data }: { entityId: string; data: { type?: string; current_state: EntityState } }) => editEntity(projectId, entityId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+    },
+  });
+};
+
+export const useDeleteEntity = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (entityId: string) => deleteEntity(projectId, entityId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
     },
@@ -376,6 +391,22 @@ export const useExtractConversation = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (threadId: string) => extractConversation(projectId, threadId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+    },
+  });
+};
+
+export const extractDump = async (projectId: string, content: string): Promise<any> => {
+  const response = await apiClient.post(`/projects/${projectId}/library/extract-dump`, { content });
+  return response.data;
+};
+
+export const useExtractDump = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (content: string) => extractDump(projectId, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] });

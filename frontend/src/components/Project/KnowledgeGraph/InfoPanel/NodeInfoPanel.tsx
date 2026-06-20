@@ -25,12 +25,12 @@ export const NodeInfoPanel: React.FC<NodeInfoPanelProps> = ({ entity }) => {
       exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
       transition={{ duration: 0.2 }}
       shadow="md"
-      radius="xl"
+      radius="md"
       p="md"
       withBorder
       style={{
         position: 'absolute',
-        top: 70,
+        top: 82,
         right: 20,
         width: 340,
         maxHeight: 'calc(100% - 90px)',

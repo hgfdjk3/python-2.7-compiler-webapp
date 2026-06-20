@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Box, ActionIcon, Group, useMantineTheme } from '@mantine/core';
+import { Box, ActionIcon, Group, useMantineTheme, Modal, Button, Text, Textarea } from '@mantine/core';
 import { useParams, useNavigate } from 'react-router-dom';
 import { KnowledgeGraphCore } from '../components/Project/KnowledgeGraph/KnowledgeGraphCore';
 import { GraphToolbar } from '../components/Project/KnowledgeGraph/Toolbar/GraphToolbar';
 import { GraphSearchWidget } from '../components/Project/KnowledgeGraph/Toolbar/GraphSearchWidget';
 import { NodeInfoPanel } from '../components/Project/KnowledgeGraph/InfoPanel/NodeInfoPanel';
-import { IconArrowLeft } from '@tabler/icons-react';
-import { useLibraryEntities } from '../api/library';
+import { IconArrowLeft, IconFileText } from '@tabler/icons-react';
+import { useLibraryEntities, useDeleteEntity, useExtractDump } from '../api/library';
 import { AnimatePresence } from 'motion/react';
 
 export const KnowledgeGraphPage: React.FC = () => {
@@ -20,6 +20,12 @@ export const KnowledgeGraphPage: React.FC = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const deleteEntityMutation = useDeleteEntity(projectId || '');
+  
+  const [extractModalOpen, setExtractModalOpen] = useState(false);
+  const [dumpText, setDumpText] = useState('');
+  const extractDumpMutation = useExtractDump(projectId || '');
 
   const typeColors: Record<string, string> = {
     document: theme.colors.blue[6],
@@ -89,7 +95,16 @@ export const KnowledgeGraphPage: React.FC = () => {
   const handleEdit = () => console.log('Edit entity', selectedNodeIds[0]);
   const handleConnect = () => console.log('Connect entities', selectedNodeIds);
   const handleMerge = () => console.log('Merge entities', selectedNodeIds);
-  const handleDelete = () => console.log('Delete entities', selectedNodeIds);
+  
+  const handleDelete = () => setDeleteModalOpen(true);
+
+  const confirmDelete = () => {
+    selectedNodeIds.forEach(id => {
+      deleteEntityMutation.mutate(id);
+    });
+    setSelectedNodeIds([]);
+    setDeleteModalOpen(false);
+  };
 
   return (
     <Box style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
@@ -106,6 +121,7 @@ export const KnowledgeGraphPage: React.FC = () => {
           onConnect={handleConnect}
           onMerge={handleMerge}
           onDelete={handleDelete}
+          onExtractText={() => setExtractModalOpen(true)}
         />
       </Group>
 
@@ -137,6 +153,48 @@ export const KnowledgeGraphPage: React.FC = () => {
           onBackgroundClick={handleBackgroundClick}
         />
       </Box>
+
+      <Modal opened={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Deletion" centered>
+        <Text size="sm" mb="md">
+          Are you sure you want to delete {selectedNodeIds.length} selected entit{selectedNodeIds.length === 1 ? 'y' : 'ies'}? This action cannot be undone.
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
+          <Button color="red" onClick={confirmDelete} loading={deleteEntityMutation.isPending}>Delete</Button>
+        </Group>
+      </Modal>
+
+      <Modal opened={extractModalOpen} onClose={() => setExtractModalOpen(false)} title="Extract Entities from Text Dump" centered size="lg">
+        <Text size="sm" mb="md" color="dimmed">
+          Paste a large block of text below. The AI will analyze it in chunks and propose new entities or relationships for your knowledge graph.
+        </Text>
+        <Textarea
+          placeholder="Paste large text dump here..."
+          minRows={10}
+          maxRows={20}
+          autosize
+          value={dumpText}
+          onChange={(e) => setDumpText(e.currentTarget.value)}
+          mb="md"
+        />
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setExtractModalOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={() => {
+              extractDumpMutation.mutate(dumpText, {
+                onSuccess: () => {
+                  setExtractModalOpen(false);
+                  setDumpText('');
+                }
+              });
+            }} 
+            loading={extractDumpMutation.isPending}
+            disabled={!dumpText.trim()}
+          >
+            Extract
+          </Button>
+        </Group>
+      </Modal>
     </Box>
   );
 };

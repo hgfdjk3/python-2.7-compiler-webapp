@@ -124,10 +124,10 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
       .linkWidth(1.15)
       .linkDirectionalParticles(2)
       .linkDirectionalParticleSpeed(0.005)
-      .d3AlphaDecay(0.01) // Super slow decay for smooth, fluid settling
+      .d3AlphaDecay(0.02) // Increased decay to allow it to settle
       .d3VelocityDecay(0.4) // Medium friction
-      .warmupTicks(10) // Let it pre-spread slightly before rendering
-      .cooldownTicks(Infinity)
+      .warmupTicks(20) // Let it pre-spread slightly before rendering
+      .cooldownTicks(200) // Stop simulation after some ticks to stop shaking
       .minZoom(0.6)
       .maxZoom(3)
       .onNodeClick((node: any, event: MouseEvent) => {

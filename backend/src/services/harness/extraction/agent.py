@@ -183,14 +183,22 @@ class ExtractorAgent:
         import asyncio
         sem = asyncio.Semaphore(3)
         
-        async def process_chunk(chunk: str):
+        completed = 0
+        total = len(chunks)
+        
+        async def process_chunk(chunk: str, i: int):
+            nonlocal completed
+            logger.info(f"[ExtractorAgent] Started processing chunk {i+1}/{total} (length: {len(chunk)})")
             async with sem:
-                return await structured_llm.ainvoke([
+                res = await structured_llm.ainvoke([
                     SystemMessage(content=system_message),
                     HumanMessage(content=f"NEW CONTENT CHUNK:\n{chunk}")
                 ])
+                completed += 1
+                logger.info(f"[ExtractorAgent] Finished chunk {i+1}/{total}. Overall progress: {completed}/{total}. Extracted {len(res.entities)} entities.")
+                return res
 
-        tasks = [process_chunk(chunk) for chunk in chunks]
+        tasks = [process_chunk(chunk, i) for i, chunk in enumerate(chunks)]
         results: List[ExtractionResult] = await asyncio.gather(*tasks)
         
         final_entities = []
@@ -207,6 +215,29 @@ class ExtractorAgent:
     async def preprocess(self, project_id: str, content: str, source_tool: str = "user_upload") -> Dict[str, Any]:
         logger.info(f"[preprocess] project={project_id}, content_len={len(content)}")
         result = await self._run_extraction_pipeline(project_id, [content])
+        return _apply_extraction(project_id, result, source_tool)
+
+    async def extract_large_text(self, project_id: str, content: str, source_tool: str = "text_dump") -> Dict[str, Any]:
+        logger.info(f"[extract_large_text] project={project_id}, content_len={len(content)}")
+        
+        # Chunk the content by lines
+        lines = content.split('\n')
+        chunks = []
+        current_chunk = []
+        current_len = 0
+        for line in lines:
+            if current_len + len(line) > 60000 and current_chunk:
+                chunks.append("\n".join(current_chunk))
+                current_chunk = []
+                current_len = 0
+            current_chunk.append(line)
+            current_len += len(line) + 1
+            
+        if current_chunk:
+            chunks.append("\n".join(current_chunk))
+
+        logger.info(f"[extract_large_text] project={project_id}, running extraction pipeline on {len(chunks)} chunks")
+        result = await self._run_extraction_pipeline(project_id, chunks)
         return _apply_extraction(project_id, result, source_tool)
 
     def postprocess(self, project_id: str, conversation_messages: List[Dict[str, str]], source_tool: str = "conversation") -> Dict[str, Any]:

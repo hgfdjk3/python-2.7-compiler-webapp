@@ -106,7 +106,7 @@ export const GraphSearchWidget: React.FC<GraphSearchWidgetProps> = ({
             backgroundColor: 'color-mix(in srgb, var(--mantine-color-body) 80%, transparent)'
           }}
         >
-          <Group gap={0} py="auto" w="100%" justify="space-between">
+          <Group gap={0} w="100%" justify="space-between">
             <TextInput
               placeholder="Search graph..."
               value={searchQuery}
@@ -116,9 +116,9 @@ export const GraphSearchWidget: React.FC<GraphSearchWidgetProps> = ({
               onKeyDown={handleKeyDown}
               leftSection={<IconSearch size={18} />}
               variant="unstyled"
-            // size="md"
-            // pl="sm"
-            // my="5"
+              // size="md"
+              pl="xs"
+              my="6"
             />
 
             <Menu shadow="md" width={200} closeOnItemClick={false}>

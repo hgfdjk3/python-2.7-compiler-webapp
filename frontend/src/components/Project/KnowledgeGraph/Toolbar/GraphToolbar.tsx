@@ -2,6 +2,7 @@ import React from 'react';
 import { Group, Paper, Divider } from '@mantine/core';
 import { IconEdit, IconLink, IconGitMerge, IconTrash } from '@tabler/icons-react';
 import { ToolbarButton } from './ToolbarButton';
+import { GraphOptionsMenu } from './GraphOptionsMenu';
 
 interface GraphToolbarProps {
   selectedNodeIds: string[];
@@ -9,6 +10,7 @@ interface GraphToolbarProps {
   onConnect: () => void;
   onMerge: () => void;
   onDelete: () => void;
+  onExtractText: () => void;
 }
 
 export const GraphToolbar: React.FC<GraphToolbarProps> = ({
@@ -17,6 +19,7 @@ export const GraphToolbar: React.FC<GraphToolbarProps> = ({
   onConnect,
   onMerge,
   onDelete,
+  onExtractText,
 }) => {
   const selectionCount = selectedNodeIds.length;
 
@@ -62,6 +65,8 @@ export const GraphToolbar: React.FC<GraphToolbarProps> = ({
           disabled={selectionCount < 1}
           onClick={onDelete}
         />
+        <Divider orientation="vertical" />
+        <GraphOptionsMenu onExtractText={onExtractText} />
       </Group>
     </Paper>
   );

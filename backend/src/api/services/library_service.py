@@ -35,6 +35,12 @@ class LibraryService:
         return None
 
     @staticmethod
+    def delete_entity(project_id: str, entity_id: str) -> bool:
+        coll = get_collection("library_entities")
+        result = coll.delete_one({"_id": entity_id, "project_id": project_id})
+        return result.deleted_count > 0
+
+    @staticmethod
     def search_entities(project_id: str, query: str) -> List[Dict[str, Any]]:
         coll = get_collection("library_entities")
         db_query = {
