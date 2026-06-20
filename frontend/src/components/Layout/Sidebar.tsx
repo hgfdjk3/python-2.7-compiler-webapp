@@ -124,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ opened, onToggle }) => {
             <Box px={8} mb="xs">
               <Group justify="space-between">
                 <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.5px' }}>
-                  Workspaces
+                  Projects
                 </Text>
                 <ActionIcon variant="subtle" size="sm" color="gray" onClick={() => navigate('/new_project')}>
                   <IconPlus size={14} />

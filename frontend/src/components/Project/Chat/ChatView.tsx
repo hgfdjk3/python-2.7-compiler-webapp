@@ -159,13 +159,26 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const automationBuilderData = useChatStore((state) => state.automationBuilderData);
   const setAutomationBuilderData = useChatStore((state) => state.setAutomationBuilderData);
 
+  const { data: conversationData, isLoading: isLoadingConversation } = useQuery({
+    queryKey: ['conversation', chatId],
+    queryFn: () => getConversation(chatId!),
+    enabled: !!chatId,
+  });
+
   // Sync with URL and reset when needed
   useEffect(() => {
     if (chatId) {
-      if (chatId !== activeThreadId) {
+      if (chatId !== activeThreadId && conversationData?.metadata.id === chatId) {
         setIsAutomationMode(false);
         setAutomationBuilderData(null);
-        loadConversationMutation.mutate(chatId);
+        
+        setActiveThreadId(conversationData.metadata.id);
+        const collapsedMessages = parseChatHistory(conversationData.history);
+        const finalMessages = collapsedMessages.map(msg => ({
+          ...msg,
+          sources: msg.sourceIds ? sources.filter(s => msg.sourceIds?.includes(s.id)) : undefined
+        }));
+        setMessages(finalMessages);
       }
     } else {
       // Navigated back to project dashboard
@@ -182,7 +195,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatId, project.id]);
+  }, [chatId, project.id, conversationData]);
 
   const [boardHeight, setBoardHeight] = useState(150);
   const [isResizing, setIsResizing] = useState(false);
@@ -216,28 +229,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleToggleSave = (id: string) => toggleSaveMutation.mutate(id);
 
-  const loadConversationMutation = useMutation({
-    mutationFn: (id: string) => getConversation(id),
-    onSuccess: (data) => {
-      setActiveThreadId(data.metadata.id);
 
-      const collapsedMessages = parseChatHistory(data.history);
-
-      const finalMessages = collapsedMessages.map(msg => ({
-        ...msg,
-        sources: msg.sourceIds ? sources.filter(s => msg.sourceIds?.includes(s.id)) : undefined
-      }));
-
-      setMessages(finalMessages);
-    }
-  });
 
   const handleChatClick = (id: string) => {
     navigate(`/project/${project.id}/chat/${id}`);
   };
 
 
-  const isLoadingConversation = loadConversationMutation.isPending;
   const showMarkdownResponse = messages.length > 0 || isPending || isLoadingConversation || !!chatId;
 
   return (

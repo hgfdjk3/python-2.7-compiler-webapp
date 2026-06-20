@@ -1,5 +1,7 @@
 import { ActionIcon, Box, Group, Menu, Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { IconStar, IconStarFilled, IconDotsVertical, IconTrash } from '@tabler/icons-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { getConversation } from '../../../api/conversations';
 import './ChatItem.css';
 
 export interface ChatItemData {
@@ -17,10 +19,18 @@ interface ChatItemProps {
 }
 
 export const ChatItem: React.FC<ChatItemProps> = ({ chat, onToggleSave, onClick }) => {
+  const queryClient = useQueryClient();
+
   return (
     <Box
       className="chat-item"
       onClick={() => onClick?.(chat.id)}
+      onMouseEnter={() => {
+        queryClient.prefetchQuery({
+          queryKey: ['conversation', chat.id],
+          queryFn: () => getConversation(chat.id)
+        });
+      }}
     >
       <Group justify="space-between" align="center" wrap="nowrap" gap="md">
         <Box style={{ flex: 1, minWidth: 0 }}>

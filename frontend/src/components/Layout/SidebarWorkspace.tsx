@@ -2,6 +2,8 @@ import React from 'react';
 import { NavLink, Text } from '@mantine/core';
 import { IconFolder, IconFolderOpen, IconMessage } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useProjectConversations, getConversation } from '../../api/conversations';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ChatItem {
   id: string;
@@ -20,12 +22,14 @@ export interface SidebarWorkspaceProps {
 export const SidebarWorkspace: React.FC<SidebarWorkspaceProps> = ({
   id,
   name,
-  chats,
+  chats = [],
   isOpened,
   onToggle,
   sidebarOpened = true,
 }) => {
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const { data: conversations = [] } = useProjectConversations(id);
   const FolderIcon = isOpened ? IconFolderOpen : IconFolder;
 
   if (!sidebarOpened) {
@@ -47,23 +51,41 @@ export const SidebarWorkspace: React.FC<SidebarWorkspaceProps> = ({
       opened={isOpened}
       onChange={onToggle}
       variant="subtle"
-      childrenOffset={28}
+      childrenOffset={6}
       p="5"
       style={{ borderRadius: 'var(--mantine-radius-sm)' }}
     >
-      {chats.map((chat) => (
+      {conversations.slice(0, 4).map((chat) => (
         <NavLink
           key={chat.id}
           component={Link}
           to={`/project/${id}/chat/${chat.id}`}
-          label={<Text size="xs" c="dimmed" truncate>{chat.name}</Text>}
+          onMouseEnter={() => {
+            queryClient.prefetchQuery({
+              queryKey: ['conversation', chat.id],
+              queryFn: () => getConversation(chat.id)
+            });
+          }}
+          label={<Text size="xs" c="dimmed" truncate>{chat.title}</Text>}
           leftSection={<IconMessage size={14} stroke={1.5} color="light-dark(var(--mantine-color-zinc-6), var(--mantine-color-zinc-2))" />}
-          h={32}
+          h={20}
           variant="light"
           active={location.pathname === `/project/${id}/chat/${chat.id}`}
           style={{ borderRadius: 'var(--mantine-radius-sm)', marginTop: '2px' }}
         />
       ))}
+      {conversations.length > 4 && (
+        <NavLink
+          component={Link}
+          to={`/project/${id}`}
+          label={<Text size="xs" c="dimmed" truncate>View all...</Text>}
+          leftSection={<IconFolderOpen size={14} stroke={1.5} color="light-dark(var(--mantine-color-zinc-6), var(--mantine-color-zinc-2))" />}
+          h={20}
+          variant="light"
+          active={location.pathname === `/project/${id}`}
+          style={{ borderRadius: 'var(--mantine-radius-sm)', marginTop: '2px' }}
+        />
+      )}
     </NavLink>
   );
 };
