@@ -11,6 +11,7 @@ interface KnowledgeGraphCoreProps {
   highlightedNodeIds?: string[];
   focusedNodeId?: string | null;
   onNodeClick?: (nodeId: string, event: MouseEvent) => void;
+  onBackgroundClick?: (event: MouseEvent) => void;
 }
 
 export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
@@ -19,7 +20,8 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
   selectedNodeIds = [],
   highlightedNodeIds,
   focusedNodeId,
-  onNodeClick
+  onNodeClick,
+  onBackgroundClick
 }) => {
   const theme = useMantineTheme();
   const { data: entities } = useLibraryEntities(projectId);
@@ -39,26 +41,29 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
   const onNodeClickRef = useRef(onNodeClick);
   onNodeClickRef.current = onNodeClick;
 
+  const onBackgroundClickRef = useRef(onBackgroundClick);
+  onBackgroundClickRef.current = onBackgroundClick;
+
   const nodeRadiusScale = (value: number, widthValue: number, heightValue: number) => {
     const minDimension = Math.min(widthValue, heightValue);
     const base = Math.max(5, Math.min(16, Math.round(minDimension / 34)));
     return Math.max(4, Math.round(base * (value / 20)));
   };
 
+  const typeColors: Record<string, string> = {
+    document: theme.colors.blue[6],
+    entity: theme.colors.grape[6],
+    concept: theme.colors.teal[6],
+    person: theme.colors.orange[6],
+    organization: theme.colors.indigo[6],
+    location: theme.colors.red[6],
+    event: theme.colors.yellow[6],
+    action: theme.colors.green[6],
+    default: theme.colors.gray[6]
+  };
+
   const graphData = useMemo(() => {
     if (!entities) return { nodes: [], links: [] };
-
-    const typeColors: Record<string, string> = {
-      document: theme.colors.blue[6],
-      entity: theme.colors.grape[6],
-      concept: theme.colors.teal[6],
-      person: theme.colors.orange[6],
-      organization: theme.colors.indigo[6],
-      location: theme.colors.red[6],
-      event: theme.colors.yellow[6],
-      action: theme.colors.green[6],
-      default: theme.colors.gray[6]
-    };
 
     const nodeValueMap = new Map<string, number>();
     entities.forEach(entity => {
@@ -127,6 +132,12 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
       .maxZoom(3)
       .onNodeClick((node: any, event: MouseEvent) => {
         if (!interactiveRef.current) return;
+        
+        if (graphRef.current) {
+          graphRef.current.centerAt(node.x, node.y, 800);
+          graphRef.current.zoom(2, 800);
+        }
+
         onNodeClickRef.current?.(node.id, event);
       })
       .onNodeDrag((node: any) => {
@@ -138,6 +149,10 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
         if (!interactiveRef.current) return;
         node.fx = undefined;
         node.fy = undefined;
+      })
+      .onBackgroundClick((event: MouseEvent) => {
+        if (!interactiveRef.current) return;
+        onBackgroundClickRef.current?.(event);
       });
 
     return () => {
@@ -194,15 +209,52 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
   useEffect(() => {
     if (graphRef.current) {
       graphRef.current
-        .linkColor(() => isDarkMode ? 'rgba(148, 163, 184, 0.42)' : 'rgba(71, 85, 105, 0.30)')
+        .linkColor((link: any) => {
+          if (selectedNodeIds.length === 0) return isDarkMode ? 'rgba(148, 163, 184, 0.42)' : 'rgba(71, 85, 105, 0.30)';
+          
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          
+          if (selectedNodeIds.includes(sourceId) || selectedNodeIds.includes(targetId)) {
+            return isDarkMode ? theme.colors.blue[4] : theme.colors.blue[6];
+          }
+          return isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(71, 85, 105, 0.05)';
+        })
+        .linkWidth((link: any) => {
+          if (selectedNodeIds.length === 0) return 1.15;
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          return selectedNodeIds.includes(sourceId) || selectedNodeIds.includes(targetId) ? 2.5 : 0.5;
+        })
+        .linkDirectionalParticles((link: any) => {
+          if (selectedNodeIds.length === 0) return 2;
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          return selectedNodeIds.includes(sourceId) || selectedNodeIds.includes(targetId) ? 4 : 0;
+        })
         .nodeCanvasObject((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-          // Use ref to read latest selected nodes without rebuilding function
-          const isSelected = selectedNodeIdsRef.current.includes(node.id);
+          const isSelected = selectedNodeIds.includes(node.id);
+          const hasSelection = selectedNodeIds.length > 0;
+          
+          let isConnected = false;
+          if (hasSelection && !isSelected) {
+            const { links } = graphRef.current.graphData();
+            isConnected = links.some((l: any) => {
+              const sid = typeof l.source === 'object' ? l.source.id : l.source;
+              const tid = typeof l.target === 'object' ? l.target.id : l.target;
+              return (sid === node.id && selectedNodeIds.includes(tid)) || (tid === node.id && selectedNodeIds.includes(sid));
+            });
+          }
+
+          const isFaded = hasSelection && !isSelected && !isConnected;
+
           const scale = Math.max(0.7, Math.min(1.02, globalScale));
           const baseRadius = nodeRadiusScale(node.value, ctx.canvas.width / window.devicePixelRatio, ctx.canvas.height / window.devicePixelRatio);
           const radius = isSelected ? baseRadius * 1.3 : baseRadius;
           const labelSize = Math.max(3, Math.min(5, 9 / scale));
           const labelColor = isDarkMode ? theme.white : theme.colors.gray[8];
+
+          ctx.globalAlpha = isFaded ? 0.2 : 1;
 
           if (isSelected) {
             ctx.beginPath();
@@ -227,6 +279,8 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
           ctx.textBaseline = 'top';
           ctx.fillStyle = labelColor;
           ctx.fillText(node.label, node.x || 0, (node.y || 0) + radius + 5);
+
+          ctx.globalAlpha = 1;
         })
         .nodePointerAreaPaint((node: any, color: string, ctx: CanvasRenderingContext2D) => {
           const radius = nodeRadiusScale(node.value, ctx.canvas.width, ctx.canvas.height);
@@ -236,10 +290,10 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
           ctx.fill();
         });
     }
-  }, [theme, isDarkMode]);
+  }, [theme, isDarkMode, selectedNodeIds]);
 
   return (
-    <Box ref={viewportRef} style={{ width: '100%', height: '100%' }}>
+    <Box ref={viewportRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
     </Box>
   );

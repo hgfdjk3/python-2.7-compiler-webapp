@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Paper, Group, TextInput, Menu, ActionIcon, Badge, Popover, Text, Stack, ScrollArea, Box, useMantineTheme } from '@mantine/core';
 import { IconSearch, IconFilter } from '@tabler/icons-react';
 import { Entity } from '../../../../api/library';
+import { SearchResultItem } from './SearchResultItem';
 
 interface GraphSearchWidgetProps {
   searchQuery: string;
@@ -25,8 +26,24 @@ export const GraphSearchWidget: React.FC<GraphSearchWidgetProps> = ({
   onResultClick
 }) => {
   const [opened, setOpened] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const theme = useMantineTheme();
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const viewportRef = React.useRef<HTMLDivElement>(null);
+
+  // Reset active index when search changes
+  React.useEffect(() => {
+    setActiveIndex(-1);
+  }, [searchQuery, selectedTypes, opened]);
+
+  // Scroll to active item
+  React.useEffect(() => {
+    if (activeIndex >= 0 && viewportRef.current) {
+      const activeElement = viewportRef.current.querySelector(`[data-active="true"]`);
+      if (activeElement) {
+        activeElement.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [activeIndex]);
 
   // Filter entities based on query and types to show in the dropdown
   const filteredEntities = entities.filter(e => {
@@ -38,44 +55,70 @@ export const GraphSearchWidget: React.FC<GraphSearchWidgetProps> = ({
 
   const showDropdown = opened && (searchQuery.length > 0 || selectedTypes.length > 0) && filteredEntities.length > 0;
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showDropdown) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex(prev => Math.min(prev + 1, filteredEntities.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0 && activeIndex < filteredEntities.length) {
+        onResultClick(filteredEntities[activeIndex].id);
+        setOpened(false);
+        setActiveIndex(-1);
+      } else if (filteredEntities.length > 0) {
+        onResultClick(filteredEntities[0].id);
+        setOpened(false);
+        setActiveIndex(-1);
+      }
+    } else if (e.key === 'Escape') {
+      setOpened(false);
+    }
+  };
+
   return (
-    <Popover 
-      opened={showDropdown} 
-      position="bottom-end" 
-      width={340} 
-      shadow="xl" 
+    <Popover
+      opened={showDropdown}
+      position="bottom-end"
+      width={340}
+      shadow="xl"
       offset={8}
       transitionProps={{ transition: 'pop-top-right', duration: 200 }}
       withArrow
     >
       <Popover.Target>
-        <Paper 
-          shadow="md" 
-          radius="xl" 
-          withBorder 
-          style={{ 
-            position: 'absolute', 
-            top: 20, 
-            right: 20, 
+        <Paper
+          shadow="md"
+          radius="xl"
+          w={340}
+          withBorder
+          style={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
             zIndex: 10,
-            backdropFilter: 'blur(10px)', 
-            backgroundColor: 'color-mix(in srgb, var(--mantine-color-body) 80%, transparent)' 
+            backdropFilter: 'blur(10px)',
+            backgroundColor: 'color-mix(in srgb, var(--mantine-color-body) 80%, transparent)'
           }}
         >
-          <Group gap={0}>
+          <Group gap={0} w="100%" justify="space-between">
             <TextInput
               placeholder="Search graph..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.currentTarget.value)}
               onFocus={() => setOpened(true)}
               onBlur={() => setTimeout(() => setOpened(false), 200)}
+              onKeyDown={handleKeyDown}
               leftSection={<IconSearch size={14} />}
               variant="unstyled"
               size="sm"
-              w={220}
               pl="sm"
             />
-            
+
             <Menu shadow="md" width={200} closeOnItemClick={false}>
               <Menu.Target>
                 <ActionIcon variant="subtle" color="gray" size="lg" radius="xl" mr="xs">
@@ -86,15 +129,15 @@ export const GraphSearchWidget: React.FC<GraphSearchWidgetProps> = ({
               <Menu.Dropdown>
                 <Menu.Label>Filter by Type</Menu.Label>
                 {availableTypes.map(type => (
-                  <Menu.Item 
-                    key={type} 
+                  <Menu.Item
+                    key={type}
                     onClick={() => onToggleType(type)}
                     leftSection={
-                      <Badge 
-                        size="xs" 
-                        color={typeColors[type] || typeColors.default} 
-                        variant={selectedTypes.includes(type) ? 'filled' : 'light'} 
-                        circle 
+                      <Badge
+                        size="xs"
+                        color={typeColors[type] || typeColors.default}
+                        variant={selectedTypes.includes(type) ? 'filled' : 'light'}
+                        circle
                       />
                     }
                   >
@@ -108,43 +151,22 @@ export const GraphSearchWidget: React.FC<GraphSearchWidgetProps> = ({
       </Popover.Target>
 
       <Popover.Dropdown p={0} style={{ overflow: 'hidden', borderRadius: theme.radius.md }}>
-        <ScrollArea h={Math.min(filteredEntities.length * 76, 400)} type="scroll">
+        <ScrollArea h={Math.min(filteredEntities.length * 76, 650)} scrollbarSize={4} viewportRef={viewportRef} type="scroll">
           <Stack gap={0}>
-            {filteredEntities.map((entity, index) => {
-              const state = entity.current_state || entity.proposed_state;
-              const relatedCount = state?.related_entities?.length || 0;
-              const isHovered = hoveredId === entity.id;
-              
-              return (
-                <Box 
-                  key={entity.id} 
-                  p="sm" 
-                  onMouseEnter={() => setHoveredId(entity.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  style={{ 
-                    cursor: 'pointer', 
-                    borderBottom: index < filteredEntities.length - 1 ? '1px solid var(--mantine-color-default-border)' : 'none',
-                    backgroundColor: isHovered ? 'var(--mantine-color-default-hover)' : 'transparent',
-                    transition: 'background-color 0.15s ease'
-                  }}
-                  onClick={() => {
-                    onResultClick(entity.id);
-                    setOpened(false);
-                  }}
-                >
-                  <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text size="sm" fw={600} truncate>{state?.title || entity.type}</Text>
-                      <Text size="xs" c="dimmed" lineClamp={2} mt={2}>{state?.description}</Text>
-                    </div>
-                    <Stack gap={4} align="flex-end" style={{ flexShrink: 0 }}>
-                      <Badge size="xs" variant="light" color={typeColors[entity.type] || typeColors.default}>{entity.type}</Badge>
-                      <Text size="xs" c="dimmed">{relatedCount} connections</Text>
-                    </Stack>
-                  </Group>
-                </Box>
-              );
-            })}
+            {filteredEntities.map((entity, index) => (
+              <SearchResultItem
+                key={entity.id}
+                entity={entity}
+                isLast={index === filteredEntities.length - 1}
+                isActive={index === activeIndex}
+                typeColor={typeColors[entity.type] || typeColors.default}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={(id) => {
+                  onResultClick(id);
+                  setOpened(false);
+                }}
+              />
+            ))}
           </Stack>
         </ScrollArea>
       </Popover.Dropdown>

@@ -4,8 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { KnowledgeGraphCore } from '../components/Project/KnowledgeGraph/KnowledgeGraphCore';
 import { GraphToolbar } from '../components/Project/KnowledgeGraph/Toolbar/GraphToolbar';
 import { GraphSearchWidget } from '../components/Project/KnowledgeGraph/Toolbar/GraphSearchWidget';
+import { NodeInfoPanel } from '../components/Project/KnowledgeGraph/InfoPanel/NodeInfoPanel';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useLibraryEntities } from '../api/library';
+import { AnimatePresence } from 'motion/react';
 
 export const KnowledgeGraphPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -44,6 +46,11 @@ export const KnowledgeGraphPage: React.FC = () => {
       );
     }
     setFocusedNodeId(null); // Clear manual focus on click
+  };
+
+  const handleBackgroundClick = () => {
+    setSelectedNodeIds([]);
+    setFocusedNodeId(null);
   };
 
   const handleResultClick = (entityId: string) => {
@@ -113,6 +120,12 @@ export const KnowledgeGraphPage: React.FC = () => {
         onResultClick={handleResultClick}
       />
 
+      <AnimatePresence>
+        {selectedNodeIds.length === 1 && entities && (
+          <NodeInfoPanel key="info-panel" entity={entities.find(e => e.id === selectedNodeIds[0]) || null} />
+        )}
+      </AnimatePresence>
+
       <Box style={{ flex: 1, minHeight: 0 }}>
         <KnowledgeGraphCore 
           projectId={projectId || ''} 
@@ -121,6 +134,7 @@ export const KnowledgeGraphPage: React.FC = () => {
           highlightedNodeIds={highlightedNodeIds}
           focusedNodeId={focusedNodeId}
           onNodeClick={handleNodeClick}
+          onBackgroundClick={handleBackgroundClick}
         />
       </Box>
     </Box>
