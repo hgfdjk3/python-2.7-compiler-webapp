@@ -62,21 +62,13 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
       nodeValueMap.set(entity.id, related.length * 2 + 10);
     });
 
-    const ringCount = entities.length;
-    const radius = 120;
-
-    const nodes = entities.map((entity, index) => {
-      const angle = (Math.PI * 2 * index) / ringCount - Math.PI / 2;
-      return {
-        id: entity.id,
-        label: entity.current_state?.title || entity.proposed_state?.title || entity.type,
-        group: entity.type,
-        value: nodeValueMap.get(entity.id) || 10,
-        color: typeColors[entity.type] || typeColors.default,
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius * 0.72,
-      };
-    });
+    const nodes = entities.map((entity) => ({
+      id: entity.id,
+      label: entity.current_state?.title || entity.proposed_state?.title || entity.type,
+      group: entity.type,
+      value: nodeValueMap.get(entity.id) || 10,
+      color: typeColors[entity.type] || typeColors.default
+    }));
 
     const links: any[] = [];
     entities.forEach(entity => {
@@ -101,6 +93,20 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
     const graph = ForceGraphFunc()(containerRef.current);
     graphRef.current = graph;
 
+    // Advanced Organic Constellation Physics
+    if (graph.d3Force('charge')) {
+      // Push apart strongly, but stop pushing entirely if further than 150px (Less Spreading!)
+      graph.d3Force('charge').strength(-200).distanceMax(150);
+    }
+    if (graph.d3Force('link')) {
+      // Pull connected nodes closely together to form tight clusters
+      graph.d3Force('link').distance(40);
+    }
+    if (graph.d3Force('center')) {
+      // Gently pull everything towards the center so isolated nodes don't drift away
+      graph.d3Force('center').strength(0.08);
+    }
+
     graph
       .nodeRelSize(1)
       .nodeVal((node: any) => node.value)
@@ -109,9 +115,9 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
       .linkWidth(1.15)
       .linkDirectionalParticles(2)
       .linkDirectionalParticleSpeed(0.005)
-      .d3AlphaDecay(0.02)
-      .d3VelocityDecay(0.35)
-      .warmupTicks(30)
+      .d3AlphaDecay(0.01) // Super slow decay for smooth, fluid settling
+      .d3VelocityDecay(0.4) // Medium friction
+      .warmupTicks(10) // Let it pre-spread slightly before rendering
       .cooldownTicks(Infinity)
       .minZoom(0.6)
       .maxZoom(3)
