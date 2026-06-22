@@ -11,6 +11,7 @@ interface GraphToolbarProps {
   onMerge: () => void;
   onDelete: () => void;
   onExtractText: () => void;
+  onRethinkConnections: () => void;
 }
 
 export const GraphToolbar: React.FC<GraphToolbarProps> = ({
@@ -20,6 +21,7 @@ export const GraphToolbar: React.FC<GraphToolbarProps> = ({
   onMerge,
   onDelete,
   onExtractText,
+  onRethinkConnections,
 }) => {
   const selectionCount = selectedNodeIds.length;
 
@@ -45,9 +47,9 @@ export const GraphToolbar: React.FC<GraphToolbarProps> = ({
         <Divider orientation="vertical" />
         <ToolbarButton
           icon={<IconLink size={18} />}
-          label="Connect Entities (Select 2)"
+          label="Connect (Select 1+)"
           color="teal"
-          disabled={selectionCount !== 2}
+          disabled={selectionCount < 1}
           onClick={onConnect}
         />
         <ToolbarButton
@@ -66,7 +68,7 @@ export const GraphToolbar: React.FC<GraphToolbarProps> = ({
           onClick={onDelete}
         />
         <Divider orientation="vertical" />
-        <GraphOptionsMenu onExtractText={onExtractText} />
+        <GraphOptionsMenu onExtractText={onExtractText} onRethinkConnections={onRethinkConnections} />
       </Group>
     </Paper>
   );

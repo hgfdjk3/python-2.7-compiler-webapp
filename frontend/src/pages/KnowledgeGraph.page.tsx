@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Box, ActionIcon, Group, useMantineTheme, Modal, Button, Text, Textarea } from '@mantine/core';
+import { Box, ActionIcon, Group, useMantineTheme, Modal, Button, Text, Textarea, TextInput } from '@mantine/core';
 import { useParams, useNavigate } from 'react-router-dom';
 import { KnowledgeGraphCore } from '../components/Project/KnowledgeGraph/KnowledgeGraphCore';
 import { GraphToolbar } from '../components/Project/KnowledgeGraph/Toolbar/GraphToolbar';
 import { GraphSearchWidget } from '../components/Project/KnowledgeGraph/Toolbar/GraphSearchWidget';
 import { NodeInfoPanel } from '../components/Project/KnowledgeGraph/InfoPanel/NodeInfoPanel';
+import { CreateConnectionModal } from '../components/Project/KnowledgeGraph/InfoPanel/CreateConnectionModal';
 import { IconArrowLeft, IconFileText } from '@tabler/icons-react';
-import { useLibraryEntities, useDeleteEntity, useExtractDump } from '../api/library';
+import { useLibraryEntities, useDeleteEntity, useExtractDump, useRethinkConnections } from '../api/library';
 import { AnimatePresence } from 'motion/react';
 
 export const KnowledgeGraphPage: React.FC = () => {
@@ -23,9 +24,15 @@ export const KnowledgeGraphPage: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const deleteEntityMutation = useDeleteEntity(projectId || '');
   
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+
   const [extractModalOpen, setExtractModalOpen] = useState(false);
   const [dumpText, setDumpText] = useState('');
   const extractDumpMutation = useExtractDump(projectId || '');
+  
+  const [rethinkModalOpen, setRethinkModalOpen] = useState(false);
+  const [rethinkTopic, setRethinkTopic] = useState('');
+  const rethinkConnectionsMutation = useRethinkConnections(projectId || '');
 
   const typeColors: Record<string, string> = {
     document: theme.colors.blue[6],
@@ -93,7 +100,7 @@ export const KnowledgeGraphPage: React.FC = () => {
   }, [entities, searchQuery, selectedTypes]);
 
   const handleEdit = () => console.log('Edit entity', selectedNodeIds[0]);
-  const handleConnect = () => console.log('Connect entities', selectedNodeIds);
+  const handleConnect = () => setIsConnectModalOpen(true);
   const handleMerge = () => console.log('Merge entities', selectedNodeIds);
   
   const handleDelete = () => setDeleteModalOpen(true);
@@ -104,6 +111,11 @@ export const KnowledgeGraphPage: React.FC = () => {
     });
     setSelectedNodeIds([]);
     setDeleteModalOpen(false);
+  };
+
+  const handleRethinkConnections = () => {
+    setRethinkTopic('');
+    setRethinkModalOpen(true);
   };
 
   return (
@@ -122,6 +134,7 @@ export const KnowledgeGraphPage: React.FC = () => {
           onMerge={handleMerge}
           onDelete={handleDelete}
           onExtractText={() => setExtractModalOpen(true)}
+          onRethinkConnections={handleRethinkConnections}
         />
       </Group>
 
@@ -141,6 +154,16 @@ export const KnowledgeGraphPage: React.FC = () => {
           <NodeInfoPanel key="info-panel" entity={entities.find(e => e.id === selectedNodeIds[0]) || null} />
         )}
       </AnimatePresence>
+
+      {selectedNodeIds.length > 0 && (
+        <CreateConnectionModal 
+          projectId={projectId || ''}
+          sourceEntityId={selectedNodeIds[0]}
+          targetEntityId={selectedNodeIds.length > 1 ? selectedNodeIds[1] : undefined}
+          opened={isConnectModalOpen}
+          onClose={() => setIsConnectModalOpen(false)}
+        />
+      )}
 
       <Box style={{ flex: 1, minHeight: 0 }}>
         <KnowledgeGraphCore 
@@ -192,6 +215,37 @@ export const KnowledgeGraphPage: React.FC = () => {
             disabled={!dumpText.trim()}
           >
             Extract
+          </Button>
+        </Group>
+      </Modal>
+
+      <Modal opened={rethinkModalOpen} onClose={() => setRethinkModalOpen(false)} title="Rethink Connections" centered>
+        <Text size="sm" mb="md" color="dimmed">
+          Specify an optional topic to guide the connection discovery process. Leave blank for general discovery.
+        </Text>
+        <TextInput
+          placeholder="e.g. funding, acquisitions, technical dependencies..."
+          value={rethinkTopic}
+          onChange={(e) => setRethinkTopic(e.currentTarget.value)}
+          mb="md"
+        />
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setRethinkModalOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={() => {
+              rethinkConnectionsMutation.mutate({ 
+                entities_ids: selectedNodeIds.length > 0 ? selectedNodeIds : undefined,
+                topic: rethinkTopic.trim() || undefined
+              }, {
+                onSuccess: () => {
+                  setRethinkModalOpen(false);
+                  setRethinkTopic('');
+                }
+              });
+            }} 
+            loading={rethinkConnectionsMutation.isPending}
+          >
+            Rethink
           </Button>
         </Group>
       </Modal>

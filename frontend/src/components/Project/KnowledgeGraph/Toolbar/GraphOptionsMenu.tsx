@@ -1,13 +1,14 @@
 import React from 'react';
 import { Menu } from '@mantine/core';
-import { IconDotsVertical, IconFileText, IconDownload, IconUpload } from '@tabler/icons-react';
+import { IconDotsVertical, IconFileText, IconDownload, IconUpload, IconRefresh } from '@tabler/icons-react';
 import { ToolbarButton } from './ToolbarButton';
 
 interface GraphOptionsMenuProps {
   onExtractText: () => void;
+  onRethinkConnections: () => void;
 }
 
-export const GraphOptionsMenu: React.FC<GraphOptionsMenuProps> = ({ onExtractText }) => {
+export const GraphOptionsMenu: React.FC<GraphOptionsMenuProps> = ({ onExtractText, onRethinkConnections }) => {
   return (
     <Menu shadow="md" width={200} position="bottom-end" offset={16}>
       <Menu.Target>
@@ -26,6 +27,9 @@ export const GraphOptionsMenu: React.FC<GraphOptionsMenuProps> = ({ onExtractTex
         <Menu.Label>Data Actions</Menu.Label>
         <Menu.Item leftSection={<IconFileText size={14} />} onClick={onExtractText}>
           Extract from Text
+        </Menu.Item>
+        <Menu.Item leftSection={<IconRefresh size={14} />} onClick={onRethinkConnections}>
+          Rethink Connections
         </Menu.Item>
         <Menu.Item leftSection={<IconUpload size={14} />} disabled>
           Import Graph (Coming soon)

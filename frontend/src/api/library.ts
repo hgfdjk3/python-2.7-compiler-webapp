@@ -413,3 +413,33 @@ export const useExtractDump = (projectId: string) => {
     },
   });
 };
+
+export const createManualConnection = async (projectId: string, data: { source_id: string; target_id: string; connection_type: string }): Promise<any> => {
+  const response = await apiClient.post(`/projects/${projectId}/library/connections`, data);
+  return response.data;
+};
+
+export const useCreateManualConnection = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { source_id: string; target_id: string; connection_type: string }) => createManualConnection(projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+    },
+  });
+};
+
+export const rethinkConnections = async (projectId: string, data: { entities_ids?: string[]; topic?: string }): Promise<any> => {
+  const response = await apiClient.post(`/projects/${projectId}/library/extract-connections`, data);
+  return response.data;
+};
+
+export const useRethinkConnections = (projectId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { entities_ids?: string[]; topic?: string }) => rethinkConnections(projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'library', 'entities'] });
+    },
+  });
+};

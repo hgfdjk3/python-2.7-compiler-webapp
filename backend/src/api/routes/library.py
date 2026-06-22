@@ -75,6 +75,55 @@ async def extract_from_conversation(
     
     return {"message": "Conversation extraction completed", "status": "success", "result": result}
 
+class RethinkConnectionsRequest(BaseModel):
+    entities_ids: Optional[List[str]] = None
+    topic: Optional[str] = None
+
+@router.post("/extract-connections")
+async def extract_missing_connections(
+    project_id: str,
+    request: RethinkConnectionsRequest,
+    username: str = Depends(get_current_user),
+):
+    """Explicitly triggers the extraction agent to find missing connections."""
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    extractor = ExtractorAgent()
+    result = await extractor.rethink_connections(project_id, request.entities_ids, request.topic)
+    
+    return {"message": "Missing connections search completed", "status": "success", "result": result}
+
+class CreateConnectionRequest(BaseModel):
+    source_id: str
+    target_id: str
+    connection_type: str
+
+@router.post("/connections")
+async def create_manual_connection(
+    project_id: str,
+    request: CreateConnectionRequest,
+    username: str = Depends(get_current_user),
+):
+    """Manually creates a new connection between two existing nodes."""
+    project = ProjectsService.get_project(project_id)
+    if not project or (username and username not in project.get("members", [])):
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Use _apply_extraction to handle the connection proposition logic safely
+    from src.services.harness.extraction.schemas import ExtractedConnection
+    from src.services.harness.extraction.agent import _apply_extraction
+    
+    conn = ExtractedConnection(
+        source_ref=request.source_id,
+        target_ref=request.target_id,
+        connection_type=request.connection_type
+    )
+    result = _apply_extraction(project_id, None, [], [conn], "manual_connection")
+    
+    return {"message": "Connection proposed", "status": "success", "result": result}
+
 @router.get("/entities", response_model=List[Entity])
 async def get_library_entities(project_id: str, username: str = Depends(get_current_user)):
     project = ProjectsService.get_project(project_id)

@@ -104,16 +104,16 @@ export const KnowledgeGraphCore: React.FC<KnowledgeGraphCoreProps> = ({
 
     // Advanced Organic Constellation Physics
     if (graph.d3Force('charge')) {
-      // Push apart strongly, but stop pushing entirely if further than 150px (Less Spreading!)
-      graph.d3Force('charge').strength(-200).distanceMax(150);
+      // Push apart strongly to prevent overlap and clustering
+      graph.d3Force('charge').strength(-400).distanceMax(400);
     }
     if (graph.d3Force('link')) {
-      // Pull connected nodes closely together to form tight clusters
-      graph.d3Force('link').distance(40);
+      // Increase distance to form readable, well-spaced structures
+      graph.d3Force('link').distance(120);
     }
     if (graph.d3Force('center')) {
       // Gently pull everything towards the center so isolated nodes don't drift away
-      graph.d3Force('center').strength(0.08);
+      graph.d3Force('center').strength(0.02);
     }
 
     graph

@@ -1,16 +1,22 @@
 import React from 'react';
-import { Paper, Group, Text, Box, Stack, Badge, ScrollArea, Divider } from '@mantine/core';
+import { Paper, Group, Text, Box, Stack, Badge, ScrollArea, Divider, ActionIcon, Tooltip } from '@mantine/core';
+import { IconLink } from '@tabler/icons-react';
+import { useState } from 'react';
 import { Entity } from '../../../../api/library';
 import { getSourceStyle } from '../../Sources/sourceTypes';
 import { motion } from 'motion/react';
 
 const MotionPaper = motion.create(Paper);
 
+import { CreateConnectionModal } from './CreateConnectionModal';
+
 interface NodeInfoPanelProps {
   entity: Entity | null;
 }
 
 export const NodeInfoPanel: React.FC<NodeInfoPanelProps> = ({ entity }) => {
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+
   if (!entity) return null;
   const state = entity.current_state || entity.proposed_state;
   if (!state) return null;

@@ -52,18 +52,10 @@ class TriageResult(BaseModel):
 
 
 # ──────────────────────────────────────────────
-# Phase 2: Extraction Schema
+# Step 1: Entity Extraction Schema
 # ──────────────────────────────────────────────
 
-class ExtractedConnection(BaseModel):
-    target_ref: str = Field(
-        description="ID of an existing entity (e.g. 'ent_abc123') OR the exact title of a new entity being created in this same batch."
-    )
-    connection_type: str = Field(
-        description=f"One of: {CONNECTION_TYPES_DESC}"
-    )
-
-class ExtractedEntity(BaseModel):
+class EntityNode(BaseModel):
     existing_id: Optional[str] = Field(
         default=None,
         description="If updating an existing entity, put its ID here. Leave null for new entities."
@@ -71,19 +63,41 @@ class ExtractedEntity(BaseModel):
     title: str = Field(description="Name or title of the entity.")
     description: str = Field(description="Detailed and comprehensive description capturing the key facts, deep context, and rationales. Must be at least 2-3 sentences.")
     type: str = Field(description=f"One of: {ENTITY_TYPES_DESC}")
+
+class EntityExtractionResult(BaseModel):
+    entities: List[EntityNode] = Field(
+        default_factory=list,
+        description="Entities to create or update extracted from the text."
+    )
+
+# ──────────────────────────────────────────────
+# Step 2: Connection Extraction Schema
+# ──────────────────────────────────────────────
+
+class ExtractedConnection(BaseModel):
+    source_ref: str = Field(
+        description="ID of the source entity (e.g. 'ent_abc123') OR the exact title of a new entity."
+    )
+    target_ref: str = Field(
+        description="ID of the target entity (e.g. 'ent_abc123') OR the exact title of a new entity."
+    )
+    connection_type: str = Field(
+        description=f"One of: {CONNECTION_TYPES_DESC}"
+    )
+
+class ConnectionExtractionResult(BaseModel):
     connections: List[ExtractedConnection] = Field(
         default_factory=list,
-        description="Connections to other entities (both existing and new)."
+        description="Connections between the provided entities."
     )
 
-class ExtractionResult(BaseModel):
+# ──────────────────────────────────────────────
+# Step 3: Summary Update Schema
+# ──────────────────────────────────────────────
+
+class SummaryUpdateResult(BaseModel):
     summary_update: Optional[str] = Field(
         default=None,
-        description="A COMPLETE, rewritten project summary that merges the OLD summary with new knowledge. Do NOT return conversational text (e.g. 'No new entities'). Null if no update needed."
+        description="A COMPLETE, rewritten project summary that merges the OLD summary with new knowledge. Do NOT return conversational text. Null if no update needed."
     )
-    entities: List[ExtractedEntity] = Field(
-        default_factory=list,
-        description="Entities to create or update."
-    )
-
 

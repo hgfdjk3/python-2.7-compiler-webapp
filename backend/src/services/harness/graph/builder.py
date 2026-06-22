@@ -96,9 +96,6 @@ def create_graph(tools: List[BaseTool], checkpointer: Optional[Any] = None) -> S
     
     # Clarifier always ends the run — user needs to respond
     workflow.add_edge("clarifier", END)
-    
-    # Automation builder always ends — returns the generated workflow
-    workflow.add_edge("automation_builder", END)
 
     # 4. Compile with checkpointer
     if checkpointer is None:
