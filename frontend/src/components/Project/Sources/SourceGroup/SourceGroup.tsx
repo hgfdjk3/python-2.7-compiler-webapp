@@ -96,6 +96,7 @@ export const SourceGroup: React.FC<SourceGroupProps> = ({
                                             source={source}
                                             selected={attachedSourceIds.includes(source.id)}
                                             onClick={onToggleSource ? () => onToggleSource(source.id) : undefined}
+                                            onOpen={!onToggleSource && onEditSource ? onEditSource : undefined}
                                             onRename={onEditSource ? () => onEditSource(source.id) : undefined}
                                         />
                                     ))

@@ -97,7 +97,7 @@ const ProjectSourcesPreviewContent: React.FC<ProjectSourcesPreviewContentProps> 
                     >
                         <Stack gap="5">
                             {filteredSources.map((source) => (
-                                <SourceCard key={source.id} source={source} isDraggingAny={isDraggingAny} onRename={onEditSource ? () => onEditSource(source.id) : undefined} />
+                                <SourceCard key={source.id} source={source} isDraggingAny={isDraggingAny} onOpen={onEditSource} onRename={onEditSource ? () => onEditSource(source.id) : undefined} />
                             ))}
                         </Stack>
                     </Box>

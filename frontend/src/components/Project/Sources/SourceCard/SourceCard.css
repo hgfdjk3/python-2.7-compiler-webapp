@@ -1,7 +1,11 @@
 .sourceCardRoot {
-    cursor: default;
+    cursor: grab;
     position: relative;
     transition: all 0.2s ease;
+}
+
+.sourceCardRoot:active {
+    cursor: grabbing;
 }
 
 .sourceCardRoot[data-dragging="true"] {
@@ -9,7 +13,6 @@
 }
 
 .dragHandle {
-    cursor: grab;
     display: flex;
     align-items: center;
 }

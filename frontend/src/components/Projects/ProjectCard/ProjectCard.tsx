@@ -99,15 +99,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               >
                 Rename
               </Menu.Item>
-              <Menu.Item
-                leftSection={<IconCopy size={14} />}
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  onDuplicate?.();
-                }}
-              >
-                Duplicate
-              </Menu.Item>
               <Menu.Divider />
               <Menu.Item
                 color="red"

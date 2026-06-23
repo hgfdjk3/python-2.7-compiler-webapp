@@ -1,13 +1,15 @@
 import React from 'react';
 import { ActionIcon, Anchor, Group, Title } from '@mantine/core';
 import { IconArrowLeft, IconDotsVertical, IconStar } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 interface ProjectHeaderProps {
   title: string;
 }
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ title }) => {
+  const { projectId } = useParams<{ projectId: string }>();
+  
   return (
     <Group justify="space-between" align="center" mb="sm">
       <Group gap="5" ml="xs" align="center">
@@ -29,7 +31,20 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ title }) => {
           All projects
         </Anchor>
         <Group style={{ flex: 1 }} ml="5" align='stretch' >
-          <Title order={4} fw={500}>{title}</Title>
+          {projectId ? (
+            <Anchor
+              component={Link}
+              to={`/project/${projectId}`}
+              underline="never"
+              c="var(--mantine-color-text)"
+            >
+              <Title order={4} fw={500} style={{ cursor: 'pointer' }}>
+                {title}
+              </Title>
+            </Anchor>
+          ) : (
+            <Title order={4} fw={500}>{title}</Title>
+          )}
         </Group>
       </Group>
 
