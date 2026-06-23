@@ -104,8 +104,21 @@ async function processStream(
     if (messages) {
       for (const msg of messages) {
         if (msg.type === 'ai' && msg.content) {
-          accumulatedContent += msg.content;
-          onUpdate(accumulatedContent);
+          let contentStr = '';
+          if (typeof msg.content === 'string') {
+            contentStr = msg.content;
+          } else if (Array.isArray(msg.content)) {
+            contentStr = msg.content.map((block: any) => {
+              if (typeof block === 'string') return block;
+              if (block && block.type === 'text' && block.text) return block.text;
+              return '';
+            }).join('');
+          }
+          
+          if (contentStr) {
+            accumulatedContent += contentStr;
+            onUpdate(accumulatedContent);
+          }
         }
       }
     }

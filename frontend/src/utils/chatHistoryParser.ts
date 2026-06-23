@@ -29,7 +29,16 @@ export const parseChatHistory = (history: any[]): ChatMessage[] => {
       });
     } else {
       // Accumulate 'ai', 'tool', etc. into a single assistant bubble
-      let appendedContent = msg.content || '';
+      let appendedContent = '';
+      if (typeof msg.content === 'string') {
+        appendedContent = msg.content;
+      } else if (Array.isArray(msg.content)) {
+        appendedContent = msg.content.map((block: any) => {
+          if (typeof block === 'string') return block;
+          if (block && block.type === 'text' && block.text) return block.text;
+          return '';
+        }).join('');
+      }
       
       if (msg.type === 'ai' && msg.tool_calls && msg.tool_calls.length > 0) {
         msg.tool_calls.forEach((tc: any) => {
