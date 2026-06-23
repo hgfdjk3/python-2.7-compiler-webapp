@@ -1,0 +1,105 @@
+---
+sidebar_position: 2
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# פיתוח מחבר MCP ב-Python
+
+במדריך זה נבנה שרת MCP בסיסי בשפת Python שמספק כלי (Tool) שמחשב מזג אוויר ופעולה אריתמטית פשוטה. הספרייה המומלצת לכך היא `mcp` (יחד עם `fastmcp` כדי להפוך את הפיתוח לקל כמו פיתוח ב-FastAPI).
+
+## התקנה
+
+ראשית, נתקין את החבילה הדרושה.
+
+```bash title="Terminal"
+pip install mcp
+```
+
+## כתיבת הקוד
+
+צרו קובץ פייתון והעתיקו אליו את הקוד הבא. בקוד זה נגדיר שני כלים (Tools) שהמערכת שלנו תוכל להפעיל.
+
+<Tabs>
+  <TabItem value="fastmcp" label="שימוש ב-FastMCP (מומלץ)" default>
+
+```python title="weather_server.py"
+from mcp.server.fastmcp import FastMCP
+
+# יוצרים את שרת ה-MCP
+mcp = FastMCP("AtomWeatherConnector")
+
+@mcp.tool()
+def get_weather(city: str) -> str:
+    """מחזיר את מזג האוויר בעיר שנבחרה."""
+    # כאן אפשר לפנות ל-API אמיתי של מזג אוויר
+    return f"The weather in {city} is sunny and 25°C."
+
+@mcp.tool()
+def calculate_sum(a: int, b: int) -> int:
+    """מחזיר את הסכום של שני מספרים."""
+    return a + b
+
+if __name__ == "__main__":
+    # מפעיל את השרת על בסיס Stdio
+    mcp.run()
+```
+
+  </TabItem>
+  <TabItem value="lowlevel" label="שימוש בממשק נמוך (Low-Level)">
+
+```python title="server_low_level.py"
+import asyncio
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+import mcp.types as types
+
+app = Server("LowLevelConnector")
+
+@app.list_tools()
+async def list_tools() -> list[types.Tool]:
+    return [
+        types.Tool(
+            name="get_weather",
+            description="Get weather for a city",
+            inputSchema={
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"]
+            }
+        )
+    ]
+
+@app.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+    if name == "get_weather":
+        city = arguments.get("city", "Unknown")
+        return [types.TextContent(type="text", text=f"Weather in {city} is 25°C")]
+    raise ValueError(f"Unknown tool: {name}")
+
+async def main():
+    async with stdio_server() as (read_stream, write_stream):
+        await app.run(read_stream, write_stream, app.create_initialization_options())
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+  </TabItem>
+</Tabs>
+
+## חיבור ל-Atom
+
+:::tip[חשוב לזכור]
+
+כאשר שרת ה-MCP פועל על Stdio (כמו בדוגמאות למעלה), Atom מריץ את הפקודה בעצמו! השרת שלכם לא ירוץ ברקע עד ש-Atom יפעיל אותו.
+
+:::
+
+1. במסך הפרויקט ב-Atom, עברו להגדרות ולחצו על **MCP Integrations**.
+2. בחרו להוסיף חיבור Stdio.
+3. בשדה **Command** הזינו: `python` (או `python3`).
+4. בשדה **Arguments** הזינו את הנתיב המלא לקובץ שלכם: `["/absolute/path/to/weather_server.py"]`.
+
+כעת Atom יידע שברשותו הכלים לחישוב מזג אוויר וסכום מספרים!

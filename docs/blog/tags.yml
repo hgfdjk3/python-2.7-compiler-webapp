@@ -1,0 +1,74 @@
+atom:
+  label: Atom
+  permalink: /atom
+  description: Posts related to the Atom platform.
+
+release:
+  label: Release
+  permalink: /release
+  description: Platform updates and release notes.
+
+scheduling:
+  label: Scheduling
+  permalink: /scheduling
+  description: Scheduling, automation and task execution guides.
+
+mcp:
+  label: MCP
+  permalink: /mcp
+  description: Model Context Protocol server integrations.
+
+python:
+  label: Python
+  permalink: /python
+  description: Python developer guides.
+
+typescript:
+  label: TypeScript
+  permalink: /typescript
+  description: TypeScript developer guides.
+
+ai:
+  label: AI
+  permalink: /ai
+  description: Artificial Intelligence and agent integrations.
+
+automation:
+  label: Automation
+  permalink: /automation
+  description: Workflow automation and execution.
+
+guide:
+  label: Guide
+  permalink: /guide
+  description: Actionable tutorials and how-to articles.
+
+knowledge-graph:
+  label: Knowledge Graph
+  permalink: /knowledge-graph
+  description: Knowledge representation, node routing, and graph structures.
+
+database:
+  label: Database
+  permalink: /database
+  description: Data stores, entities, and state persistence.
+
+development:
+  label: Development
+  permalink: /development
+  description: Development processes and workflow insights.
+
+architecture:
+  label: Architecture
+  permalink: /architecture
+  description: Architecture and system design choices.
+
+react:
+  label: React
+  permalink: /react
+  description: UI building and frontend updates.
+
+rust:
+  label: Rust
+  permalink: /rust
+  description: Core engine updates and high-performance Rust programming.

@@ -1,0 +1,107 @@
+---
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# פיתוח מחבר MCP ב-TypeScript
+
+ניתן לכתוב מחברי MCP גם בסביבת Node.js ו-TypeScript. ה-SDK הרישמי של MCP מספק תמיכה מצוינת בכך.
+
+## התקנה
+
+פתחו פרויקט חדש והתקינו את הספריות הנדרשות:
+
+```bash title="Terminal"
+npm init -y
+npm install @modelcontextprotocol/sdk
+npm install -D typescript @types/node
+npx tsc --init
+```
+
+## כתיבת הקוד
+
+ניצור קובץ בשם `index.ts` שחושף כלי (Tool) המחזיר נתוני לקוח פיקטיביים ממערכת ה-CRM שלנו.
+
+```typescript title="index.ts"
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+
+const server = new Server({
+  name: "Atom-TS-Connector",
+  version: "1.0.0",
+}, {
+  capabilities: {
+    tools: {},
+  },
+});
+
+// הגדרת רשימת הכלים (Tools) שהשרת חושף
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: "get_crm_customer",
+        description: "Fetch customer details from CRM by ID",
+        inputSchema: {
+          type: "object",
+          properties: {
+            customerId: { type: "string" },
+          },
+          required: ["customerId"],
+        },
+      },
+    ],
+  };
+});
+
+// טיפול בקריאה לכלי
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === "get_crm_customer") {
+    const customerId = request.params.arguments?.customerId;
+    
+    // בחיים האמיתיים היינו עושים קריאת HTTP ל-Salesforce וכדומה
+    const customerData = {
+      id: customerId,
+      name: "ישראל ישראלי",
+      status: "VIP"
+    };
+
+    return {
+      content: [{ type: "text", text: JSON.stringify(customerData) }],
+    };
+  }
+
+  throw new Error(`Tool not found: ${request.params.name}`);
+});
+
+// אתחול התקשורת ב-Stdio
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.log("MCP Server running...");
+}
+
+main().catch(console.error);
+```
+
+:::danger[קימפול הקוד]
+
+Atom מריץ את הקוד שלכם כקובץ הרצה. לא לשכוח לקמפל את ה-TypeScript שלכם ל-JavaScript (`npx tsc`) או להשתמש ב-`ts-node`/`tsx` בשדה הפקודה (Command) ב-Atom.
+
+:::
+
+## חיבור ל-Atom
+
+בהגדרות הפרויקט שלכם, הוסיפו חיבור Stdio:
+- **Command:** `node`
+- **Arguments:** `["/absolute/path/to/dist/index.js"]`
+
+או, אם אתם רוצים להריץ ישירות את ה-TypeScript ללא קימפול (פחות מומלץ לסביבת ייצור):
+- **Command:** `npx`
+- **Arguments:** `["tsx", "/absolute/path/to/index.ts"]`

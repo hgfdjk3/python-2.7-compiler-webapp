@@ -11,8 +11,8 @@ from src.api.services.projects_service import ProjectsService
 logger = logging.getLogger("worker_node")
 
 @tool
-def request_clarification() -> str:
-    """Use this tool if the user's request is extremely ambiguous, vague, or missing critical details that prevent you from completing the task. Calling this tool will pause your execution and ask the user for clarification."""
+def request_clarification(reason: str) -> str:
+    """Use this tool if the user's request is extremely ambiguous, vague, or missing critical details that prevent you from completing the task. Provide a specific 'reason' explaining what information is missing. Calling this tool will pause your execution and ask the user for clarification."""
     return ""
 
 async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, Any]:
@@ -83,7 +83,17 @@ Additional Guidelines:
         for tc in response.tool_calls:
             if tc["name"] == "request_clarification":
                 logger.info("Worker requested clarification, routing to clarifier node.")
-                return {"next": "clarifier"}
+                reason = tc.get("args", {}).get("reason", "The user's request is ambiguous.")
+                tool_msg = ToolMessage(
+                    content=f"Clarification requested. Reason: {reason}",
+                    tool_call_id=tc["id"],
+                    name=tc["name"]
+                )
+                return {
+                    "messages": [response, tool_msg],
+                    "next": "clarifier",
+                    "routing_metadata": reason
+                }
     
     # Route back to standard flow (tools_condition handles the next routing)
     return {

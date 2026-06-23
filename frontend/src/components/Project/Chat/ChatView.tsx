@@ -59,11 +59,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
   // Clarification questions state — driven externally by MarkdownResponse
   const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestionData[]>([]);
   const [showClarification, setShowClarification] = useState(false);
+  const triggeredClarificationsRef = useRef<Set<string>>(new Set());
 
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const [activeThreadId, setActiveThreadId] = useState(() => `chat_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`);
-  const { mutate, streamedContent, isPending, submitApproval } = useChatStream(activeThreadId, project.id, setMessages);
+  const { mutate, streamedContent, isPending, submitApproval, clearStream } = useChatStream(activeThreadId, project.id, setMessages);
   const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
 
   const handleApprovalDecision = async (toolCallId: string, toolName: string, decision: 'allow' | 'reject' | 'try_again' | 'always_allow') => {
@@ -104,6 +105,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
       sources: messageSources
     }]);
     setShowClarification(false);
+    triggeredClarificationsRef.current.clear();
+    clearStream();
     mutate({ prompt, isAutomation, sourceIds }, {
       onSuccess: (finalContent) => {
         setMessages((prev) => [...prev, {
@@ -139,6 +142,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   /** Called from MarkdownResponse / ClarificationBlock to show clarification above the prompt */
   const handleTriggerClarification = useCallback((questions: ClarificationQuestionData[]) => {
+    const hash = JSON.stringify(questions);
+    if (triggeredClarificationsRef.current.has(hash)) return;
+    triggeredClarificationsRef.current.add(hash);
+
     setClarificationQuestions(questions);
     setShowClarification(true);
   }, []);

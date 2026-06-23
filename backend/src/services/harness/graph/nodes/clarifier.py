@@ -78,7 +78,7 @@ async def clarifier_node(state: AgentState, config: RunnableConfig) -> Dict[str,
     if llm is None:
         model_name = configurable.get("model_name", "qwen/qwen3.5-122b-a10b")
         temperature = configurable.get("temperature", 0.3)
-        llm = ChatOpenAI(model=model_name, temperature=temperature)
+        llm = ChatOpenAI(model=model_name, temperature=temperature, max_tokens=2048)
 
     structured_llm = llm.with_structured_output(ClarificationResponse, method="function_calling").with_retry(
         stop_after_attempt=10,
@@ -89,6 +89,10 @@ async def clarifier_node(state: AgentState, config: RunnableConfig) -> Dict[str,
     extra_instruction = state.get("system_instruction", "")
     if extra_instruction:
         system_prompt += f"\n\nContext & Instructions:\n{extra_instruction}\n"
+        
+    reason = state.get("routing_metadata", "")
+    if reason:
+        system_prompt += f"\n\nThe orchestrator requested clarification for the following reason:\n{reason}\n"
 
     messages = [SystemMessage(content=system_prompt)] + list(state.get("messages", []))
 
