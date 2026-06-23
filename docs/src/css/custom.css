@@ -236,98 +236,6 @@ body {
   --feedback-color-rgb: 113, 113, 122 !important;
 }
 
-/* Hero Section Refinement */
-.hero-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 7rem 1.5rem;
-  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.04) 0%, rgba(0, 0, 0, 0) 50%);
-  position: relative;
-  border-bottom: 1px solid var(--atom-border-color);
-}
-
-[data-theme='dark'] .hero-container {
-  background: radial-gradient(circle at top, rgba(99, 102, 241, 0.08) 0%, rgba(0, 0, 0, 0) 60%);
-}
-
-.hero-logo {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 2rem;
-  color: var(--ifm-color-primary);
-  filter: drop-shadow(0 0 12px rgba(37, 99, 235, 0.2));
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: float-logo 4s ease-in-out infinite;
-}
-
-[data-theme='dark'] .hero-logo {
-  color: var(--ifm-color-primary-light);
-  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.25));
-}
-
-.hero-logo:hover {
-  transform: scale(1.08) rotate(8deg);
-  filter: drop-shadow(0 0 30px var(--atom-accent-glow)) drop-shadow(0 0 15px var(--atom-accent));
-  color: var(--atom-accent);
-}
-
-@keyframes float-logo {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-
-.hero-title {
-  font-family: var(--ifm-heading-font-family);
-  font-size: 3.25rem;
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.8px;
-  margin-bottom: 1.25rem;
-  background: linear-gradient(135deg, #09090b 30%, var(--ifm-color-primary) 75%, var(--atom-accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-[data-theme='dark'] .hero-title {
-  background: linear-gradient(135deg, #fafafa 40%, var(--ifm-color-primary-light) 80%, var(--atom-accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-  font-size: 1.2rem;
-  color: #52525b;
-  /* Zinc 600 */
-  max-width: 680px;
-  margin-bottom: 2.25rem;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
-[data-theme='dark'] .hero-subtitle {
-  color: #a1a1aa;
-  /* Zinc 400 */
-}
-
-/* Premium Buttons Layout */
-.hero-buttons {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
 .button-primary {
   background-color: var(--ifm-color-primary);
   color: white !important;
@@ -399,4 +307,44 @@ body {
 
 [data-theme='dark'] .navbar__search-input:focus {
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* ── Compact Footer ───────────────────────────────────────────── */
+.footer {
+  padding: 0 !important;
+  border-top: 1px solid var(--atom-border-color) !important;
+  background-color: var(--ifm-background-color) !important;
+}
+
+/* Hide the multi-column link grid; keep only the bottom bar */
+.footer__links {
+  display: none !important;
+}
+
+.footer__bottom {
+  padding: 0.65rem 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-direction: row-reverse !important; /* copyright left, links right in LTR; reversed for RTL */
+  gap: 1rem !important;
+}
+
+.footer__copyright {
+  font-size: 0.78rem !important;
+  color: var(--ifm-color-emphasis-400) !important;
+  margin: 0 !important;
+}
+
+/* Inject the flat link list via the .footer__bottom existing markup */
+.footer__bottom .footer__link-item {
+  font-size: 0.78rem !important;
+  color: var(--ifm-color-emphasis-500) !important;
+  text-decoration: none !important;
+  transition: color 0.15s !important;
+}
+
+.footer__bottom .footer__link-item:hover {
+  color: var(--ifm-color-primary) !important;
+  text-decoration: none !important;
 }
