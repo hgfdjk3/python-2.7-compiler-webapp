@@ -6,6 +6,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { getToolIcon } from '../../../../utils/iconUtils';
 import { ToolApprovalCard } from '../ToolApprovalCard/ToolApprovalCard';
 import { useApprovalStore } from '../../../../utils/approvalStore';
+import { ToolDataTable } from '../ToolBlock/ToolDataTable/ToolDataTable';
 
 interface ApproveToolBlockProps {
   name?: string;
@@ -75,7 +76,7 @@ export const ApproveToolBlock: React.FC<ApproveToolBlockProps> = ({ name, id, on
       {!decision && (
         <Collapse expanded={open}>
           <Box pl={28} mt="xs">
-            <Code block>{parsedArgs ? JSON.stringify(parsedArgs, null, 2) : String(children)}</Code>
+            <ToolDataTable data={parsedArgs} rawString={String(children)} />
           </Box>
         </Collapse>
       )}

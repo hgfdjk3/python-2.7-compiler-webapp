@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Code, Group, Collapse, ThemeIcon, Card, Text, Loader, ActionIcon, Box, Divider } from '@mantine/core';
+import { ToolDataTable } from './ToolDataTable/ToolDataTable';
 import { IconChevronRight, IconCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 
@@ -83,7 +84,7 @@ export const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ name, children }) 
 
       <Collapse expanded={open}>
         <Box pl={28} mt="xs">
-          <Code block>{parsed ? JSON.stringify(parsed, null, 2) : String(children)}</Code>
+          <ToolDataTable data={parsed} rawString={String(children)} />
         </Box>
       </Collapse>
     </Box>
