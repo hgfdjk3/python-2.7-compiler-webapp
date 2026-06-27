@@ -1,0 +1,50 @@
+---
+sidebar_position: 3
+---
+
+# הגדרות מתקדמות: תגיות מטא ואישורים
+
+כאשר אנו חושפים כלים (Tools) דרך MCP, לעיתים נרצה לשלוט באיך שהכלים מוצגים למשתמש בממשק, או אפילו לדרוש אישור ידני לפני שהסוכן (Agent) מפעיל אותם. ניתן לעשות זאת בקלות באמצעות פרמטר ה-`meta`.
+
+## הוספת שם ותיאור כלים
+
+כברירת מחדל, המערכת משתמשת בשם הפונקציה (למשל `get_weather_in_city`) כשם הכלי. כדי להציג שם קריא וברור יותר בממשק המשתמש, נוכל להגדיר `display_name` ו-`display_description`:
+
+```python title="server.py"
+from fastmcp import FastMCP
+
+mcp = FastMCP("Weather App")
+
+@mcp.tool(meta={
+    "display_name": "Get City Weather", 
+    "display_description": "Fetches current weather information for a specific city."
+})
+def get_weather_in_city(city: str) -> str:
+    """Get the current weather for a given city."""
+    return f"Mild and 20°C in {city}"
+```
+
+## דרישת אישור פעולה (Requires Approval)
+
+ישנן פעולות רגישות במערכת. למשל: מחיקת קבצים, עדכון נתונים במסד הנתונים, או הרצת סקריפטים. בפעולות אלו נרצה לוודא שהסוכן לא מבצע אותן בצורה אוטומטית ללא ידיעת המשתמש.
+
+על ידי הוספת התגית `requires_approval`, המערכת תעצור את הריצה ותבקש את אישור המשתמש לפני הפעלת הכלי:
+
+```python title="server.py"
+@mcp.tool(meta={
+    "tags": ["requires_approval"],
+    "display_name": "Read File Content",
+    "display_description": "Read the contents of a sensitive file."
+})
+def read_file(path: str) -> str:
+    """Read the contents of a file."""
+    import os
+    
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+    
+    with open(path, "r") as f:
+        return f.read()
+```
+
+כאשר הסוכן ינסה להשתמש בכלי זה, הריצה תשהה (Pause) ותופיע חלונית אישור למשתמש בתיבת הצ'אט. הפונקציה המקורית שלכם תופעל אך ורק אם המשתמש אישר את הפעולה במפורש. מנגנון זה מבטיח שהשליטה תמיד נשארת בידיים של המשתמש בעת צורך בכך.

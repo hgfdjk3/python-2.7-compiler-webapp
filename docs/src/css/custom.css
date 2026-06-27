@@ -9,13 +9,13 @@
   --ifm-code-font-size: 88%;
 
   /* Brand Colors - Custom Indigo/Cobalt Theme */
-  --ifm-color-primary: #2e4885;
-  --ifm-color-primary-dark: #294178;
-  --ifm-color-primary-darker: #273d71;
-  --ifm-color-primary-darkest: #20325d;
-  --ifm-color-primary-light: #334f92;
-  --ifm-color-primary-lighter: #355399;
-  --ifm-color-primary-lightest: #3c5ead;
+  --ifm-color-primary: #5b86ec;
+  --ifm-color-primary-dark: #3e70e9;
+  --ifm-color-primary-darker: #2f66e7;
+  --ifm-color-primary-darkest: #184ecd;
+  --ifm-color-primary-light: #789cef;
+  --ifm-color-primary-lighter: #87a6f1;
+  --ifm-color-primary-lightest: #b3c7f6;
 
   /* Accent Colors - Sleek Node Activation (Emerald) */
   --atom-accent: #10b981;
@@ -326,7 +326,8 @@ body {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  flex-direction: row-reverse !important; /* copyright left, links right in LTR; reversed for RTL */
+  flex-direction: row-reverse !important;
+  /* copyright left, links right in LTR; reversed for RTL */
   gap: 1rem !important;
 }
 
@@ -347,4 +348,10 @@ body {
 .footer__bottom .footer__link-item:hover {
   color: var(--ifm-color-primary) !important;
   text-decoration: none !important;
+}
+
+/* Custom Avatar Sizing */
+.avatar__photo {
+  width: 36px !important;
+  height: 36px !important;
 }

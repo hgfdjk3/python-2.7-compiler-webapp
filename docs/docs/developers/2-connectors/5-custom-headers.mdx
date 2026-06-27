@@ -1,0 +1,43 @@
+---
+sidebar_position: 5
+---
+
+# Custom Headers
+
+בנוסף לזיהוי המשתמש הבסיסי (`x-user`), לעיתים תצטרכו להעביר מידע נוסף אל שרתי ה-MCP שלכם, כגון טוקנים לאימות (API Keys), הגדרות אזוריות, או מזהי סביבה (Tenant ID). 
+
+מערכת Atom מאפשרת להגדיר Headers מותאמים אישית ברמת החיבור, והם ישלחו בכל בקשה אל הכלים (Tools) שלכם.
+
+## קריאת Custom Headers בתוך הכלי
+
+בדיוק כמו ה-User Header, ניתן לקרוא כל Header שהועבר בעזרת הפונקציה `get_http_headers` (כאשר מעבירים לה `include_all=True`):
+
+```python title="server.py"
+from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_http_headers
+
+mcp = FastMCP("My App")
+
+@mcp.tool()
+def fetch_secure_data() -> str:
+    """Fetch data from a secure internal system."""
+    
+    # קבלת כל ה-Headers שהועברו על ידי המערכת
+    headers = get_http_headers(include_all=True)
+    
+    # שליפת Header מותאם אישית בשם 'x-api-key'
+    api_key = headers.get("x-api-key")
+    
+    if not api_key:
+        return "שגיאה: חסר מפתח אימות (API Key)."
+        
+    # שימוש ב-API Key שקיבלנו מה-Header
+    print(f"Authenticating with API Key: {api_key}")
+    
+    return "Secure data retrieved successfully."
+```
+
+## הגדרת Custom Headers במערכת
+
+כדי להגדיר את ה-Headers הללו, יש לעבור למסך **ניהול חיבורים (Connectors)** במערכת Atom. 
+בעת הוספה או עריכה של חיבור מבוסס HTTP/SSE, תוכלו להזין זוגות של מפתח-ערך (Key-Value) שיישלחו כ-Headers בכל בקשה אל שרת ה-MCP. כך ניתן לנהל הרשאות וגישה למערכות צד שלישי בצורה מאובטחת.

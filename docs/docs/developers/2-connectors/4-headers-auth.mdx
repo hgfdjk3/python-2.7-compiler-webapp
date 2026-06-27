@@ -1,0 +1,67 @@
+---
+sidebar_position: 4
+---
+
+# הרשאות משתמשים
+
+מערכת Atom תוכננה כדי להעניק לכם, המפתחים, גמישות ושליטה מלאה על הרשאות הגישה. במקום שהמערכת תכפה עליכם מודל הרשאות סגור, אנו מעבירים את האחריות ואת הכוח לידיים שלכם. כלים (Tools) שמבוצעים בשרת ה-MCP שלכם לרוב צריכים לדעת מי המשתמש שהפעיל אותם, כדי שתוכלו לנהל הרשאות בעצמכם, להגביל גישה למידע רגיש, או לתעד פעולות במערכת ה-Audit הארגונית שלכם.
+
+כדי לאפשר זאת, מערכת Atom דואגת להעביר לשרת ה-MCP שלכם את מזהה המשתמש שהפעיל את הצ'אט ב-Header מיוחד בשם `x-user`.
+
+## ניהול הרשאות מבוסס משתמש
+
+בכדי לקבל את ה-Headers שנשלחו עם הבקשה ולזהות את המשתמש, נשתמש בפונקציה `get_http_headers` מתוך `fastmcp.server.dependencies`:
+
+```python title="server.py"
+from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_http_headers
+
+mcp = FastMCP("My App")
+
+# רשימת הרשאות דמיונית (במערכת אמיתית תיבדק מול מסד הנתונים או Active Directory)
+ADMIN_USERS = ["admin_user_1", "it_manager"]
+
+@mcp.tool()
+def delete_database_record(record_id: str) -> str:
+    """Delete a sensitive record from the database. Requires admin privileges."""
+    
+    # קבלת כל ה-Headers שהועברו על ידי המערכת
+    headers = get_http_headers(include_all=True)
+    
+    # שליפת מזהה המשתמש מתוך ה-Header
+    user_id = headers.get("x-user")
+    
+    if not user_id:
+        return "שגיאה: משתמש לא מזוהה. הפעולה נדחתה."
+        
+    # ניהול הרשאות עצמאי שאתם כמפתחים מבצעים
+    if user_id not in ADMIN_USERS:
+        return f"שגיאה: למשתמש '{user_id}' אין הרשאות מנהל לביצוע מחיקה."
+        
+    # רק במקרה שבו למשתמש יש הרשאה, נבצע את הפעולה
+    print(f"Record {record_id} deleted by authorized user: {user_id}")
+    return f"Record {record_id} has been successfully deleted."
+```
+
+## דוגמה נוספת: גישה למידע אישי
+
+מלבד חסימת פעולות, ניתן (ורצוי) להשתמש ב-`x-user` כדי לסנן מידע ולהחזיר למשתמש אך ורק את הנתונים שלו:
+
+```python title="server.py"
+@mcp.tool()
+def get_my_salary_slip() -> str:
+    """Get the salary slip for the current user."""
+    
+    headers = get_http_headers(include_all=True)
+    user_id = headers.get("x-user")
+    
+    if not user_id:
+        return "Unauthorized"
+        
+    # שאילתה למסד הנתונים להבאת תלוש המשכורת של המשתמש הספציפי
+    # db.query("SELECT * FROM salaries WHERE employee_id = ?", user_id)
+    
+    return f"Here is the salary slip for employee {user_id}."
+```
+
+שימוש נכון ב-`x-user` נותן לכם את כל הכלים לנהל הרשאות בצורה מאובטחת, ולהבטיח שהנתונים שמנועי ה-AI קוראים ומעבדים חשופים אך ורק למי שמורשה לכך בפועל.
