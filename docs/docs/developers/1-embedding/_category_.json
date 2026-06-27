@@ -1,0 +1,8 @@
+{
+  "label": "הטמעת צ'אט (Embedding)",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "הטמעה של ממשק ה-Chat של Atom במערכות חיצוניות אחרות"
+  }
+}

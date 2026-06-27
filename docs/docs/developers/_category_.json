@@ -2,7 +2,7 @@
   "label": "למפתחים",
   "position": 2,
   "link": {
-    "type": "generated-index",
-    "description": "מדריכים למפתחי תוכנה: כיצד להרחיב את המערכת באמצעות חיבורי MCP"
+    "type": "doc",
+    "id": "developers/intro"
   }
 }

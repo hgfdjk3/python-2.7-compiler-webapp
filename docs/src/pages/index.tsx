@@ -25,7 +25,7 @@ export default function Home(): React.ReactNode {
 
         {/* Short tagline */}
         <p className={styles.subtitle}>
-          פלטפורמת התזמון, גרף הידע וחיבור סוכני ה-AI שלכם
+          הדרך הקלה ביותר לאטמט את המשימות החזרתיות והידניות בעבודה
         </p>
 
         {/* Primary CTAs */}
