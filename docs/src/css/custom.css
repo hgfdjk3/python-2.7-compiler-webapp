@@ -113,9 +113,6 @@ body {
   color: var(--ifm-color-primary);
 }
 
-[data-theme='dark'] .navbar__logo {
-  filter: invert(1);
-}
 
 .navbar__item {
   font-weight: 500;

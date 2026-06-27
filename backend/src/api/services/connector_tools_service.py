@@ -7,14 +7,16 @@ logger = logging.getLogger("connector_tools_service")
 # In-memory tool to connector mapping cache: { tool_name: {"connector_id": str, "color": str, "tags": list} }
 _TOOL_TO_CONNECTOR_MAPPING: Dict[str, Dict[str, Any]] = {}
 
-def register_tool_mapping(tool_name: str, connector_id: str, color: str, tags: List[str] = None):
+def register_tool_mapping(tool_name: str, connector_id: str, color: str, tags: List[str] = None, display_name: str = None, display_description: str = None):
     """Registers a dynamic tool mapping from an active MCP server connection."""
     _TOOL_TO_CONNECTOR_MAPPING[tool_name] = {
         "connector_id": connector_id,
         "color": color,
-        "tags": tags or []
+        "tags": tags or [],
+        "display_name": display_name,
+        "display_description": display_description
     }
-    logger.info(f"Registered tool mapping: {tool_name} -> {connector_id} ({color}) tags={tags or []}")
+    logger.info(f"Registered tool mapping: {tool_name} -> {connector_id} ({color}) tags={tags or []} display_name={display_name}")
 
 async def get_tool_mappings() -> Dict[str, Dict[str, Any]]:
     """

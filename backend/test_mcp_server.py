@@ -6,7 +6,7 @@ from fastmcp.server.dependencies import get_http_headers
 mcp = FastMCP("Weather app")
 
 
-@mcp.tool(meta={"tags": ["requires_approval"]})
+@mcp.tool(meta={"tags": ["requires_approval"], "display_name": "Get City Weather", "display_description": "Fetches current weather information for a specific city."})
 def get_weather_in_city(city: str) -> str:
     """Get the current weather for a given city (Mock data)."""
     headers = get_http_headers(include_all=True)

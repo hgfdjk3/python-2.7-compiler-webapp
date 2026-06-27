@@ -6,6 +6,7 @@ import { useDisclosure } from '@mantine/hooks';
 
 import { getToolIcon } from '../../../../utils/iconUtils';
 import { useApprovalStore } from '../../../../utils/approvalStore';
+import { useToolMetadata } from '../../../../api/connectors';
 
 interface ToolCallBlockProps {
   name?: string;
@@ -16,6 +17,10 @@ export const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ name, children }) 
   const [open, { toggle }] = useDisclosure(false);
 
   const cleanName = (name?.replace(/^user-content-/, '') || '').trim();
+  
+  const { data: toolMetadata } = useToolMetadata(cleanName);
+  const displayName = toolMetadata?.display_name || cleanName;
+  const displayDescription = toolMetadata?.display_description || '';
 
   let isRunning = true;
   let parsed: any = null;
@@ -65,7 +70,14 @@ export const ToolCallBlock: React.FC<ToolCallBlockProps> = ({ name, children }) 
 
           <Divider
             w="100%"
-            label={cleanName}
+            label={
+              <span>
+                <span style={{ fontWeight: 500, fontSize: '12px' }}>{displayName}</span>
+                {displayDescription && (
+                  <span style={{ fontSize: '10px', color: 'var(--mantine-color-dimmed)', marginLeft: '4px', fontWeight: 400 }}>- {displayDescription}</span>
+                )}
+              </span>
+            }
             labelPosition='left'
           />
         </Group>

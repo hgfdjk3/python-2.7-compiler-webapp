@@ -2,7 +2,8 @@ import React from 'react';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
-import AtomLogo from '@site/static/img/Atom.svg';
+import ThemedImage from '@theme/ThemedImage';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './index.module.css';
 
 export default function Home(): React.ReactNode {
@@ -12,12 +13,14 @@ export default function Home(): React.ReactNode {
     <Layout title="Atom Docs" description="תיעוד רשמי של פלטפורמת Atom">
       <main className={styles.hero}>
         {/* Logo */}
-        <AtomLogo
-          width={96}
-          height={96}
+        <ThemedImage
+          alt="Atom logo"
           className={styles.logo}
-          role="img"
-          aria-label="Atom logo"
+          style={{ width: 96, height: 96 }}
+          sources={{
+            light: useBaseUrl('/img/Atom-light.svg'),
+            dark: useBaseUrl('/img/Atom.svg'),
+          }}
         />
 
         {/* Heading */}

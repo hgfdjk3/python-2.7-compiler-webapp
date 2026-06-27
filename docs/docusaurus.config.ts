@@ -96,7 +96,8 @@ const config: Config = {
       title: 'Atom',
       logo: {
         alt: 'Atom Logo',
-        src: 'img/Atom.svg',
+        src: 'img/Atom-light.svg',
+        srcDark: 'img/Atom.svg',
       },
       items: [
         {

@@ -136,8 +136,17 @@ class MCPClientManager:
                     tool_meta = getattr(tool, "metadata", None) or {}
                     meta_block = tool_meta.get("_meta", {}) or {}
                     tool_tags = meta_block.get("tags", []) if isinstance(meta_block, dict) else []
-                    register_tool_mapping(tool.name, name, color, tags=tool_tags)
-                    logger.info(f"Loaded tool: {tool.name} (tags={tool_tags})")
+                    display_name = meta_block.get("display_name") if isinstance(meta_block, dict) else None
+                    display_description = meta_block.get("display_description") if isinstance(meta_block, dict) else None
+                    
+                    register_tool_mapping(tool.name, name, color, tags=tool_tags, display_name=display_name, display_description=display_description)
+                    logger.info(f"Loaded tool: {tool.name} (tags={tool_tags}) display_name={display_name}")
+
+                    # Guarantee that these display properties are invisible to the agent/LLM
+                    # by forcefully stripping them out of the tool's metadata/schema
+                    if isinstance(meta_block, dict):
+                        meta_block.pop("display_name", None)
+                        meta_block.pop("display_description", None)
                 
                 all_tools.extend(server_tools)
             except Exception as e:

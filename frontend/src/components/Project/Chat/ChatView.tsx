@@ -16,6 +16,7 @@ import { ResizeDivider } from './ResizeDivider';
 import { PromptClarification, ClarificationQuestionData } from './PromptInput/PromptClarification/PromptClarification';
 import { Project } from '../../../api/projects';
 import { useChatStore } from '../../../store/chatStore';
+import { useApprovalStore } from '../../../utils/approvalStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProjectConversations, updateConversation, getConversation } from '../../../api/conversations';
 import { parseChatHistory } from '../../../utils/chatHistoryParser';
@@ -119,26 +120,29 @@ export const ChatView: React.FC<ChatViewProps> = ({
     });
   }, [mutate, chatId, activeThreadId, project.id, navigate, sources]);
 
+  const pendingApprovals = useApprovalStore((state) => state.pendingApprovals);
+  const hasPendingApproval = Object.values(pendingApprovals).some(Boolean);
+
   const handleSendMessage = useCallback((value: string, isAutomation: boolean = false) => {
     const now = new Date();
     const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const messageId = Date.now().toString();
 
-    if (isPending) {
+    if (isPending || hasPendingApproval || isSubmittingApproval) {
       setQueuedMessages(prev => [...prev, { id: messageId, prompt: value, isAutomation, timestamp, sourceIds: attachedSourceIds, sources: sources.filter(s => attachedSourceIds.includes(s.id)) }]);
       return;
     }
 
     processSend(value, isAutomation, messageId, timestamp, attachedSourceIds);
-  }, [isPending, processSend, attachedSourceIds, sources]);
+  }, [isPending, hasPendingApproval, isSubmittingApproval, processSend, attachedSourceIds, sources]);
 
   useEffect(() => {
-    if (!isPending && queuedMessages.length > 0) {
+    if (!isPending && !hasPendingApproval && !isSubmittingApproval && queuedMessages.length > 0) {
       const nextMsg = queuedMessages[0];
       setQueuedMessages(prev => prev.slice(1));
       processSend(nextMsg.prompt, nextMsg.isAutomation, nextMsg.id, nextMsg.timestamp, nextMsg.sourceIds);
     }
-  }, [isPending, queuedMessages, processSend]);
+  }, [isPending, hasPendingApproval, isSubmittingApproval, queuedMessages, processSend]);
 
   /** Called from MarkdownResponse / ClarificationBlock to show clarification above the prompt */
   const handleTriggerClarification = useCallback((questions: ClarificationQuestionData[]) => {
@@ -178,7 +182,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       if (chatId !== activeThreadId && conversationData?.metadata.id === chatId) {
         setIsAutomationMode(false);
         setAutomationBuilderData(null);
-        
+
         setActiveThreadId(conversationData.metadata.id);
         const collapsedMessages = parseChatHistory(conversationData.history);
         const finalMessages = collapsedMessages.map(msg => ({
@@ -283,8 +287,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </>
         )}
       </AnimatePresence>
-      <Box 
-        className="chat-scroll-container" 
+      <Box
+        className="chat-scroll-container"
         style={{ flex: 1, minHeight: 0 }}
         ref={scrollViewportRef}
         onScroll={handleScroll}

@@ -33,7 +33,7 @@ async def worker_node(state: AgentState, config: RunnableConfig) -> Dict[str, An
     if worker_tools:
         tool_names = [getattr(t, 'name', str(t)) for t in worker_tools]
         logger.info(f"Worker node active. Binding tools: {tool_names}")
-        llm = llm.bind_tools(worker_tools)
+        llm = llm.bind_tools(worker_tools, parallel_tool_calls=False)
     else:
         logger.info("Worker node active. No tools bound.")
 

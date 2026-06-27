@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Group, ThemeIcon, Divider, Collapse, Code, Card, Text, Loader, ActionIcon } from '@mantine/core';
 import { IconChevronRight } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -7,6 +7,7 @@ import { getToolIcon } from '../../../../utils/iconUtils';
 import { ToolApprovalCard } from '../ToolApprovalCard/ToolApprovalCard';
 import { useApprovalStore } from '../../../../utils/approvalStore';
 import { ToolDataTable } from '../ToolBlock/ToolDataTable/ToolDataTable';
+import { useToolMetadata } from '../../../../api/connectors';
 
 interface ApproveToolBlockProps {
   name?: string;
@@ -22,8 +23,26 @@ export const ApproveToolBlock: React.FC<ApproveToolBlockProps> = ({ name, id, on
   const cleanId = (id?.replace(/^user-content-/, '') || '').trim();
   const cleanName = (name?.replace(/^user-content-/, '') || '').trim();
 
+  const { data: toolMetadata } = useToolMetadata(cleanName);
+  const displayName = toolMetadata?.display_name || cleanName;
+  const displayDescription = toolMetadata?.display_description || '';
+
   const decision = useApprovalStore((state) => state.decisions[cleanId]);
   const isActive = useApprovalStore((state) => !!state.activeTools[cleanId]);
+  const setPendingApproval = useApprovalStore((state) => state.setPendingApproval);
+
+  useEffect(() => {
+    if (!decision && cleanId) {
+      setPendingApproval(cleanId, true);
+    } else if (cleanId) {
+      setPendingApproval(cleanId, false);
+    }
+    return () => {
+      if (cleanId) {
+        setPendingApproval(cleanId, false);
+      }
+    };
+  }, [decision, cleanId, setPendingApproval]);
 
   if (decision && !isActive) {
     return null; // ToolCallBlock has claimed it, or it was rejected
@@ -57,12 +76,12 @@ export const ApproveToolBlock: React.FC<ApproveToolBlockProps> = ({ name, id, on
           <Divider
             w="100%"
             label={
-              cleanName
-              // {decision ? (
-              //   <Loader size={10} color="dimmed" />
-              // ) : (
-              //   <Text size="xs" c="orange" m={0}>Requires Approval</Text>
-              // )}
+              <span>
+                <span style={{ fontWeight: 500, fontSize: '12px' }}>{displayName}</span>
+                {displayDescription && (
+                  <span style={{ fontSize: '10px', color: 'var(--mantine-color-dimmed)', marginLeft: '4px', fontWeight: 400 }}>- {displayDescription}</span>
+                )}
+              </span>
             }
             labelPosition='left'
           />

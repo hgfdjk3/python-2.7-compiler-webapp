@@ -105,6 +105,20 @@ async def list_developer_connectors(username: str = Depends(get_current_user)):
         result.append(conn_copy)
     return result
 
+@router.get("/tools/{tool_name}/metadata")
+async def get_tool_metadata(tool_name: str):
+    from src.api.services.connector_tools_service import get_tool_mappings
+    mappings = await get_tool_mappings()
+    info = mappings.get(tool_name)
+    if not info:
+        raise HTTPException(status_code=404, detail="Tool not found")
+    return {
+        "name": tool_name,
+        "display_name": info.get("display_name"),
+        "display_description": info.get("display_description"),
+        "tags": info.get("tags", [])
+    }
+
 @router.post("/connectors", response_model=ConnectorResponse)
 async def add_connector(connector: ConnectorCreate, request: Request, username: str = Depends(get_current_user)):
     connectors_coll = get_collection("connectors")
