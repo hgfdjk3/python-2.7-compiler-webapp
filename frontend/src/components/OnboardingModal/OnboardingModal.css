@@ -1,0 +1,61 @@
+.onboarding-modal .mantine-Modal-content {
+  background: radial-gradient(
+    circle at top center,
+    light-dark(var(--mantine-color-zinc-1), var(--mantine-color-zinc-8)) 0%,
+    transparent 70%
+  ), light-dark(var(--mantine-color-white), var(--mantine-color-zinc-9)) !important;
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8)) !important;
+  overflow: hidden;
+  box-shadow: var(--mantine-shadow-xxl) !important;
+}
+
+.onboarding-modal-container {
+  min-height: 440px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.onboarding-step-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* Progress indicator dots */
+.onboarding-dots-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.onboarding-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: light-dark(var(--mantine-color-zinc-3), var(--mantine-color-zinc-7));
+  transition: all 0.2s ease;
+}
+
+.onboarding-dot.active {
+  width: 16px;
+  border-radius: 3px;
+  background-color: light-dark(var(--mantine-color-zinc-8), var(--mantine-color-white));
+}
+
+/* Navigation button container styling */
+.onboarding-footer {
+  border-top: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+  padding-top: var(--mantine-spacing-md);
+  margin-top: var(--mantine-spacing-lg);
+  z-index: 2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .onboarding-modal-container {
+    min-height: 380px;
+  }
+}

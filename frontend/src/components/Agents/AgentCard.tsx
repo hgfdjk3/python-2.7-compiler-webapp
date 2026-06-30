@@ -19,35 +19,35 @@ export const AgentCard: React.FC<AgentCardProps> = ({
   return (
     <Card
       withBorder
-      shadow="sm"
-      radius="md"
-      p="sm"
+      shadow="md"
+      radius="sm"
+      p="md"
       onClick={onClick}
       className="agent-card"
       style={{ '--agent-brand-color': agent.brandColor } as React.CSSProperties}
     >
-      <Group wrap="nowrap" align="flex-start">
+      <Group wrap="nowrap" align="center" gap="md">
         <Box style={{ position: 'relative' }}>
           <ThemeIcon
-            size={42}
-            radius="md"
+            size={56}
+            radius="lg"
             variant="light"
             color="gray"
             className="agent-icon-wrapper"
           >
-            {getAgentIcon(agent.iconName || agent.name, { size: 24, stroke: 1.5 })}
+            {getAgentIcon(agent.iconName || agent.name, { size: 30, stroke: 1.5 })}
           </ThemeIcon>
         </Box>
-        <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+        <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
           <Group justify="space-between" wrap="nowrap" gap="xs">
-            <Text fw={600} size="sm" c="zinc.1" truncate>{agent.name}</Text>
+            <Text fw={700} size="md" truncate>{agent.name}</Text>
             {status === 'enabled' && (
               <ThemeIcon variant='light' size="sm" className="status-indicator-glass">
                 <IconCheck size={12} />
               </ThemeIcon>
             )}
           </Group>
-          <Text size="xs" c="zinc.4" lineClamp={2} style={{ transition: 'color 0.3s ease' }} className="agent-desc">{agent.description}</Text>
+          <Text size="xs" c="zinc.4" lineClamp={2} style={{ transition: 'color 0.3s ease', lineHeight: 1.4 }} className="agent-desc">{agent.description}</Text>
         </Stack>
       </Group>
 

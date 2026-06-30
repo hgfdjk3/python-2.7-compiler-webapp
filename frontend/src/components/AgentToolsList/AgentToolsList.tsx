@@ -39,6 +39,9 @@ export const AgentToolsList: React.FC<AgentToolsListProps> = ({ tools, brandColo
           slideSize="50%"
           slideGap="xs"
           styles={{
+            viewport: {
+              height: 'auto',
+            },
             control: {
               backgroundColor: 'light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8))',
               borderColor: 'light-dark(var(--mantine-color-zinc-3), var(--mantine-color-zinc-7))',

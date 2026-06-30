@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { AppShell } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Sidebar } from './Sidebar';
+import { OnboardingModal } from '../OnboardingModal/OnboardingModal';
 
 interface ProjectLayoutProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
       <AppShell.Main h="100vh" py="xs" pr="0" pb="0" style={{ display: 'flex', flexDirection: 'column' }}>
         {children}
       </AppShell.Main>
+      <OnboardingModal />
     </AppShell>
   );
 };

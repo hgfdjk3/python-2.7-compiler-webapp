@@ -1,0 +1,11 @@
+.onboarding-project-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}
+
+.onboarding-project-input-container {
+  margin: 20px 0;
+  width: 100%;
+}

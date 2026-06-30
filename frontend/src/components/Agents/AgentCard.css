@@ -3,14 +3,14 @@
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   height: 100%;
   --agent-brand-color: var(--mantine-color-blue-filled);
-  /* Default fallback */
-  background: linear-gradient(180deg, var(--mantine-color-zinc-9) 0%, var(--mantine-color-black) 100%);
-  border-color: var(--mantine-color-zinc-8);
+  /* Responsive background and border matching the modal */
+  background: light-dark(var(--mantine-color-white), var(--mantine-color-zinc-9));
+  border-color: light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
   position: relative;
   overflow: hidden;
 }
 
-/* Base Gradient Overlay for depth - ALWAYS VISIBLE */
+/* Base Gradient Overlay for depth and texture - ALWAYS VISIBLE */
 .agent-card::before {
   content: '';
   position: absolute;
@@ -18,14 +18,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg,
-      color-mix(in srgb, var(--agent-brand-color) 12%, transparent) 0%,
-      transparent 60%);
+  /* Bolder brand gradient with a premium grainy texture layered on top */
+  background-image: 
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, color-mix(in srgb, var(--agent-brand-color) 24%, transparent) 0%, transparent 65%);
   opacity: 1;
-  /* Always visible now */
   transition: opacity 0.4s ease;
   z-index: 0;
-
   pointer-events: none;
 }
 
@@ -38,7 +37,7 @@
   right: 0;
   bottom: 0;
   background: radial-gradient(circle at top right,
-      color-mix(in srgb, var(--agent-brand-color) 8%, transparent) 0%,
+      color-mix(in srgb, var(--agent-brand-color) 12%, transparent) 0%,
       transparent 70%);
   opacity: 0.6;
   /* Slightly visible base */
@@ -48,7 +47,7 @@
 }
 
 .agent-card:hover {
-  /* transform: translateY(-4px) scale(1.01); */
+  transform: translateY(-4px);
   box-shadow: 0 16px 32px -8px color-mix(in srgb, var(--agent-brand-color) 25%, transparent),
     0 0 0 1px color-mix(in srgb, var(--agent-brand-color) 50%, transparent);
   border-color: transparent;
@@ -71,9 +70,10 @@
 
 .agent-icon-wrapper {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  background-color: var(--mantine-color-zinc-9) !important;
-  color: var(--mantine-color-zinc-4) !important;
-  border: 1px solid var(--mantine-color-zinc-8);
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9)) !important;
+  color: light-dark(var(--mantine-color-zinc-6), var(--mantine-color-zinc-4)) !important;
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+  border-radius: 12px;
 }
 
 .agent-card:hover .agent-icon-wrapper {

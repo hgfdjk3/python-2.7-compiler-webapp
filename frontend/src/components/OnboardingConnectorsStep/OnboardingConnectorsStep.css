@@ -1,0 +1,39 @@
+.onboarding-connectors-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}
+
+.onboarding-carousel {
+  margin: 8px 0;
+  width: 100%;
+}
+
+.onboarding-carousel .mantine-Carousel-container {
+  padding: 12px 0; /* Breathing room for hover translate and shadow */
+}
+
+.onboarding-carousel .mantine-Carousel-slide {
+  padding: 4px 8px;
+  display: flex;
+}
+
+.onboarding-carousel .mantine-Carousel-slide > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-carousel .mantine-Carousel-control {
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-zinc-8));
+  border-color: light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-7));
+  color: light-dark(var(--mantine-color-zinc-8), var(--mantine-color-zinc-2));
+  opacity: 0.9;
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.onboarding-carousel .mantine-Carousel-control:hover {
+  background-color: light-dark(var(--mantine-color-zinc-1), var(--mantine-color-zinc-7));
+  opacity: 1;
+}
