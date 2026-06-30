@@ -5,6 +5,7 @@ import { IconDatabase, IconTool, IconExternalLink } from '@tabler/icons-react';
 import { AgentInfo } from '../../utils/agentUtils';
 import { getAgentIcon } from '../../utils/iconUtils';
 import { AgentConfigurationForm } from '../AgentConfiguration/AgentConfigurationForm';
+import { AgentToolsList } from '../AgentToolsList/AgentToolsList';
 import './AgentModal.css';
 
 interface AgentModalProps {
@@ -130,36 +131,64 @@ export const AgentModal: React.FC<AgentModalProps> = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Group justify="space-between" mb="sm" px={4}>
-                <Group gap={6}>
-                  <Text fw={700} lh={1} size="md">
-                    Sources
-                  </Text>
-                  <Text size="10px" fw={800} c="zinc.5" bg="zinc.8" px={6} py={1} style={{ borderRadius: 10 }}>
-                    {agent.sourcesAdded.length}
-                  </Text>
-                </Group>
-              </Group>
-
-              <Group gap="xs">
-                {agent.sourcesAdded.map((source) => (
-                  <Box
-                    key={source}
-                    className="agent-modal-source-card"
-                    style={{ '--source-color': agent.brandColor } as React.CSSProperties}
-                  >
-                    <Text size="xs" fw={700} c="zinc.2">
-                      {source}
-                    </Text>
+              <Stack gap="xs" px={4}>
+                <Text fw={700} lh={1} size="md">
+                  Connection Details
+                </Text>
+                <SimpleGrid cols={2} spacing="sm">
+                  <Box>
+                    <Text size="xs" c="zinc.4" fw={500}>Visibility</Text>
+                    <Group gap="xs" mt={4}>
+                      <Badge variant="light" size='xs' color={agent.public ? agent.brandColor : "zinc.6"}>
+                        {agent.public ? "Public" : "Private"}
+                      </Badge>
+                    </Group>
                   </Box>
-                ))}
-              </Group>
+                  {agent.creator && (
+                    <Box>
+                      <Text size="xs" c="zinc.4" fw={500}>Creator</Text>
+                      <Text size="xs" fw={600}>{agent.creator}</Text>
+                    </Box>
+                  )}
+                </SimpleGrid>
+              </Stack>
             </motion.div>
+
+            {agent.tags && agent.tags.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 }}
+              >
+                <Stack gap="xs" px={4}>
+                  <Text fw={700} lh={1} size="md">
+                    Tags
+                  </Text>
+                  <Group gap="xs">
+                    {agent.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" color="zinc.4" size="sm">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </Group>
+                </Stack>
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
+            >
+              <Box px={4}>
+                <AgentToolsList tools={agent.toolsEnabled} brandColor={agent.brandColor} />
+              </Box>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.35 }}
             >
               <Stack gap="xs" px={4}>
                 <Text fw={700} lh={1} size="md">

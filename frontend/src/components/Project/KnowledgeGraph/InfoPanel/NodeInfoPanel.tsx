@@ -6,7 +6,7 @@ import { Entity } from '../../../../api/library';
 import { getSourceStyle } from '../../Sources/sourceTypes';
 import { motion } from 'motion/react';
 
-const MotionPaper = motion.create(Paper);
+const MotionPaper = motion.create(Paper as any);
 
 import { CreateConnectionModal } from './CreateConnectionModal';
 

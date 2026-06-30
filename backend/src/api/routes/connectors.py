@@ -39,6 +39,7 @@ class ConnectorCreate(BaseModel):
     publisher_name: Optional[str] = None
     developers: Optional[List[str]] = []
     tags: Optional[List[str]] = []
+    public: Optional[bool] = False
 
 class ConnectorResponse(BaseModel):
     id: str
@@ -54,9 +55,11 @@ class ConnectorResponse(BaseModel):
     publisher_name: Optional[str] = None
     developers: Optional[List[str]] = []
     tags: Optional[List[str]] = []
+    public: Optional[bool] = False
+    creator: Optional[str] = None
 
 @router.get("/connectors", response_model=List[ConnectorResponse])
-async def list_connectors():
+async def list_connectors(username: str = Depends(get_current_user)):
     from src.api.services.connector_tools_service import get_tool_mappings
     mappings = await get_tool_mappings()
     
@@ -71,6 +74,11 @@ async def list_connectors():
     result = []
     connectors_db = get_connectors_dict()
     for conn_id, conn in connectors_db.items():
+        is_public = conn.get("public") is True
+        is_owner = (conn.get("creator") == username) or (username in conn.get("developers", [])) or (conn.get("publisher_name") == username)
+        if not is_public and not is_owner:
+            continue
+            
         conn_copy = conn.copy()
         conn_copy["tools"] = conn_to_tools.get(conn_id, [])
         result.append(conn_copy)
@@ -129,6 +137,9 @@ async def add_connector(connector: ConnectorCreate, request: Request, username: 
     conn_dict = connector.model_dump()
     conn_dict["_id"] = conn_dict["id"]
     
+    # Set creator to current username
+    conn_dict["creator"] = username
+    
     if not conn_dict.get("developers"):
         conn_dict["developers"] = []
     if username not in conn_dict["developers"]:
@@ -136,6 +147,9 @@ async def add_connector(connector: ConnectorCreate, request: Request, username: 
         
     if not conn_dict.get("publisher_name"):
         conn_dict["publisher_name"] = username
+        
+    if conn_dict.get("public") is None:
+        conn_dict["public"] = False
     
     # Strip header_values before saving to DB, if necessary. 
     # Actually, previous code said: "Strip header_values before saving to connectors.json"
@@ -186,8 +200,11 @@ async def update_connector(connector_id: str, connector: ConnectorCreate, reques
         conn_dict["developers"].append(username)
         
     # Preserve legacy creator field if it existed, just in case
-    if "creator" in existing:
-        conn_dict["creator"] = existing["creator"]
+    conn_dict["creator"] = existing.get("creator") or username
+    
+    # Preserve public status if it exists and wasn't sent
+    if conn_dict.get("public") is None:
+        conn_dict["public"] = existing.get("public", False)
     
     db_dict = conn_dict.copy()
     if "header_values" in db_dict:

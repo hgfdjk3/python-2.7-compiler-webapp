@@ -46,8 +46,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--mantine-color-zinc-9);
-  border: 1px solid var(--mantine-color-zinc-8);
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-9));
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
   border-radius: 20px;
   color: var(--agent-modal-brand-color);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);

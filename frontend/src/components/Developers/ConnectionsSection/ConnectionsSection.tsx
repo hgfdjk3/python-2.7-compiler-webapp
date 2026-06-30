@@ -3,13 +3,14 @@ import { Box, Text, Group, Stack, ThemeIcon, Anchor, SimpleGrid } from '@mantine
 import { IconPlugConnected, IconArrowRight } from '@tabler/icons-react';
 import { motion } from 'motion/react';
 import { AgentConnectionCard } from '../AgentConnectionCard/AgentConnectionCard';
-import { AGENTS_DIRECTORY } from '../../../utils/agentUtils';
+import { useAgentInfo, AgentInfo } from '../../../utils/agentUtils';
 
 const ENABLED_AGENTS = new Set(['github']);
 
 export const ConnectionsSection: React.FC = () => {
-  const activeAgents = AGENTS_DIRECTORY.filter((a) => ENABLED_AGENTS.has(a.id));
-  const inactiveAgents = AGENTS_DIRECTORY.filter((a) => !ENABLED_AGENTS.has(a.id));
+  const { agents } = useAgentInfo();
+  const activeAgents = agents.filter((a: AgentInfo) => ENABLED_AGENTS.has(a.id));
+  const inactiveAgents = agents.filter((a: AgentInfo) => !ENABLED_AGENTS.has(a.id));
 
   return (
     <Box>
@@ -72,7 +73,7 @@ export const ConnectionsSection: React.FC = () => {
             Active ({activeAgents.length})
           </Text>
           <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }} spacing="md">
-            {activeAgents.map((agent, i) => (
+            {activeAgents.map((agent: AgentInfo, i: number) => (
               <motion.div
                 key={agent.id}
                 initial={{ opacity: 0, y: 16 }}
@@ -100,7 +101,7 @@ export const ConnectionsSection: React.FC = () => {
             Inactive ({inactiveAgents.length})
           </Text>
           <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }} spacing="md">
-            {inactiveAgents.map((agent, i) => (
+            {inactiveAgents.map((agent: AgentInfo, i: number) => (
               <motion.div
                 key={agent.id}
                 initial={{ opacity: 0, y: 16 }}

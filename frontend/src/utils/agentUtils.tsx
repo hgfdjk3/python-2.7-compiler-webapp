@@ -17,6 +17,11 @@ export interface AgentInfo {
   toolsEnabled: string[];
   headers_schema?: Record<string, string>;
   header_values?: Record<string, string>;
+  url?: string;
+  developers?: string[];
+  public?: boolean;
+  creator?: string;
+  icon?: React.ReactNode;
 }
 
 export const useAgentInfo = () => {
@@ -27,14 +32,19 @@ export const useAgentInfo = () => {
       id: c.id,
       name: c.name,
       description: c.description || 'Custom Connector',
-      developer: 'Local',
+      developer: c.publisher_name || 'Local',
       tags: c.tags || [],
       brandColor: c.color || '#228be6',
       iconName: c.icon,
       sourcesAdded: [],
       toolsEnabled: c.tools || [],
       headers_schema: c.headers_schema || c.headers, // fallback to old headers
-      header_values: c.header_values
+      header_values: c.header_values,
+      url: c.url,
+      developers: c.developers,
+      public: c.public,
+      creator: c.creator,
+      icon: getAgentIcon(c.icon || c.name)
     }));
   }, [connectors]);
 

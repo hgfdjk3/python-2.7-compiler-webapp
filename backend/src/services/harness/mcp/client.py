@@ -86,6 +86,12 @@ class MCPClientManager:
         """
         all_tools = []
         for name, config in self.server_configs.items():
+            if self.username:
+                is_public = config.get("public") is True
+                is_owner = (config.get("creator") == self.username) or (self.username in config.get("developers", [])) or (config.get("publisher_name") == self.username)
+                if not is_public and not is_owner:
+                    logger.warning(f"User {self.username} is not authorized to use connector {name}")
+                    continue
             try:
                 if name in self.sessions:
                     logger.info(f"Reloading tools from active session for '{name}'...")

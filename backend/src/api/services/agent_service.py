@@ -59,10 +59,14 @@ class AgentService:
         user_scoped_configs = {}
         for conn_id in enabled_connectors:
             if conn_id in connectors_db:
-                conn_copy = connectors_db[conn_id].copy()
-                if conn_id in user_headers:
-                    conn_copy["header_values"] = user_headers[conn_id]
-                user_scoped_configs[conn_id] = conn_copy
+                conn = connectors_db[conn_id]
+                is_public = conn.get("public") is True
+                is_owner = (conn.get("creator") == username) or (username in conn.get("developers", [])) or (conn.get("publisher_name") == username)
+                if is_public or is_owner:
+                    conn_copy = conn.copy()
+                    if conn_id in user_headers:
+                        conn_copy["header_values"] = user_headers[conn_id]
+                    user_scoped_configs[conn_id] = conn_copy
 
         system_instruction = body.system_instruction or ""
         if getattr(body, "source_ids", None):

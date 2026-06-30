@@ -22,6 +22,8 @@ export interface ConnectorFormData {
   publisher_name?: string;
   developers?: string[];
   tags?: string[];
+  public?: boolean;
+  creator?: string;
 }
 
 export const getToolMetadata = async (toolName: string): Promise<ToolDetail> => {

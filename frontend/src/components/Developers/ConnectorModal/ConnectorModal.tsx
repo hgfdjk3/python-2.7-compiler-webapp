@@ -182,7 +182,7 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ opened, onClose,
                           </Button>
                         </Popover.Target>
                         <Popover.Dropdown p="xs">
-                          <ScrollArea.Autosize maxHeight={200}>
+                          <ScrollArea.Autosize mah={200}>
                             <SimpleGrid cols={6} spacing="xs">
                               {UNIQUE_ICONS.map(([key, IconComponent]) => (
                                 <ActionIcon
