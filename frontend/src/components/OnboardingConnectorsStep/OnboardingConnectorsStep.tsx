@@ -87,7 +87,6 @@ export const OnboardingConnectorsStep: React.FC = () => {
           slideSize="50%"
           h="100%"
           slideGap="md"
-          align="start"
           className="onboarding-carousel"
           styles={{
             viewport: {

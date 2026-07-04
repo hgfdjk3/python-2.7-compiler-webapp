@@ -1,0 +1,35 @@
+.empty-project-modal-content {
+  background: radial-gradient(circle at top center,
+      light-dark(var(--mantine-color-zinc-1), var(--mantine-color-zinc-8)) 0%,
+      transparent 70%), light-dark(var(--mantine-color-white), var(--mantine-color-zinc-9)) !important;
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8)) !important;
+  overflow: hidden;
+  box-shadow: var(--mantine-shadow-xxl) !important;
+}
+
+.empty-project-modal-header {
+  background: transparent !important;
+  padding: var(--mantine-spacing-sm) !important;
+  padding-bottom: 0 !important;
+  min-height: 0 !important;
+}
+
+
+.empty-project-modal-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.empty-project-option-card {
+  transition: all 0.2s ease;
+  border: 1px solid light-dark(var(--mantine-color-zinc-2), var(--mantine-color-zinc-8));
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-zinc-9));
+}
+
+.empty-project-option-card:hover {
+  transform: translateY(-4px);
+  border-color: light-dark(var(--mantine-color-zinc-3), var(--mantine-color-zinc-7));
+  box-shadow: var(--mantine-shadow-md);
+  background-color: light-dark(var(--mantine-color-zinc-0), var(--mantine-color-zinc-8));
+}

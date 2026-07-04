@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { useParams } from 'react-router-dom';
 import { ProjectPanel } from '../components/Project/ProjectPanel';
 import { useProject } from '../api/projects';
+import { EmptyProjectModal } from '../components/Project/EmptyProjectModal/EmptyProjectModal';
 
 export const ProjectPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -35,6 +36,7 @@ export const ProjectPage: React.FC = () => {
         style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
       >
         <ProjectPanel project={project} />
+        <EmptyProjectModal projectId={project.id} />
       </motion.div>
     </Box>
   );
