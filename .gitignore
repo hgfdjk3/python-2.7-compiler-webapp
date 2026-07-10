@@ -47,3 +47,5 @@ yarn-error.log*
 # System Files
 .DS_Store
 Thumbs.db
+backend/trace_graph.db
+backend/trace_graph.db.graphlite

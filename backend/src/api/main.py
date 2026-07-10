@@ -24,6 +24,7 @@ from src.api.routes.projects import router as projects_router
 from src.api.routes.user import router as user_router
 from src.api.routes.conversations import router as conversations_router
 from src.api.routes.library import router as library_router
+from src.api.routes.trace import router as trace_router
 
 
 
@@ -67,4 +68,5 @@ app.include_router(projects_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(library_router, prefix="/api/v1")
+app.include_router(trace_router, prefix="/api/v1")
 
